@@ -1,0 +1,1 @@
+#include "..\MyRandom\MyRandom.hpp"
