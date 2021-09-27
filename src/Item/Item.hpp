@@ -4,27 +4,16 @@
 #include <vector>
 
 struct Item {
-    static int N;                                       //アイテム数
-    static std::vector<int> num_category;
+    static size_t N;                                    //アイテム数
+    static size_t w_size;                               //weightの種類数
+    static size_t v_size;                               //valueの種類数
 
-    int id;                                             //0～N-1
-    int predefined_group;                               //あらかじめ決められた固定グループ(-1 : 該当なし)
-    std::vector<int> category;                          //各アイテムが所属するカテゴリ
-    std::vector<double> values;                         //各アイテムがもつ値
+    size_t id;                                          //0～N-1
+    size_t predefined_group;                            //あらかじめ決められた固定グループ(-1 : 該当なし)
+    std::vector<double> weight;                         //各アイテムの重み(制約条件, ペナルティ用)
+    std::vector<double> values;                         //各アイテムがもつ値(目的関数用)
     std::vector<std::vector<double>> item_relations;    //それぞれのアイテム間の関係値
     std::vector<std::vector<double>> group_relations;   //アイテムとグループの間の関係値
-
-    int get_category_num() const;
 };
-
-inline int Item::get_category_num() const {
-    int num = 0;
-    int tmp = 1;
-    for (size_t i = 0; i < num_category.size(); ++i) {
-        num += category[i] * tmp;
-        tmp *= num_category[i];
-    }
-    return num;
-}
 
 #endif

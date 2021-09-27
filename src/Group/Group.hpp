@@ -12,10 +12,10 @@ private:
     int id;                                                                             //班のid:0～G-1(5)
     std::list<int> member_id;                                                           //班員のid
     int member_num;                                                                     //班員数
-    std::vector<int> num_ratio;                               //人数比:num_ratio[学年][男女][多摩理工]
-    std::vector<int> sum_values;                                                                      //点数の合計
-    static std::vector<int> upper_num;
-    static std::vector<int> lower_num;
+    std::vector<double> sum_weight;                               //人数比:num_ratio[学年][男女][多摩理工]
+    std::vector<double> sum_values;                                                                      //点数の合計
+    static std::vector<double> upper_weight;
+    static std::vector<double> lower_weight;
 
 public:
     static int N;                                                                       //班数
@@ -23,22 +23,18 @@ public:
     Group(Item& leader, std::vector<Item>& member, int group_id);
     void erase_member(const Item& item);
     void add_member(const Item& item);
-    int group_score_distance(const Item& item) const;
-    int group_scode_distance_all(const std::vector<Item>& items) const;
-    int group_relation(const Item& item) const;                                          //ある人とこの班の人との関係値と回数の和
-    int group_relation_all(const std::vector<Item>& items) const;                   //この班の関係値と回数の和
-    int add_penalty(int category_upper, int category_lower, const Item& item) const;     //ある人を班員に加えた時のペナルティ変化量
-    int erase_penalty(int category_upper, int category_lower, const Item& item) const;   //班員pを削除した時のペナルティ変化量
-    int diff_penalty(const std::vector<const Item*>& add, const std::vector<const Item*>& erase) const;
-    int calc_penalty() const;
-    static void set_upper_and_lower(const std::vector<Item>& items);
+    std::vector<double> item_relation(const Item& item) const;
+    std::vector<double> sum_relation(const std::vector<Item>& items) const;
+    double diff_penalty(const std::vector<const Item*>& add, const std::vector<const Item*>& erase) const;
+    double calc_penalty() const;
+    static void set_upper_and_lower(const std::vector<double>& upper, const std::vector<double>& lower);
     int get_id() const;
     int get_member_num() const;
-    const std::vector<int>& get_num_ratio() const;
-    const std::vector<int>& get_sum_values() const;
+    const std::vector<double>& get_sum_weight() const;
+    const std::vector<double>& get_sum_values() const;
     std::vector<double> value_averages() const;
-    static const std::vector<int>& get_upper();
-    static const std::vector<int>& get_lower();
+    static const std::vector<double>& get_upper();
+    static const std::vector<double>& get_lower();
     const std::list<int>& get_member_list() const;
 
     friend std::ostream& operator<<(std::ostream&, const Group&);
@@ -56,12 +52,12 @@ inline int Group::get_member_num() const {
 }
 
 /*人数比を取得*/
-inline const std::vector<int>& Group::get_num_ratio() const {
-    return num_ratio;
+inline const std::vector<double>& Group::get_sum_weight() const {
+    return sum_weight;
 }
 
 /*合計点を取得*/
-inline const std::vector<int>& Group::get_sum_values() const {
+inline const std::vector<double>& Group::get_sum_values() const {
     return sum_values;
 }
 
@@ -74,12 +70,12 @@ inline std::vector<double> Group::value_averages() const {
     return std::move(aves);
 }
 
-inline const std::vector<int>& Group::get_upper() {
-    return upper_num;
+inline const std::vector<double>& Group::get_upper() {
+    return upper_weight;
 }
 
-inline const std::vector<int>& Group::get_lower() {
-    return lower_num;
+inline const std::vector<double>& Group::get_lower() {
+    return lower_weight;
 }
 
 inline const std::list<int>& Group::get_member_list() const {
