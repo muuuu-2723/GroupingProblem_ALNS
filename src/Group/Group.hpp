@@ -25,8 +25,11 @@ public:
     void add_member(const Item& item);
     std::vector<double> item_relation(const Item& item) const;
     std::vector<double> sum_relation(const std::vector<Item>& items) const;
-    double diff_penalty(const std::vector<const Item*>& add, const std::vector<const Item*>& erase) const;
-    double calc_penalty() const;
+    double diff_weight_penalty(const std::vector<const Item*>& add, const std::vector<const Item*>& erase) const;
+    double calc_weight_penalty() const;
+    int calc_item_penalty(const Item& item) const;
+    int calc_sum_item_penalty(const std::vector<Item>& items) const;
+    int calc_group_penalty(const std::vector<Item>& items) const;
     static void set_upper_and_lower(const std::vector<double>& upper, const std::vector<double>& lower);
     int get_id() const;
     int get_member_num() const;
@@ -63,8 +66,8 @@ inline const std::vector<double>& Group::get_sum_values() const {
 
 /*•½‹Ï“_‚ðŽæ“¾*/
 inline std::vector<double> Group::value_averages() const {
-    std::vector<double> aves(sum_values.size());
-    for (size_t i = 0; i < aves.size(); ++i) {
+    std::vector<double> aves(Item::v_size);
+    for (size_t i = 0; i < Item::v_size; ++i) {
         aves[i] = (double) sum_values[i] / member_num;
     }
     return std::move(aves);

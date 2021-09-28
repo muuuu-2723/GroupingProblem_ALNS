@@ -27,30 +27,35 @@ Solution::Solution(vector<Item>& items) {
     balance_parameter = 1;
     groups.clear();
     groups.reserve(Group::N + 1);
-    for (int i = 0; i < Group::N + 1; i++) {
+    for (size_t i = 0; i < Group::N + 1; i++) {
         groups.push_back(Group(i));
     }
-    group_relation.assign(Item::N, vector<std::optional<int>>(Group::N + 1, std::nullopt));
-    group_score_distance.assign(Item::N, vector<std::optional<int>>(Group::N + 1, std::nullopt));
+    group_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
     item_group_ids.resize(Item::N);
-    ave = 0;
+    aves.assign(Item::v_size, 0);
+    sum_values.assign(Item::v_size, 0);
 
     //班長は指定の班, それ以外はランダムな班に追加
     RandomInt<> rand_group(0, Group::N - 1);
     int cnt = 0;
     for (auto&& item : items) {
-        if (item.is_leader) {
-            groups[cnt].add_member(item);
-            item_group_ids[item.id] = cnt++;
+        if (item.predefined_group != -1) {
+            groups[item.predefined_group].add_member(item);
+            item_group_ids[item.id] = item.predefined_group;
         }
         else {
             groups[Group::N].add_member(item);
             item_group_ids[item.id] = Group::N;
         }
-        ave += item.score;
+        for (size_t i = 0; i < Item::v_size; i++) {
+            sum_values[i] += item.values[i];
+        }
     }
 
-    ave /= items.size();
+    for (size_t i = 0; i < Item::v_size; i++) {
+        aves[i] = sum_values[i] / Item::N;
+    }
+    
 
     //relation_greedy(items);
     
@@ -63,49 +68,43 @@ Solution::Solution(vector<Item>& items) {
     *this = std::move(rg(*this, des));
 }
 
-int Solution::get_group_relation(const Item& item, int group_id) {
-    if (group_relation[item.id][group_id]) {
-        return group_relation[item.id][group_id].value();
-    }
+const vector<double>& Solution::get_group_relation(const Item& item, int group_id) {
     if (group_id >= Group::N) {
-        group_relation[item.id][group_id] = 0;
-        return group_relation[item.id][group_id].value();
+        group_relation[item.id][group_id] = vector<double>(item.item_relations.size(), 0);
     }
-    group_relation[item.id][group_id] = groups[group_id].group_relation(item);
+    else if (!group_relation[item.id][group_id]) {
+        group_relation[item.id][group_id] = groups[group_id].item_relation(item);
+    }
     return group_relation[item.id][group_id].value();
-}
-
-int Solution::get_group_score_distance(const Item& item, int group_id) {
-    if (group_score_distance[item.id][group_id]) {
-        return group_score_distance[item.id][group_id].value();
-    }
-    if (group_id >= Group::N) {
-        group_score_distance[item.id][group_id] = 0;
-        return group_score_distance[item.id][group_id].value();
-    }
-    group_score_distance[item.id][group_id] = groups[group_id].group_score_distance(item);
-    return group_score_distance[item.id][group_id].value();
 }
 
 /*すべての班を評価*/
 double Solution::evaluation_all(const vector<Item>& items) {
     penalty = 0;
     relation = 0;
-    balance = 0;
-    deviation = 0;
+    ave_balance = 0;
+    sum_balance = 0;
     auto [group_begin, group_end] = get_groups_range();
     for (auto citr = group_begin; citr != group_end; ++citr) {
-        penalty += citr->calc_penalty();
+        penalty += citr->calc_weight_penalty();
+        penalty += citr->calc_sum_item_penalty(items);
+        penalty += citr->calc_group_penalty(items);
 
-        balance += citr->group_scode_distance_all(items);
-
-        //点数の平均偏差用
-        deviation += std::abs(ave - citr->score_average());
+        //点数の平滑化用
+        vector<double> value_averages = citr->value_averages();
+        vector<double> group_sum_values = citr->get_sum_values();
+        for (size_t i = 0; i < Item::v_size; i++) {
+            ave_balance += std::abs(aves[i] - value_averages[i]);
+            //deviation += std::abs(sum_values[i] / Item::N - value_averages[i]);
+            sum_balance += std::abs(sum_values[i] - group_sum_values[i]);
+        }
 
         //関係値と回数の和
-        relation += citr->group_relation_all(items);
+        for (const auto& sum_relation : citr->sum_relation(items)) {
+            relation += sum_relation;
+        }
     }
-    deviation /= Group::N;
+    ave_balance /= Group::N;
 
     return get_eval_value();
 }

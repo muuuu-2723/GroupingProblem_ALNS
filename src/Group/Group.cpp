@@ -99,7 +99,7 @@ vector<double> Group::sum_relation(const vector<Item>& items) const {
     return std::move(result);
 }
 
-double Group::diff_penalty(const vector<const Item*>& add, const vector<const Item*>& erase) const {
+double Group::diff_weight_penalty(const vector<const Item*>& add, const vector<const Item*>& erase) const {
     double penalty = 0;
     for (size_t i = 0; i < Item::w_size; i++) {
         double diff_weight = sum_weight[i];
@@ -121,7 +121,7 @@ double Group::diff_penalty(const vector<const Item*>& add, const vector<const It
     return penalty;
 }
 
-double Group::calc_penalty() const {
+double Group::calc_weight_penalty() const {
     double penalty = 0;
     for (size_t i = 0; i < Item::w_size; i++) {
         if (sum_weight[i] < lower_weight[i]) {
@@ -132,6 +132,32 @@ double Group::calc_penalty() const {
         }
     }
 
+    return penalty;
+}
+
+int Group::calc_item_penalty(const Item& item) const {
+    int penalty = 0;
+    for (const auto& m_id : member_id) {
+        penalty += item.item_penalty[m_id];
+    }
+    return penalty;
+}
+
+int Group::calc_sum_item_penalty(const vector<Item>& items) const {
+    int penalty = 0;
+    for (auto itr1 = member_id.begin(), end = member_id.end(); itr1 != end; ++itr1) {
+        for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
+            penalty += items[*itr1].item_penalty[*itr2];
+        }
+    }
+    return penalty;
+}
+
+int Group::calc_group_penalty(const vector<Item>& items) const {
+    int penalty;
+    for (const auto& m_id : member_id) {
+        penalty += items[m_id].group_penalty[id];
+    }
     return penalty;
 }
 

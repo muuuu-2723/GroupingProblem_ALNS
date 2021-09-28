@@ -15,37 +15,30 @@ struct MoveItem {
     MoveItem(Item& item, int source, int destination) : item(item), source(source), destination(destination) {}
 };
 
-enum class Moving {
-    NoMove,
-    WorseMove,
-    BetterMove
-};
-
 class Solution {
 private:
     std::vector<Group> groups;                              //î«ï™ÇØ
     std::vector<int> item_group_ids;
-    int relation;
-    int penalty;
-    double deviation;
-    int balance;
-    std::vector<std::vector<std::optional<int>>> group_relation;           //Ç†ÇÈêlÇ∆î«àıÇÃä÷åWílÇ∆âÒêîÇÃòa
-    std::vector<std::vector<std::optional<int>>> group_score_distance;
-    double ave;
+    double relation;
+    double penalty;
+    double ave_balance;
+    double sum_balance;
+    std::vector<std::vector<std::optional<std::vector<double>>>> group_relation;
+    std::vector<double> aves;
+    std::vector<double> sum_values;
     int relation_parameter;
     int penalty_parameter;
     int score_parameter;
     int balance_parameter;
 
     void move_processing(const std::vector<MoveItem>& move_items, const std::tuple<int, int, double, int>& diff);
-    void set_eval_value(int relation, int penalty, double deviation, int balance);
+    void set_eval_value(int relation, int penalty, double ave_balance, double sum_balance);
 
 public:
     Solution(std::vector<Item>& items);
     double get_eval_value() const;
-    double get_ave() const;
-    int get_group_relation(const Item& item, int group_id);
-    int get_group_score_distance(const Item& item, int group_id);
+    const std::vector<double>& get_ave() const;
+    const std::vector<double>& get_group_relation(const Item& item, int group_id);
     int get_group_id(const Item& item) const;
     auto get_groups_range() const -> const std::pair<std::vector<Group>::const_iterator, std::vector<Group>::const_iterator>;
     const std::vector<Group>& get_groups() const;
@@ -72,19 +65,19 @@ public:
     int get_score_parameter() const;
 };
 
-inline void Solution::set_eval_value(int relation, int penalty, double deviation, int balance) {
+inline void Solution::set_eval_value(int relation, int penalty, double ave_balance, double sum_balance) {
     this->relation = relation;
     this->penalty = penalty;
-    this->deviation = deviation;
-    this->balance = balance;
+    this->ave_balance = ave_balance;
+    this->sum_balance = sum_balance;
 }
 
 inline double Solution::get_eval_value() const {
-    return relation * relation_parameter - penalty * penalty_parameter - deviation * score_parameter + balance * balance_parameter;
+    return relation * relation_parameter - penalty * penalty_parameter - deviation * score_parameter;
 }
 
-inline double Solution::get_ave() const {
-    return ave;
+inline const std::vector<double>& Solution::get_ave() const {
+    return aves;
 }
 
 inline int Solution::get_group_id(const Item& item) const {

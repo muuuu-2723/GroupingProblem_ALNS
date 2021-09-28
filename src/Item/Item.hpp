@@ -14,6 +14,8 @@ struct Item {
     std::vector<double> values;                         //各アイテムがもつ値(目的関数用)
     std::vector<std::vector<double>> item_relations;    //それぞれのアイテム間の関係値
     std::vector<std::vector<double>> group_relations;   //アイテムとグループの間の関係値
+    std::vector<int> item_penalty;                      //それぞれのアイテム間のペナルティ値
+    std::vector<int> group_penalty;                     //アイテムとグループの間のペナルティ値
 };
 
 #endif
