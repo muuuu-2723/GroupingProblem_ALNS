@@ -55,7 +55,7 @@ void Group::erase_member(const Item& item) {
     }
 
     member_num--;
-    for (size_t i = 0; i < Item::w_size; i++) {
+    for (size_t i = 0; i < Item::w_size; ++i) {
         sum_weight[i] -= item.weight[i];
     }
     for (size_t i = 0; i < Item::v_size; ++i) {
@@ -69,7 +69,7 @@ void Group::erase_member(const Item& item) {
 void Group::add_member(const Item& item) {
     member_id.push_back(item.id);
     member_num++;
-    for (size_t i = 0; i < Item::w_size; i++) {
+    for (size_t i = 0; i < Item::w_size; ++i) {
         sum_weight[i] += item.weight[i];
     }
     for (size_t i = 0; i < Item::v_size; ++i) {
@@ -78,8 +78,8 @@ void Group::add_member(const Item& item) {
 }
 
 vector<double> Group::item_relation(const Item& item) const {
-    vector<double> result(item.item_relations.size(), 0);
-    for (size_t i = 0, size = result.size(); i < size; i++) {
+    vector<double> result(Item::item_r_size, 0);
+    for (size_t i = 0; i < Item::item_r_size; ++i) {
         for (const auto& m_id : member_id) {
             result[i] += item.item_relations[i][m_id];
         }
@@ -87,9 +87,9 @@ vector<double> Group::item_relation(const Item& item) const {
     return std::move(result);
 }
 
-vector<double> Group::sum_relation(const vector<Item>& items) const {
-    vector<double> result(items[0].item_relations.size(), 0);
-    for (size_t i = 0, size = result.size(); i < size; i++) {
+vector<double> Group::sum_item_relation(const vector<Item>& items) const {
+    vector<double> result(Item::item_r_size, 0);
+    for (size_t i = 0; i < Item::item_r_size; ++i) {
         for (auto itr1 = member_id.begin(), end = member_id.end(); itr1 != end; ++itr1) {
             for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
                 result[i] += items[*itr1].item_relations[i][*itr2];
@@ -99,9 +99,19 @@ vector<double> Group::sum_relation(const vector<Item>& items) const {
     return std::move(result);
 }
 
+vector<double> Group::sum_group_relation(const vector<Item>& items) const {
+    vector<double> result(Item::group_r_size, 0);
+    for (size_t i = 0; i < Item::group_r_size; ++i) {
+        for (const auto& m_id : member_id) {
+            result[i] += items[m_id].group_relations[i][id];
+        }
+    }
+    return std::move(result);
+}
+
 double Group::diff_weight_penalty(const vector<const Item*>& add, const vector<const Item*>& erase) const {
     double penalty = 0;
-    for (size_t i = 0; i < Item::w_size; i++) {
+    for (size_t i = 0; i < Item::w_size; ++i) {
         double diff_weight = sum_weight[i];
         for (const auto& item : add) {
             diff_weight += item->weight[i];
@@ -123,7 +133,7 @@ double Group::diff_weight_penalty(const vector<const Item*>& add, const vector<c
 
 double Group::calc_weight_penalty() const {
     double penalty = 0;
-    for (size_t i = 0; i < Item::w_size; i++) {
+    for (size_t i = 0; i < Item::w_size; ++i) {
         if (sum_weight[i] < lower_weight[i]) {
             penalty += lower_weight[i] - sum_weight[i];
         }

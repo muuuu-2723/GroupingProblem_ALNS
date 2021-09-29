@@ -27,10 +27,11 @@ Solution::Solution(vector<Item>& items) {
     balance_parameter = 1;
     groups.clear();
     groups.reserve(Group::N + 1);
-    for (size_t i = 0; i < Group::N + 1; i++) {
+    for (size_t i = 0; i < Group::N + 1; ++i) {
         groups.push_back(Group(i));
     }
-    group_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
+    each_group_item_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
+    each_group_item_penalty.assign(Item::N, vector<std::optional<int>>(Group::N + 1, std::nullopt));
     item_group_ids.resize(Item::N);
     aves.assign(Item::v_size, 0);
     sum_values.assign(Item::v_size, 0);
@@ -47,12 +48,12 @@ Solution::Solution(vector<Item>& items) {
             groups[Group::N].add_member(item);
             item_group_ids[item.id] = Group::N;
         }
-        for (size_t i = 0; i < Item::v_size; i++) {
+        for (size_t i = 0; i < Item::v_size; ++i) {
             sum_values[i] += item.values[i];
         }
     }
 
-    for (size_t i = 0; i < Item::v_size; i++) {
+    for (size_t i = 0; i < Item::v_size; ++i) {
         aves[i] = sum_values[i] / Item::N;
     }
     
@@ -68,14 +69,24 @@ Solution::Solution(vector<Item>& items) {
     *this = std::move(rg(*this, des));
 }
 
-const vector<double>& Solution::get_group_relation(const Item& item, int group_id) {
+const vector<double>& Solution::get_each_group_item_relation(const Item& item, int group_id) {
     if (group_id >= Group::N) {
-        group_relation[item.id][group_id] = vector<double>(item.item_relations.size(), 0);
+        each_group_item_relation[item.id][group_id] = vector<double>(Item::item_r_size, 0);
     }
-    else if (!group_relation[item.id][group_id]) {
-        group_relation[item.id][group_id] = groups[group_id].item_relation(item);
+    else if (!each_group_item_relation[item.id][group_id]) {
+        each_group_item_relation[item.id][group_id] = groups[group_id].item_relation(item);
     }
-    return group_relation[item.id][group_id].value();
+    return each_group_item_relation[item.id][group_id].value();
+}
+
+int Solution::get_each_group_item_penalty(const Item& item, int group_id) {
+    if (group_id >= Group::N) {
+        each_group_item_penalty[item.id][group_id] = 0;
+    }
+    else if (!each_group_item_penalty[item.id][group_id]) {
+        each_group_item_penalty[item.id][group_id] = groups[group_id].calc_item_penalty(item);
+    }
+    return each_group_item_penalty[item.id][group_id].value();
 }
 
 /*すべての班を評価*/
@@ -86,22 +97,24 @@ double Solution::evaluation_all(const vector<Item>& items) {
     sum_balance = 0;
     auto [group_begin, group_end] = get_groups_range();
     for (auto citr = group_begin; citr != group_end; ++citr) {
+        //ペナルティ計算
         penalty += citr->calc_weight_penalty();
         penalty += citr->calc_sum_item_penalty(items);
         penalty += citr->calc_group_penalty(items);
 
-        //点数の平滑化用
-        vector<double> value_averages = citr->value_averages();
-        vector<double> group_sum_values = citr->get_sum_values();
-        for (size_t i = 0; i < Item::v_size; i++) {
-            ave_balance += std::abs(aves[i] - value_averages[i]);
+        //valueの平滑化用
+        for (size_t i = 0; i < Item::v_size; ++i) {
+            ave_balance += std::abs(aves[i] - citr->value_average(i));
             //deviation += std::abs(sum_values[i] / Item::N - value_averages[i]);
-            sum_balance += std::abs(sum_values[i] - group_sum_values[i]);
+            sum_balance += std::abs(sum_values[i] / Group::N - citr->get_sum_values()[i]);
         }
 
-        //関係値と回数の和
-        for (const auto& sum_relation : citr->sum_relation(items)) {
-            relation += sum_relation;
+        //関係値の計算
+        for (const auto& r : citr->sum_item_relation(items)) {
+            relation += r;
+        }
+        for (const auto& r : citr->sum_group_relation(items)) {
+            relation += r;
         }
     }
     ave_balance /= Group::N;
@@ -109,7 +122,7 @@ double Solution::evaluation_all(const vector<Item>& items) {
     return get_eval_value();
 }
 
-auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple<int, int, double, int> {
+auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple<double, double, double, double> {
     vector<vector<const Item*>> in(Group::N + 1);
     vector<vector<const Item*>> out(Group::N + 1);
     for (const auto& mi : move_items) {
@@ -117,176 +130,212 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
         in[mi.destination].push_back(&mi.item);
     }
 
-    int diff_penalty = 0;
-    for (int i = 0; i < Group::N; ++i) {
-        diff_penalty += groups[i].diff_penalty(in[i], out[i]);
-    }
-
-    int decreace = 0, increace = 0, sd = 0;
-    for (const auto& mi : move_items) {
-        decreace += get_group_relation(mi.item, mi.source);
-        increace += get_group_relation(mi.item, mi.destination);
-        sd -= get_group_score_distance(mi.item, mi.source);
-        sd += get_group_score_distance(mi.item, mi.destination);
-        for (const auto& ptr_p : out[mi.destination]) {
-            decreace += mi.item.relations[ptr_p->id] - mi.item.times[ptr_p->id];
-            sd -= mi.item.score_distances[ptr_p->id];
+    //ペナルティの差分を計算
+    double diff_penalty = 0;
+    for (size_t i = 0; i < Group::N; ++i) {
+        diff_penalty += groups[i].diff_weight_penalty(in[i], out[i]);
+        for (const auto& in_item : in[i]) {
+            diff_penalty += in_item->group_penalty[i];
+        }
+        for (const auto& out_item : out[i]) {
+            diff_penalty -= out_item->group_penalty[i];
         }
     }
-    for (int i = 0; i < Group::N; ++i) {
+    for (const auto& mi : move_items) {
+        diff_penalty -= get_each_group_item_penalty(mi.item, mi.source);
+        diff_penalty += get_each_group_item_penalty(mi.item, mi.destination);
+        for (const auto& out_item : out[mi.destination]) {
+            diff_penalty -= mi.item.item_penalty[out_item->id];
+        }
+    }
+    for (size_t i = 0; i < Group::N; ++i) {
         for (auto itr1 = out[i].begin(), end = out[i].end(); itr1 != end; ++itr1) {
             for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
-                increace += (*itr1)->relations[(*itr2)->id] - (*itr1)->times[(*itr2)->id];
-                sd += (*itr1)->score_distances[(*itr2)->id];
+                diff_penalty += (*itr1)->item_penalty[(*itr2)->id];
             }
         }
         for (auto itr1 = in[i].begin(), end = in[i].end(); itr1 != end; ++itr1) {
             for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
-                increace += (*itr1)->relations[(*itr2)->id] - (*itr1)->times[(*itr2)->id];
-                sd += (*itr1)->score_distances[(*itr2)->id];
+                diff_penalty += (*itr1)->item_penalty[(*itr2)->id];
             }
         }
     }
 
-    double diff_deviation = 0;
-    //double next_dispersion = std::pow(deviation, 2);
-    for (int i = 0; i < Group::N; ++i) {
-        if (in[i].size() == 0 && out[i].size() == 0) continue;
-
-        diff_deviation -= std::abs(groups[i].score_average() - ave) / Group::N;
-        //next_dispersion -= std::pow(groups[i].score_average() - ave, 2);
-        int new_sum_score = groups[i].get_sum_score();
-        for (const auto& ptr_p : in[i]) {
-            new_sum_score += ptr_p->score;
+    //関係値の差分を計算
+    double diff_relation = 0;
+    for (size_t i = 0; i < Item::item_r_size; ++i) {
+        for (const auto& mi : move_items) {
+            diff_relation -= get_each_group_item_relation(mi.item, mi.source)[i];
+            diff_relation += get_each_group_item_relation(mi.item, mi.destination)[i];
+            for (const auto& out_item : out[mi.destination]) {
+                diff_relation -= mi.item.item_relations[i][out_item->id];
+            }
         }
-        for (const auto& ptr_p : out[i]) {
-            new_sum_score -= ptr_p->score;
+        for (size_t j = 0; j < Group::N; ++j) {
+            for (auto itr1 = out[j].begin(), end = out[j].end(); itr1 != end; ++itr1) {
+                for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
+                    diff_relation += (*itr1)->item_relations[i][(*itr2)->id];
+                }
+            }
+            for (auto itr1 = in[j].begin(), end = in[j].end(); itr1 != end; ++itr1) {
+                for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
+                    diff_relation += (*itr1)->item_relations[i][(*itr2)->id];
+                }
+            }
         }
-        double new_group_ave = (double)new_sum_score / (groups[i].get_member_num() - out[i].size() + in[i].size());
-        diff_deviation += std::abs(new_group_ave - ave) / Group::N;
-        //next_dispersion += std::pow(new_group_ave - ave, 2);
     }
+    for (size_t i = 0; i < Item::group_r_size; ++i) {
+        for (size_t j = 0; j < Group::N; ++j) {
+            for (const auto& in_item : in[j]) {
+                diff_relation += in_item->group_relations[i][j];
+            }
+            for (const auto& out_item : out[j]) {
+                diff_relation -= out_item->group_relations[i][j];
+            }
+        }
+    }
+    
+    //ave_balanceとsum_balanceの差分を計算
+    double diff_ave_balance = 0, diff_sum_balance = 0;
+    for (size_t i = 0; i < Group::N; ++i) {
+        if (in[i].size() == 0 && out[i].size() == 0) continue;
+        for (size_t j = 0; j < Item::v_size; ++j) {
+            diff_ave_balance -= std::abs(groups[i].value_average(j) - aves[j]) / Group::N;
+            diff_sum_balance -= std::abs(groups[i].get_sum_values()[j] - sum_values[j] / Group::N);
 
-    //double next_deviation = std::sqrt(next_dispersion);
+            double new_sum_score = groups[i].get_sum_values()[j];
+            for (const auto& in_item : in[i]) {
+                new_sum_score += in_item->values[j];
+            }
+            for (const auto& out_item : out[i]) {
+                new_sum_score -= out_item->values[j];
+            }
+            double new_group_ave = new_sum_score / (groups[i].get_member_num() - out[i].size() + in[i].size());
+            diff_ave_balance += std::abs(new_group_ave - aves[j]) / Group::N;
+            diff_sum_balance += std::abs(new_sum_score - sum_values[j] / Group::N);
+        }
+    }
 
     //計算誤差の対策
-    if (std::abs(diff_deviation) < 1e-10 && increace == decreace && diff_penalty == 0 && sd == 0) {
-        return {0, 0, 0, 0};
-    }
-    //std::cerr << increace - decreace << " " << diff_penalty << " " << next_deviation - std::sqrt(dispersion) << std::endl;
-
-    //return increace - decreace - diff_penalty * penalty_parameter - (next_deviation - std::sqrt(dispersion)) * score_parameter;
-    return {increace - decreace, diff_penalty, diff_deviation, sd};
+    if (std::abs(diff_penalty) < 1e-10) diff_penalty = 0;
+    if (std::abs(diff_relation) < 1e-10) diff_relation = 0;
+    if (std::abs(diff_ave_balance) < 1e-10) diff_ave_balance = 0;
+    if (std::abs(diff_sum_balance) < 1e-10) diff_sum_balance = 0;
+    
+    return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance};
 }
 
 /*shift移動時の評価値の変化量*/
-auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<int, int, double, int> {
-    //関係値と回数の和の変化量を計算
+auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<double, double, double, double> {
     const Group& now_group = groups[item_group_ids[item.id]];
-    int decreace, increace;
-    decreace = get_group_relation(item, now_group.get_id());
-
     const Group& next_group = groups[group_id];
-    increace = get_group_relation(item, next_group.get_id());
 
-    int sd = get_group_score_distance(item, next_group.get_id()) - get_group_score_distance(item, now_group.get_id());
+    //ペナルティの差分を計算
+    double diff_penalty = now_group.diff_weight_penalty({}, {&item}) + next_group.diff_weight_penalty({&item}, {});
+    diff_penalty -= get_each_group_item_penalty(item, now_group.get_id());
+    diff_penalty += get_each_group_item_penalty(item, next_group.get_id());
+    diff_penalty -= item.group_penalty[now_group.get_id()];
+    diff_penalty += item.group_penalty[next_group.get_id()];
 
-    //ペナルティの変化量を計算
-    /*int diff_penalty = now_group.erase_penalty(upper_num[item.year - 1][item.gender][item.campus], 
-                                          lower_num[item.year - 1][item.gender][item.campus], item);
-    
-    diff_penalty += next_group.add_penalty(upper_num[item.year - 1][item.gender][item.campus],
-                                      lower_num[item.year - 1][item.gender][item.campus], item);*/
-    int diff_penalty = now_group.diff_penalty({}, {&item});
-    diff_penalty += next_group.diff_penalty({&item}, {});
-    
-    //点数の平均偏差の算出
-    double diff_deviation = 0;
-    diff_deviation -= std::abs(now_group.score_average() - ave) / Group::N;
-    diff_deviation -= std::abs(next_group.score_average() - ave) / Group::N;
-    //double next_dispersion = std::pow(deviation, 2);
-    //next_dispersion -= std::pow(now_group.score_average() - ave, 2);
-    //next_dispersion -= std::pow(next_group.score_average() - ave, 2);
-
-    double group_ave = (double)(now_group.get_sum_score() - item.score) / (now_group.get_member_num() - 1);
-    diff_deviation += std::abs(group_ave - ave) / Group::N;
-    //next_dispersion += std::pow(group_ave - ave, 2);
-    group_ave = (double)(next_group.get_sum_score() + item.score) / (next_group.get_member_num() + 1);
-    diff_deviation += std::abs(group_ave - ave) / Group::N;
-    //next_dispersion += std::pow(group_ave - ave, 2);
-
-    //double next_deviation = std::sqrt(next_dispersion);
-
-    //計算誤差の対策
-    if (std::abs(diff_deviation) < 1e-10 && increace == decreace && diff_penalty == 0, sd == 0) {
-        return {0, 0, 0, 0};
+    //関係値の差分を計算
+    double diff_relation = 0;
+    for (size_t i = 0; i < Item::item_r_size; ++i) {
+        diff_relation -= get_each_group_item_relation(item, now_group.get_id())[i];
+        diff_relation += get_each_group_item_relation(item, next_group.get_id())[i];
+    }
+    for (size_t i = 0; i < Item::group_r_size; ++i) {
+        diff_relation -= item.group_relations[i][now_group.get_id()];
+        diff_relation += item.group_relations[i][next_group.get_id()];
     }
 
-    return {increace - decreace, diff_penalty, diff_deviation, sd};
+    //ave_balanceとsum_balanceの差分を計算
+    double diff_ave_balance = 0, diff_sum_balance = 0;
+    for (size_t i = 0; i < Item::v_size; ++i) {
+        diff_ave_balance -= std::abs(now_group.value_average(i) - aves[i]) / Group::N;
+        diff_ave_balance -= std::abs(next_group.value_average(i) - aves[i]) / Group::N;
+
+        double group_ave = (double)(now_group.get_sum_values()[i] - item.values[i]) / (now_group.get_member_num() - 1);
+        diff_ave_balance += std::abs(group_ave - aves[i]) / Group::N;
+        group_ave = (double)(next_group.get_sum_values()[i] + item.values[i]) / (next_group.get_member_num() + 1);
+        diff_ave_balance += std::abs(group_ave - aves[i]) / Group::N;
+
+        diff_sum_balance -= std::abs(now_group.get_sum_values()[i] - sum_values[i] / Group::N);
+        diff_sum_balance -= std::abs(next_group.get_sum_values()[i] - sum_values[i] / Group::N);
+        diff_sum_balance += std::abs(now_group.get_sum_values()[i] - item.values[i] - sum_values[i] / Group::N);
+        diff_sum_balance += std::abs(next_group.get_sum_values()[i] + item.values[i] - sum_values[i] / Group::N);
+    }
+
+    //計算誤差の対策
+    if (std::abs(diff_penalty) < 1e-10) diff_penalty = 0;
+    if (std::abs(diff_relation) < 1e-10) diff_relation = 0;
+    if (std::abs(diff_ave_balance) < 1e-10) diff_ave_balance = 0;
+    if (std::abs(diff_sum_balance) < 1e-10) diff_sum_balance = 0;
+    
+    return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance};
 }
 
 /*swap移動時の評価値の変化量*/
-auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tuple<int, int, double, int> {
-    //関係値と回数の和の変化量を計算(shift移動時の計算結果を利用)
+auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tuple<double, double, double, double> {
     const Group& g1 = groups[item_group_ids[item1.id]];
     const Group& g2 = groups[item_group_ids[item2.id]];
-    int diff_relation = 0, sd = 0;
-    diff_relation += get_group_relation(item1, g2.get_id());
-    diff_relation += get_group_relation(item2, g1.get_id());
-    diff_relation -= get_group_relation(item1, g1.get_id());
-    diff_relation -= get_group_relation(item2, g2.get_id());
-    sd += get_group_score_distance(item1, g2.get_id());
-    sd += get_group_score_distance(item2, g1.get_id());
-    sd -= get_group_score_distance(item1, g1.get_id());
-    sd -= get_group_score_distance(item2, g2.get_id());
 
-    diff_relation -= (item1.relations[item2.id] - item1.times[item2.id]) * 2;
-    sd -= item1.score_distances[item2.id] * 2;
+    //ペナルティの差分を計算
+    double diff_penalty = 0;
+    diff_penalty += g1.diff_weight_penalty({&item1}, {&item2});
+    diff_penalty += g2.diff_weight_penalty({&item2}, {&item1});
+    
+    diff_penalty += get_each_group_item_penalty(item1, g2.get_id());
+    diff_penalty += get_each_group_item_penalty(item2, g1.get_id());
+    diff_penalty -= get_each_group_item_penalty(item1, g1.get_id());
+    diff_penalty -= get_each_group_item_penalty(item2, g2.get_id());
+    diff_penalty -= item1.item_penalty[item2.id] * 2;
 
-    //ペナルティの変化量を計算
-    int diff_penalty = 0;
-    if (item1.year != item2.year || item1.gender != item2.gender || item1.campus != item2.campus) {
-        /*diff_penalty += groups[item1.group_id].erase_penalty(upper_num[item1.year - 1][item1.gender][item1.campus],
-                                                     lower_num[item1.year - 1][item1.gender][item1.campus], item1);
-        
-        diff_penalty += groups[item1.group_id].add_penalty(upper_num[item2.year - 1][item2.gender][item2.campus],
-                                                   lower_num[item2.year - 1][item2.gender][item2.campus], item2);
+    diff_penalty += item1.group_penalty[g2.get_id()];
+    diff_penalty += item2.group_penalty[g1.get_id()];
+    diff_penalty -= item1.group_penalty[g1.get_id()];
+    diff_penalty -= item2.group_penalty[g2.get_id()];
 
-        diff_penalty += groups[item2.group_id].erase_penalty(upper_num[item2.year - 1][item2.gender][item2.campus],
-                                                     lower_num[item2.year - 1][item2.gender][item2.campus], item2);
-        
-        diff_penalty += groups[item2.group_id].add_penalty(upper_num[item1.year - 1][item1.gender][item1.campus],
-                                                   lower_num[item1.year - 1][item1.gender][item1.campus], item1);
+    //関係値の差分を計算
+    double diff_relation = 0;
+    for (size_t i = 0; i < Item::item_r_size; ++i) {
+        diff_relation += get_each_group_item_relation(item1, g2.get_id())[i];
+        diff_relation += get_each_group_item_relation(item2, g1.get_id())[i];
+        diff_relation -= get_each_group_item_relation(item1, g1.get_id())[i];
+        diff_relation -= get_each_group_item_relation(item2, g2.get_id())[i];
 
-
-        diff_penalty -= 4;*/
-        diff_penalty += g1.diff_penalty({&item2}, {&item1});
-        diff_penalty += g2.diff_penalty({&item1}, {&item2});
+        diff_relation -= item1.item_relations[i][item2.id] * 2;
+    }
+    for (size_t i = 0; i < Item::group_r_size; ++i) {
+        diff_relation += item1.group_relations[i][g2.get_id()];
+        diff_relation += item2.group_relations[i][g1.get_id()];
+        diff_relation -= item1.group_relations[i][g1.get_id()];
+        diff_relation -= item2.group_relations[i][g2.get_id()];
     }
 
-    //点数の平均偏差を算出
-    double diff_deviation = 0;
-    //double next_dispersion = std::pow(deviation, 2);
-    diff_deviation -= std::abs(g1.score_average() - ave) / Group::N;
-    diff_deviation -= std::abs(g2.score_average() - ave) / Group::N;
-    //next_dispersion -= std::pow(g1.score_average() - ave, 2);
-    //next_dispersion -= std::pow(g2.score_average() - ave, 2);
+    //ave_balanceとsum_balanceの差分を計算
+    double diff_ave_balance = 0, diff_sum_balance = 0;
+    for (size_t i = 0; i < Item::v_size; ++i) {
+        diff_ave_balance -= std::abs(g1.value_average(i) - aves[i]) / Group::N;
+        diff_ave_balance -= std::abs(g2.value_average(i) - aves[i]) / Group::N;
 
-    double group_ave = (double)(g1.get_sum_score() - item1.score + item2.score) / g1.get_member_num();
-    diff_deviation += std::abs(group_ave - ave) / Group::N;
-    //next_dispersion += std::pow(group_ave - ave, 2);
-    group_ave = (double)(g2.get_sum_score() - item2.score + item1.score) / g2.get_member_num();
-    diff_deviation += std::abs(group_ave - ave) / Group::N;
-    //next_dispersion += std::pow(group_ave - ave, 2);
+        double group_ave = (double)(g1.get_sum_values()[i] - item1.values[i] + item2.values[i]) / g1.get_member_num();
+        diff_ave_balance += std::abs(group_ave - aves[i]) / Group::N;
+        group_ave = (double)(g2.get_sum_values()[i] - item2.values[i] + item1.values[i]) / g2.get_member_num();
+        diff_ave_balance += std::abs(group_ave - aves[i]) / Group::N;
 
-    //double next_deviation = std::sqrt(next_dispersion);
+        diff_sum_balance -= std::abs(g1.get_sum_values()[i] - sum_values[i] / Group::N);
+        diff_sum_balance -= std::abs(g2.get_sum_values()[i] - sum_values[i] / Group::N);
+        diff_sum_balance += std::abs(g1.get_sum_values()[i] - item1.values[i] + item2.values[i] - sum_values[i] / Group::N);
+        diff_sum_balance += std::abs(g2.get_sum_values()[i] - item2.values[i] + item1.values[i] - sum_values[i] / Group::N);
+    }
 
     //計算誤差の対策
-    if (std::abs(diff_deviation) < 1e-10 && diff_relation == 0 && diff_penalty == 0, sd == 0) {
-        return {0, 0, 0, 0};
-    }
-
-    return {diff_relation, diff_penalty, diff_deviation, sd};
+    if (std::abs(diff_penalty) < 1e-10) diff_penalty = 0;
+    if (std::abs(diff_relation) < 1e-10) diff_relation = 0;
+    if (std::abs(diff_ave_balance) < 1e-10) diff_ave_balance = 0;
+    if (std::abs(diff_sum_balance) < 1e-10) diff_sum_balance = 0;
+    
+    return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance};
 }
 
 void Solution::move_processing(const std::vector<MoveItem>& move_items, const std::tuple<int, int, double, int>& diff) {
@@ -294,11 +343,11 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
     set_eval_value(relation + diff_relation, penalty + diff_penalty, deviation + diff_deviation, balance + diff_balance);
     for (const auto& mi : move_items) {
         for (int i = 0; i < Item::N; ++i) {
-            if (group_relation[i][mi.source] && mi.source < Group::N) {
-                group_relation[i][mi.source].value() -= (mi.item.relations[i] - mi.item.times[i]);
+            if (each_group_item_relation[i][mi.source] && mi.source < Group::N) {
+                each_group_item_relation[i][mi.source].value() -= (mi.item.relations[i] - mi.item.times[i]);
             }
-            if (group_relation[i][mi.destination] && mi.destination < Group::N) {
-                group_relation[i][mi.destination].value() += (mi.item.relations[i] - mi.item.times[i]);
+            if (each_group_item_relation[i][mi.destination] && mi.destination < Group::N) {
+                each_group_item_relation[i][mi.destination].value() += (mi.item.relations[i] - mi.item.times[i]);
             }
             if (group_score_distance[i][mi.source] && mi.source < Group::N) {
                 group_score_distance[i][mi.source].value() -= mi.item.score_distances[i];
@@ -330,12 +379,12 @@ bool Solution::shift_check(Item& item, int group_id) {
         move_processing(move_items, diff);
         //値の更新
         /*set_eval_value(relation + diff_relation, penalty + diff_penalty, deviation + diff_deviation);
-        for (int i = 0; i < Item::N; i++) {
-            if (group_relation[i][item.group_id]) {
-                group_relation[i][item.group_id].value() -= (item.relations[i] - item.times[i]);
+        for (int i = 0; i < Item::N; ++i) {
+            if (each_group_item_relation[i][item.group_id]) {
+                each_group_item_relation[i][item.group_id].value() -= (item.relations[i] - item.times[i]);
             }
-            if (group_relation[i][group_id]) {
-                group_relation[i][group_id].value() += (item.relations[i] - item.times[i]);
+            if (each_group_item_relation[i][group_id]) {
+                each_group_item_relation[i][group_id].value() += (item.relations[i] - item.times[i]);
             }
         }
 
@@ -365,13 +414,13 @@ bool Solution::swap_check(Item& item1, Item& item2) {
 
         //値の更新
         set_eval_value(relation + diff_relation, penalty + diff_penalty, deviation + diff_deviation);
-        for (int i = 0; i < Item::N; i++) {
+        for (int i = 0; i < Item::N; ++i) {
             //リーダー避け(スマートな方法に改善したい)
-            if (group_relation[i][group_id1]) {
-                group_relation[i][group_id1].value() -= (item1.relations[i] - item1.times[i]);
-                group_relation[i][group_id1].value() += (item2.relations[i] - item2.times[i]);
-                group_relation[i][group_id2].value() -= (item2.relations[i] - item2.times[i]);
-                group_relation[i][group_id2].value() += (item1.relations[i] - item1.times[i]);
+            if (each_group_item_relation[i][group_id1]) {
+                each_group_item_relation[i][group_id1].value() -= (item1.relations[i] - item1.times[i]);
+                each_group_item_relation[i][group_id1].value() += (item2.relations[i] - item2.times[i]);
+                each_group_item_relation[i][group_id2].value() -= (item2.relations[i] - item2.times[i]);
+                each_group_item_relation[i][group_id2].value() += (item1.relations[i] - item1.times[i]);
             }
         }
 
@@ -426,7 +475,7 @@ std::ostream& operator<<(std::ostream& out, const Solution& s) {
             auto [group_begin, group_end] = get_groups_range();
             for (auto citr = group_begin; citr != group_end; ++citr) {
                 double value;
-                if ((value = citr->group_relation(items[id]) / (double)citr->get_member_num()) > max_value) {
+                if ((value = citr->each_group_item_relation(items[id]) / (double)citr->get_member_num()) > max_value) {
                     max_value = value;
                     max_group_id = citr->get_id();
                 }
@@ -469,17 +518,17 @@ void Solution::score_greedy(vector<Item>& items) {
         return a.score > b.score;
     });
     vector<vector<int>> blocks(Item::N / Group::N + 1);
-    for (int i = 0; i < Item::N; i++) {
+    for (int i = 0; i < Item::N; ++i) {
         blocks[i / Group::N].push_back(items[i].id);
     }
     std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
         return a.id < b.id;
     });
-    for (int i = 0; i < blocks.size(); i++) {
+    for (int i = 0; i < blocks.size(); ++i) {
         if (i % 4 == 1 || i % 4 == 2) {
             std::reverse(blocks[i].begin(), blocks[i].end());
         }
-        for (int j = 0; j < blocks[i].size(); j++) {
+        for (int j = 0; j < blocks[i].size(); ++j) {
             if (items[blocks[i][j]].is_leader && items[blocks[i][j]].group_id != j) {
                 std::swap(blocks[i][j], blocks[i][items[blocks[i][j]].group_id]);
             }
@@ -487,7 +536,7 @@ void Solution::score_greedy(vector<Item>& items) {
     }
 
     for (auto&& block : blocks) {
-        for (int i = 0; i < block.size(); i++) {
+        for (int i = 0; i < block.size(); ++i) {
             groups[i].add_member(items[block[i]]);
         }
     }
