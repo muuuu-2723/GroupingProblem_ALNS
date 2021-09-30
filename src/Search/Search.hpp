@@ -5,25 +5,30 @@
 #include <vector>
 #include <memory>
 
-struct Person;
+struct Item;
 class Solution;
 class Destroy;
 
+/*近傍と構築法の基底クラス*/
 class Search {
 protected:
-    std::vector<Person>& persons;
-    Weight weight;
+    const std::vector<Item>& items;                             //グループ分けするアイテムの集合
+    Weight weight;                                              //選択確率を決める重み
 public:
-    Search(std::vector<Person>& persons, int param) : persons(persons), weight(param) {}
+    /*コンストラクタ*/
+    Search(const std::vector<Item>& items, int param) : items(items), weight(param) {}
+    /*新たな解を生成*/
     virtual Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) = 0;
     virtual void update_weight(double score) final;
     virtual double get_weight() const final;
 };
 
+/*重みの更新*/
 inline void Search::update_weight(double score) {
     weight.update(score);
 }
 
+/*重みの取得*/
 inline double Search::get_weight() const {
     return weight.get_weight();
 }

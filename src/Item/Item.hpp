@@ -3,6 +3,7 @@
 
 #include <vector>
 
+/*グループ分けするアイテム*/
 struct Item {
     static size_t N;                                    //アイテム数
     static size_t w_size;                               //weightの種類数

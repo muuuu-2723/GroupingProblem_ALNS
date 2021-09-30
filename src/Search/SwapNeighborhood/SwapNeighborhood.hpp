@@ -4,17 +4,15 @@
 #include <Search.hpp>
 #include <vector>
 
-struct Person;
+struct Item;
 class Solution;
 class Destroy;
 
+/*swapãﬂñT*/
 class SwapNeighborhood : public Search {
-private:
-    std::vector<int> shuffle_member_ids1;
-    std::vector<int> shuffle_member_ids2;
 public:
-    SwapNeighborhood(std::vector<Person>& persons, int param);
-    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;
+    using Search::Search;
+    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;   //swapãﬂñTÇíTçı
 };
 
 #endif

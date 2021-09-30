@@ -19,12 +19,14 @@
 
 using std::vector;
 
+/*コンストラクタ*/
 Solution::Solution(vector<Item>& items) {
-    Group::set_upper_and_lower(items);
+    vector<double> upper, vector<double> lower;
+    Group::set_upper_and_lower(upper, lower);
     penalty_parameter = 10000;
     relation_parameter = 40;
-    score_parameter = 80;
-    balance_parameter = 1;
+    ave_balance_parameter = 80;
+    sum_balance_parameter = 1;
     groups.clear();
     groups.reserve(Group::N + 1);
     for (size_t i = 0; i < Group::N + 1; ++i) {
@@ -69,6 +71,7 @@ Solution::Solution(vector<Item>& items) {
     *this = std::move(rg(*this, des));
 }
 
+/*each_group_item_relationの値を取得, なければ計算して取得*/
 const vector<double>& Solution::get_each_group_item_relation(const Item& item, int group_id) {
     if (group_id >= Group::N) {
         each_group_item_relation[item.id][group_id] = vector<double>(Item::item_r_size, 0);
@@ -89,7 +92,7 @@ int Solution::get_each_group_item_penalty(const Item& item, int group_id) {
     return each_group_item_penalty[item.id][group_id].value();
 }
 
-/*すべての班を評価*/
+/*現在の解(グループ分け)を評価*/
 double Solution::evaluation_all(const vector<Item>& items) {
     penalty = 0;
     relation = 0;
@@ -122,6 +125,7 @@ double Solution::evaluation_all(const vector<Item>& items) {
     return get_eval_value();
 }
 
+/*評価値の変化量を計算*/
 auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple<double, double, double, double> {
     vector<vector<const Item*>> in(Group::N + 1);
     vector<vector<const Item*>> out(Group::N + 1);
@@ -225,7 +229,7 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
     return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance};
 }
 
-/*shift移動時の評価値の変化量*/
+/*shift移動時の評価値の変化量を計算*/
 auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<double, double, double, double> {
     const Group& now_group = groups[item_group_ids[item.id]];
     const Group& next_group = groups[group_id];
@@ -274,7 +278,7 @@ auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<do
     return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance};
 }
 
-/*swap移動時の評価値の変化量*/
+/*swap移動時の評価値の変化量を計算*/
 auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tuple<double, double, double, double> {
     const Group& g1 = groups[item_group_ids[item1.id]];
     const Group& g2 = groups[item_group_ids[item2.id]];
@@ -338,25 +342,34 @@ auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tup
     return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance};
 }
 
-void Solution::move_processing(const std::vector<MoveItem>& move_items, const std::tuple<int, int, double, int>& diff) {
-    auto [diff_relation, diff_penalty, diff_deviation, diff_balance] = diff;
-    set_eval_value(relation + diff_relation, penalty + diff_penalty, deviation + diff_deviation, balance + diff_balance);
+/*移動処理*/
+void Solution::move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double>& diff) {
+    auto [diff_relation, diff_penalty, diff_ave_balance, diff_sum_balance] = diff;
+    set_eval_value(relation + diff_relation, penalty + diff_penalty, ave_balance + diff_ave_balance, sum_balance + diff_sum_balance);
+
+    //値の更新
     for (const auto& mi : move_items) {
         for (int i = 0; i < Item::N; ++i) {
             if (each_group_item_relation[i][mi.source] && mi.source < Group::N) {
-                each_group_item_relation[i][mi.source].value() -= (mi.item.relations[i] - mi.item.times[i]);
+                for (size_t j = 0; j < Item::item_r_size; ++j) {
+                    each_group_item_relation[i][mi.source].value()[j] -= mi.item.item_relations[j][i];
+                }
             }
             if (each_group_item_relation[i][mi.destination] && mi.destination < Group::N) {
-                each_group_item_relation[i][mi.destination].value() += (mi.item.relations[i] - mi.item.times[i]);
+                for (size_t j = 0; j < Item::item_r_size; ++j) {
+                    each_group_item_relation[i][mi.source].value()[j] += mi.item.item_relations[j][i];
+                }
             }
-            if (group_score_distance[i][mi.source] && mi.source < Group::N) {
-                group_score_distance[i][mi.source].value() -= mi.item.score_distances[i];
+            if (each_group_item_penalty[i][mi.source] && mi.source < Group::N) {
+                each_group_item_penalty[i][mi.source].value() -= mi.item.item_penalty[i];
             }
-            if (group_score_distance[i][mi.destination] && mi.destination < Group::N) {
-                group_score_distance[i][mi.destination].value() += mi.item.score_distances[i];
+            if (each_group_item_penalty[i][mi.destination] && mi.destination < Group::N) {
+                each_group_item_penalty[i][mi.destination].value() += mi.item.item_penalty[i];
             }
          }
     }
+
+    //移動
     for (const auto& mi : move_items) {
         //std::cerr << mi.item.id << " ";
         assert(item_group_ids[mi.item.id] == mi.source);
@@ -370,28 +383,12 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
  *shift移動するかどうかを調査し, 必要に応じて移動する
  *移動した場合はtrue, していない場合はfalseを返す
  */
-bool Solution::shift_check(Item& item, int group_id) {
+bool Solution::shift_check(const Item& item, int group_id) {
     auto diff = evaluation_shift(item, group_id);
-    auto [diff_relation, diff_penalty, diff_deviation, diff_balance] = diff;
-    double increace = diff_relation * relation_parameter - diff_penalty * penalty_parameter - diff_deviation * score_parameter + diff_balance * balance_parameter;
+    auto [diff_relation, diff_penalty, diff_ave_balance, diff_sum_balance] = diff;
+    double increace = diff_relation * relation_parameter - diff_penalty * penalty_parameter + diff_ave_balance * ave_balance_parameter + diff_sum_balance * sum_balance_parameter;
     if (increace > 0 && std::abs(increace) > 1e-10) {
-        vector<MoveItem> move_items = {MoveItem(item, item_group_ids[item.id], group_id)};
-        move_processing(move_items, diff);
-        //値の更新
-        /*set_eval_value(relation + diff_relation, penalty + diff_penalty, deviation + diff_deviation);
-        for (int i = 0; i < Item::N; ++i) {
-            if (each_group_item_relation[i][item.group_id]) {
-                each_group_item_relation[i][item.group_id].value() -= (item.relations[i] - item.times[i]);
-            }
-            if (each_group_item_relation[i][group_id]) {
-                each_group_item_relation[i][group_id].value() += (item.relations[i] - item.times[i]);
-            }
-        }
-
-        //移動
-        groups[item.group_id].erase_member(item);
-        groups[group_id].add_member(item);*/
-        
+        move_processing({MoveItem(item, item_group_ids[item.id], group_id)}, diff);
         return true;
     }
     return false;
@@ -401,43 +398,26 @@ bool Solution::shift_check(Item& item, int group_id) {
  *swap移動するかどうかを調査し, 必要に応じて移動する
  *移動した場合はtrue, していない場合はfalseを返す
  */
-bool Solution::swap_check(Item& item1, Item& item2) {
+bool Solution::swap_check(const Item& item1, const Item& item2) {
     auto diff = evaluation_swap(item1, item2);
-    auto [diff_relation, diff_penalty, diff_deviation, diff_balance] = diff;
-    double increace = diff_relation * relation_parameter - diff_penalty * penalty_parameter - diff_deviation * score_parameter + diff_balance * balance_parameter;
+    auto [diff_relation, diff_penalty, diff_ave_balance, diff_sum_balance] = diff;
+    double increace = diff_relation * relation_parameter - diff_penalty * penalty_parameter + diff_ave_balance * ave_balance_parameter + diff_sum_balance * sum_balance_parameter;
     if (increace > 0 && std::abs(increace) > 1e-10) {
         int g1_id = item_group_ids[item1.id], g2_id = item_group_ids[item2.id];
-        vector<MoveItem> move_items = {MoveItem(item1, g1_id, g2_id), MoveItem(item2, g2_id, g1_id)};
-        move_processing(move_items, diff);
-        /*int group_id1 = item1.group_id;
-        int group_id2 = item2.group_id;
-
-        //値の更新
-        set_eval_value(relation + diff_relation, penalty + diff_penalty, deviation + diff_deviation);
-        for (int i = 0; i < Item::N; ++i) {
-            //リーダー避け(スマートな方法に改善したい)
-            if (each_group_item_relation[i][group_id1]) {
-                each_group_item_relation[i][group_id1].value() -= (item1.relations[i] - item1.times[i]);
-                each_group_item_relation[i][group_id1].value() += (item2.relations[i] - item2.times[i]);
-                each_group_item_relation[i][group_id2].value() -= (item2.relations[i] - item2.times[i]);
-                each_group_item_relation[i][group_id2].value() += (item1.relations[i] - item1.times[i]);
-            }
-        }
-
-        //移動
-        groups[group_id1].erase_member(item1);
-        groups[group_id2].erase_member(item2);
-        groups[group_id1].add_member(item2);
-        groups[group_id2].add_member(item1);*/
+        move_processing({MoveItem(item1, g1_id, g2_id), MoveItem(item2, g2_id, g1_id)}, diff);
         return true;
     }
     return false;
 }
 
+/*
+ *move_itemsに基づいて移動するかどうかを調査し, 必要に応じて移動する
+ *移動した場合はtrue, していない場合はfalseを返す
+ */
 bool Solution::move_check(const vector<MoveItem>& move_items) {
     auto diff = evaluation_diff(move_items);
-    auto [diff_relation, diff_penalty, diff_deviation, diff_balance] = diff;
-    double increace = diff_relation * relation_parameter - diff_penalty * penalty_parameter - diff_deviation * score_parameter + diff_balance * balance_parameter;
+    auto [diff_relation, diff_penalty, diff_ave_balance, diff_sum_balance] = diff;
+    double increace = diff_relation * relation_parameter - diff_penalty * penalty_parameter + diff_ave_balance * ave_balance_parameter + diff_sum_balance * sum_balance_parameter;
 
     if (increace > 0) {
         move_processing(move_items, diff);
@@ -446,10 +426,12 @@ bool Solution::move_check(const vector<MoveItem>& move_items) {
     return false;
 }
 
+/*move_itemsに基づいて移動する*/
 void Solution::move(const vector<MoveItem>& move_items) {
     move_processing(move_items, evaluation_diff(move_items));
 }
 
+/*解の出力用*/
 std::ostream& operator<<(std::ostream& out, const Solution& s) {
     auto [group_begin, group_end] = s.get_groups_range();
     for (auto citr = group_begin; citr != group_end; ++citr) {
@@ -458,86 +440,3 @@ std::ostream& operator<<(std::ostream& out, const Solution& s) {
     out << "評価値:" << s.get_eval_value() << std::endl;
     return out;
 }
-
-/*void Solution::relation_greedy(vector<Item>& items) {
-    for (auto&& item : items) {
-        if (item.is_leader) {
-            groups[item.group_id].add_member(item);
-        }
-    }
-    vector<int> shuffle_ids(items.size());
-    std::iota(shuffle_ids.begin(), shuffle_ids.end(), 0);
-    MyRandom::shuffle(shuffle_ids);
-    for (const auto& id : shuffle_ids) {
-        if (!items[id].is_leader) {
-            int max_group_id;
-            double max_value = -DBL_MAX;
-            auto [group_begin, group_end] = get_groups_range();
-            for (auto citr = group_begin; citr != group_end; ++citr) {
-                double value;
-                if ((value = citr->each_group_item_relation(items[id]) / (double)citr->get_member_num()) > max_value) {
-                    max_value = value;
-                    max_group_id = citr->get_id();
-                }
-            }
-            groups[max_group_id].add_member(items[id]);
-        }
-    }
-}
-
-void Solution::penalty_greedy(vector<Item>& items) {
-    for (auto&& item : items) {
-        if (item.is_leader) {
-            groups[item.group_id].add_member(item);
-        }
-    }
-    vector<int> shuffle_ids(items.size());
-    std::iota(shuffle_ids.begin(), shuffle_ids.end(), 0);
-    MyRandom::shuffle(shuffle_ids);
-    for (const auto& id : shuffle_ids) {
-        Item& item = items[id];
-        if (!item.is_leader) {
-            int min_group_id;
-            int min_penalty = INT_MAX;
-            auto [group_begin, group_end] = get_groups_range();
-            for (auto citr = group_begin; citr != group_end; ++citr) {
-                int diff_penalty = citr->diff_penalty({&item}, {});
-                if (diff_penalty < min_penalty) {
-                    min_group_id = citr->get_id();
-                    min_penalty = diff_penalty;
-                }
-            }
-            //std::cerr << min_penalty << std::endl;
-            groups[min_group_id].add_member(item);
-        }
-    }
-}
-
-void Solution::score_greedy(vector<Item>& items) {
-    std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
-        return a.score > b.score;
-    });
-    vector<vector<int>> blocks(Item::N / Group::N + 1);
-    for (int i = 0; i < Item::N; ++i) {
-        blocks[i / Group::N].push_back(items[i].id);
-    }
-    std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
-        return a.id < b.id;
-    });
-    for (int i = 0; i < blocks.size(); ++i) {
-        if (i % 4 == 1 || i % 4 == 2) {
-            std::reverse(blocks[i].begin(), blocks[i].end());
-        }
-        for (int j = 0; j < blocks[i].size(); ++j) {
-            if (items[blocks[i][j]].is_leader && items[blocks[i][j]].group_id != j) {
-                std::swap(blocks[i][j], blocks[i][items[blocks[i][j]].group_id]);
-            }
-        }
-    }
-
-    for (auto&& block : blocks) {
-        for (int i = 0; i < block.size(); ++i) {
-            groups[i].add_member(items[block[i]]);
-        }
-    }
-}*/

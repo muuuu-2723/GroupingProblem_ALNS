@@ -13,20 +13,11 @@ using std::list;
 using std::cerr;
 using std::endl;
 
-/*namespace std {
-    template<>
-    class hash<tuple<int, int, int>> {
-    public:
-        size_t operator()(const tuple<int, int, int>& t) const {
-            return hash<int>()(get<0>(t)) ^ hash<int>()(get<1>(t)) ^ hash<int>()(get<2>(t));
-        }
-    };
-}*/
-
 int Group::N = 0;
 vector<double> Group::upper_weight;
 vector<double> Group::lower_weight;
 
+/*コンストラクタ*/
 Group::Group(int group_id) {
     id = group_id;
     member_num = 0;
@@ -34,6 +25,7 @@ Group::Group(int group_id) {
     sum_values.assign(Item::v_size, 0);
 }
 
+/*メンバー指定のコンストラクタ*/
 Group::Group(Item& leader, vector<Item>& members, int group_id)
 : Group(group_id) {
     add_member(leader);
@@ -42,7 +34,7 @@ Group::Group(Item& leader, vector<Item>& members, int group_id)
     }
 }
 
-/*メンバー1人を削除*/
+/*所属するアイテムの削除*/
 void Group::erase_member(const Item& item) {
     if (item.predefined_group != -1) {
         cerr << "erase_error:リーダー削除, id = " << item.id << endl;
@@ -65,7 +57,7 @@ void Group::erase_member(const Item& item) {
     member_id.erase(itr);
 }
 
-/*1人をメンバーに加える*/
+/*新たにアイテムを追加する*/
 void Group::add_member(const Item& item) {
     member_id.push_back(item.id);
     member_num++;
@@ -77,6 +69,7 @@ void Group::add_member(const Item& item) {
     }
 }
 
+/*あるアイテムとこのグループのitem_relation*/
 vector<double> Group::item_relation(const Item& item) const {
     vector<double> result(Item::item_r_size, 0);
     for (size_t i = 0; i < Item::item_r_size; ++i) {
@@ -87,6 +80,7 @@ vector<double> Group::item_relation(const Item& item) const {
     return std::move(result);
 }
 
+/*このグループのitem_relationの合計*/
 vector<double> Group::sum_item_relation(const vector<Item>& items) const {
     vector<double> result(Item::item_r_size, 0);
     for (size_t i = 0; i < Item::item_r_size; ++i) {
@@ -99,6 +93,7 @@ vector<double> Group::sum_item_relation(const vector<Item>& items) const {
     return std::move(result);
 }
 
+/*このグループのgroup_relationの合計*/
 vector<double> Group::sum_group_relation(const vector<Item>& items) const {
     vector<double> result(Item::group_r_size, 0);
     for (size_t i = 0; i < Item::group_r_size; ++i) {
@@ -109,6 +104,10 @@ vector<double> Group::sum_group_relation(const vector<Item>& items) const {
     return std::move(result);
 }
 
+/*
+ *weight_penaltyの変化量
+ *addのアイテム群を加え, eraseのアイテム群を削除したときのweight_penaltyの変化量
+ */
 double Group::diff_weight_penalty(const vector<const Item*>& add, const vector<const Item*>& erase) const {
     double penalty = 0;
     for (size_t i = 0; i < Item::w_size; ++i) {
@@ -131,6 +130,7 @@ double Group::diff_weight_penalty(const vector<const Item*>& add, const vector<c
     return penalty;
 }
 
+/*このグループのweight_penaltyを計算*/
 double Group::calc_weight_penalty() const {
     double penalty = 0;
     for (size_t i = 0; i < Item::w_size; ++i) {
@@ -145,6 +145,7 @@ double Group::calc_weight_penalty() const {
     return penalty;
 }
 
+/*あるアイテムとこのグループのitem_penalty*/
 int Group::calc_item_penalty(const Item& item) const {
     int penalty = 0;
     for (const auto& m_id : member_id) {
@@ -153,6 +154,7 @@ int Group::calc_item_penalty(const Item& item) const {
     return penalty;
 }
 
+/*このグループのitem_penaltyを計算*/
 int Group::calc_sum_item_penalty(const vector<Item>& items) const {
     int penalty = 0;
     for (auto itr1 = member_id.begin(), end = member_id.end(); itr1 != end; ++itr1) {
@@ -163,6 +165,7 @@ int Group::calc_sum_item_penalty(const vector<Item>& items) const {
     return penalty;
 }
 
+/*このグループのgroup_penaltyを計算*/
 int Group::calc_group_penalty(const vector<Item>& items) const {
     int penalty;
     for (const auto& m_id : member_id) {
@@ -171,6 +174,7 @@ int Group::calc_group_penalty(const vector<Item>& items) const {
     return penalty;
 }
 
+/*weightの上下限を設定*/
 void Group::set_upper_and_lower(const vector<double>& upper, const vector<double>& lower) {
     if (upper.size() != Item::w_size || lower.size() != Item::w_size) {
         std::cerr << "weightの上下限のサイズエラー" << std::endl;
@@ -180,6 +184,7 @@ void Group::set_upper_and_lower(const vector<double>& upper, const vector<double
     lower_weight = lower;
 }
 
+/*グループの出力用*/
 std::ostream& operator<<(std::ostream& out, const Group& g) {
     out << std::setw((int)std::log10(Group::N) + 1) << g.id << ":";
     for (const auto& member : g.member_id) {

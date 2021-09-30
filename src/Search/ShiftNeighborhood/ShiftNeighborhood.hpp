@@ -5,17 +5,15 @@
 #include <vector>
 #include <memory>
 
-struct Person;
+struct Item;
 class Solution;
 class Destroy;
 
+/*shiftãﬂñT*/
 class ShiftNeighborhood : public Search {
-private:
-    std::vector<int> shuffle_member_ids;
-    std::vector<int> shuffle_group_ids;
 public:
-    ShiftNeighborhood(std::vector<Person>& persons, int param);
-    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;
+    using Search::Search;
+    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;   //shiftãﬂñTÇíTçı
 };
 
 #endif
