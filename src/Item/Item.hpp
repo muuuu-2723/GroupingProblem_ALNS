@@ -15,8 +15,8 @@ struct Item {
     size_t predefined_group;                            //あらかじめ決められた固定グループ(-1 : 該当なし)
     std::vector<double> weight;                         //各アイテムの重み(制約条件, ペナルティ用)
     std::vector<double> values;                         //各アイテムがもつ値(目的関数用)
-    std::vector<std::vector<double>> item_relations;    //それぞれのアイテム間の関係値  item_relation[type][item_id]
-    std::vector<std::vector<double>> group_relations;   //アイテムとグループの間の関係値  group_relation[type][group_id]
+    std::vector<std::vector<double>> item_relations;    //それぞれのアイテム間の関係値  item_relation[item_id][type]
+    std::vector<std::vector<double>> group_relations;   //アイテムとグループの間の関係値  group_relation[group_id][type]
     std::vector<int> item_penalty;                      //それぞれのアイテム間のペナルティ値
     std::vector<int> group_penalty;                     //アイテムとグループの間のペナルティ値
 };

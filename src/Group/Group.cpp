@@ -72,9 +72,9 @@ void Group::add_member(const Item& item) {
 /*あるアイテムとこのグループのitem_relation*/
 vector<double> Group::item_relation(const Item& item) const {
     vector<double> result(Item::item_r_size, 0);
-    for (size_t i = 0; i < Item::item_r_size; ++i) {
-        for (const auto& m_id : member_id) {
-            result[i] += item.item_relations[i][m_id];
+    for (const auto& m_id : member_id) {
+        for (size_t i = 0; i < Item::item_r_size; ++i) {
+            result[i] += item.item_relations[m_id][i];
         }
     }
     return std::move(result);
@@ -83,10 +83,10 @@ vector<double> Group::item_relation(const Item& item) const {
 /*このグループのitem_relationの合計*/
 vector<double> Group::sum_item_relation(const vector<Item>& items) const {
     vector<double> result(Item::item_r_size, 0);
-    for (size_t i = 0; i < Item::item_r_size; ++i) {
-        for (auto itr1 = member_id.begin(), end = member_id.end(); itr1 != end; ++itr1) {
-            for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
-                result[i] += items[*itr1].item_relations[i][*itr2];
+    for (auto itr1 = member_id.begin(), end = member_id.end(); itr1 != end; ++itr1) {
+        for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
+            for (size_t i = 0; i < Item::item_r_size; ++i) {
+                result[i] += items[*itr1].item_relations[*itr2][i];
             }
         }
     }
@@ -96,9 +96,9 @@ vector<double> Group::sum_item_relation(const vector<Item>& items) const {
 /*このグループのgroup_relationの合計*/
 vector<double> Group::sum_group_relation(const vector<Item>& items) const {
     vector<double> result(Item::group_r_size, 0);
-    for (size_t i = 0; i < Item::group_r_size; ++i) {
-        for (const auto& m_id : member_id) {
-            result[i] += items[m_id].group_relations[i][id];
+    for (const auto& m_id : member_id) {
+        for (size_t i = 0; i < Item::group_r_size; ++i) {
+            result[i] += items[m_id].group_relations[id][i];
         }
     }
     return std::move(result);

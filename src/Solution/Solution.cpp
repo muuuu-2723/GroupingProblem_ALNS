@@ -172,18 +172,18 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
             diff_relation -= get_each_group_item_relation(mi.item, mi.source)[i];
             diff_relation += get_each_group_item_relation(mi.item, mi.destination)[i];
             for (const auto& out_item : out[mi.destination]) {
-                diff_relation -= mi.item.item_relations[i][out_item->id];
+                diff_relation -= mi.item.item_relations[out_item->id][i];
             }
         }
         for (size_t j = 0; j < Group::N; ++j) {
             for (auto itr1 = out[j].begin(), end = out[j].end(); itr1 != end; ++itr1) {
                 for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
-                    diff_relation += (*itr1)->item_relations[i][(*itr2)->id];
+                    diff_relation += (*itr1)->item_relations[(*itr2)->id][i];
                 }
             }
             for (auto itr1 = in[j].begin(), end = in[j].end(); itr1 != end; ++itr1) {
                 for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
-                    diff_relation += (*itr1)->item_relations[i][(*itr2)->id];
+                    diff_relation += (*itr1)->item_relations[(*itr2)->id][i];
                 }
             }
         }
@@ -191,10 +191,10 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
     for (size_t i = 0; i < Item::group_r_size; ++i) {
         for (size_t j = 0; j < Group::N; ++j) {
             for (const auto& in_item : in[j]) {
-                diff_relation += in_item->group_relations[i][j];
+                diff_relation += in_item->group_relations[j][i];
             }
             for (const auto& out_item : out[j]) {
-                diff_relation -= out_item->group_relations[i][j];
+                diff_relation -= out_item->group_relations[j][i];
             }
         }
     }
@@ -248,8 +248,8 @@ auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<do
         diff_relation += get_each_group_item_relation(item, next_group.get_id())[i];
     }
     for (size_t i = 0; i < Item::group_r_size; ++i) {
-        diff_relation -= item.group_relations[i][now_group.get_id()];
-        diff_relation += item.group_relations[i][next_group.get_id()];
+        diff_relation -= item.group_relations[now_group.get_id()][i];
+        diff_relation += item.group_relations[next_group.get_id()][i];
     }
 
     //ave_balance‚Æsum_balance‚Ì·•ª‚ðŒvŽZ
@@ -307,13 +307,13 @@ auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tup
         diff_relation -= get_each_group_item_relation(item1, g1.get_id())[i];
         diff_relation -= get_each_group_item_relation(item2, g2.get_id())[i];
 
-        diff_relation -= item1.item_relations[i][item2.id] * 2;
+        diff_relation -= item1.item_relations[item2.id][i] * 2;
     }
     for (size_t i = 0; i < Item::group_r_size; ++i) {
-        diff_relation += item1.group_relations[i][g2.get_id()];
-        diff_relation += item2.group_relations[i][g1.get_id()];
-        diff_relation -= item1.group_relations[i][g1.get_id()];
-        diff_relation -= item2.group_relations[i][g2.get_id()];
+        diff_relation += item1.group_relations[g2.get_id()][i];
+        diff_relation += item2.group_relations[g1.get_id()][i];
+        diff_relation -= item1.group_relations[g1.get_id()][i];
+        diff_relation -= item2.group_relations[g2.get_id()][i];
     }
 
     //ave_balance‚Æsum_balance‚Ì·•ª‚ðŒvŽZ
@@ -352,12 +352,12 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
         for (int i = 0; i < Item::N; ++i) {
             if (each_group_item_relation[i][mi.source] && mi.source < Group::N) {
                 for (size_t j = 0; j < Item::item_r_size; ++j) {
-                    each_group_item_relation[i][mi.source].value()[j] -= mi.item.item_relations[j][i];
+                    each_group_item_relation[i][mi.source].value()[j] -= mi.item.item_relations[i][j];
                 }
             }
             if (each_group_item_relation[i][mi.destination] && mi.destination < Group::N) {
                 for (size_t j = 0; j < Item::item_r_size; ++j) {
-                    each_group_item_relation[i][mi.source].value()[j] += mi.item.item_relations[j][i];
+                    each_group_item_relation[i][mi.source].value()[j] += mi.item.item_relations[i][j];
                 }
             }
             if (each_group_item_penalty[i][mi.source] && mi.source < Group::N) {
