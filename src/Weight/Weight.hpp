@@ -5,17 +5,19 @@ class Weight {
 private:
     static double lambda;
     double weight;
-    int cnt;
     int param;
-    double pow_lambda;
 public:
-    Weight(int param) : weight(1), cnt(0), param(param), pow_lambda(1) {}
+    Weight(double init_weight, int param) : weight(init_weight), param(param) {}
     void update(double score);
     double get_weight() const;
 };
 
 inline double Weight::get_weight() const {
     return weight;
+}
+
+inline void Weight::update(double score) {
+    weight = lambda * weight + (1 - lambda) * score / param;
 }
 
 #endif

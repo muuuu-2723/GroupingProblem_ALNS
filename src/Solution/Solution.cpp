@@ -65,7 +65,7 @@ Solution::Solution(vector<Item>& items) {
 
     //penalty_greedy(items);
     //score_greedy(items);
-    RelationGreedy rg(items, 1);
+    RelationGreedy rg(items, 1, 1);
     //PenaltyGreedy rg(items, 1);
     std::shared_ptr<Destroy> des = std::make_shared<Destroy>(items, 1);
     *this = std::move(rg(*this, des));

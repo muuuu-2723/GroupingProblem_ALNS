@@ -1,7 +1,7 @@
 #include "NeighborhoodGraph.hpp"
 #include <Search.hpp>
 #include <Solution.hpp>
-#include <Person.hpp>
+#include <Item.hpp>
 #include <Group.hpp>
 #include <Destroy.hpp>
 #include <vector>
@@ -15,20 +15,20 @@
 
 using std::vector;
 
-NeighborhoodGraph::NeighborhoodGraph(vector<Person>& persons, int param) : Search(persons, param) {
-    vertices.reserve(Person::N + Group::N);
+NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weight, int param) : Search(items,init_weight , param) {
+    vertices.reserve(Item::N + Group::N);
     int idx = 0;
-    for (auto&& person : persons) {
-        if (!person.is_leader) {
-            vertices.push_back(Vertex(idx++, person));
+    for (auto&& item : items) {
+        if (item.predefined_group == -1) {
+            vertices.push_back(Vertex(idx++, item));
         }
     }
-    dummy_persons.reserve(Group::N);
-    for (int i = 0; i < Group::N; ++i) {
-        Person p;
-        p.id = Person::N + i;
-        dummy_persons.push_back(p);
-        vertices.push_back(Vertex(idx++, dummy_persons[i]));
+    dummy_items.reserve(Group::N);
+    for (size_t i = 0; i < Group::N; ++i) {
+        Item item;
+        item.id = Item::N + i;
+        dummy_items.push_back(item);
+        vertices.push_back(Vertex(idx++, dummy_items[i]));
     }
 }
 
@@ -36,55 +36,91 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
     graph.assign(vertices.size(), vector<Edge>());
     for (const auto& s : vertices) {
         for (const auto& t : vertices) {
-            if (s.person.id >= Person::N && t.person.id >= Person::N) continue;
-            int s_group_id = s.person.id < Person::N ? solution.get_group_id(s.person) : s.person.id - Person::N;
-            int t_group_id = t.person.id < Person::N ? solution.get_group_id(t.person) : t.person.id - Person::N;
+            if (s.item.id >= Item::N && t.item.id >= Item::N) continue;
+            int s_group_id = s.item.id < Item::N ? solution.get_group_id(s.item) : s.item.id - Item::N;
+            int t_group_id = t.item.id < Item::N ? solution.get_group_id(t.item) : t.item.id - Item::N;
 
             if (s_group_id != t_group_id) {
-                const Group& s_group = solution.get_groups()[s_group_id];
                 const Group& t_group = solution.get_groups()[t_group_id];
-                if (s.person.id >= Person::N) {
-                    if (t_group.diff_penalty({}, {&t.person}) == 0) {
+                if (s.item.id >= Item::N) {
+                    double penalty = t_group.diff_weight_penalty({}, {&t.item});
+                    penalty -= t.item.group_penalty[t_group_id];
+                    penalty -= solution.get_each_group_item_penalty(t.item, t_group_id);
+                    if (penalty <= 0 || std::abs(penalty) < 1e-10) {
                         double weight = 0;
-                        weight -= solution.get_group_relation(t.person, t_group_id) * solution.get_relation_parameter();
-                        //weight -= t_group.group_relation(t.person) * solution.get_relation_parameter();
-                        weight -= solution.get_group_score_distance(t.person, t_group_id) * solution.get_balance_parameter();
-                        //weight -= t_group.group_score_distance(t.person) * solution.get_balance_parameter();
-                        double new_ave = (double)(t_group.get_sum_score() - t.person.score) / (t_group.get_member_num() - 1);
-                        weight += std::abs(solution.get_ave() - t_group.score_average()) / Group::N * solution.get_score_parameter();
-                        weight -= std::abs(solution.get_ave() - new_ave) / Group::N * solution.get_score_parameter();
-                        graph[s.id].push_back(Edge(t.id, -weight));
+                        for (auto&& r : solution.get_each_group_item_relation(t.item, t_group_id)) {
+                            weight -= r * solution.get_relation_parameter();
+                        }
+                        for (auto&& r : t.item.group_relations[t_group_id]) {
+                            weight -= r * solution.get_relation_parameter();
+                        }
+                        for (size_t i = 0; i < Item::v_size; ++i) {
+                            weight -= std::abs(solution.get_ave()[i] - t_group.value_average(i)) / Group::N * solution.get_ave_balance_parameter();
+                            double new_ave = (t_group.get_sum_values()[i] - t.item.values[i]) / (t_group.get_member_num() - 1);
+                            weight += std::abs(solution.get_ave()[i] - new_ave) / Group::N * solution.get_ave_balance_parameter();
+
+                            weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
+                            weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] - t.item.values[i])) * solution.get_sum_balance_parameter();
+                        }
+                        graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
                     }
                 }
-                else if (t.person.id >= Person::N) {
-                    if (t_group.diff_penalty({&s.person}, {}) == 0) {
+                else if (t.item.id >= Item::N) {
+                    double penalty = t_group.diff_weight_penalty({&s.item}, {});
+                    penalty += s.item.group_penalty[t_group_id];
+                    penalty += solution.get_each_group_item_penalty(s.item, t_group_id);
+                    if (penalty <= 0 || std::abs(penalty) < 1e-10) {
                         double weight = 0;
-                        weight += solution.get_group_relation(s.person, t_group_id) * solution.get_relation_parameter();
-                        //weight += t_group.group_relation(s.person) * solution.get_relation_parameter();
-                        weight += solution.get_group_score_distance(s.person, t_group_id) * solution.get_balance_parameter();
-                        //weight += t_group.group_score_distance(s.person) * solution.get_balance_parameter();
-                        double new_ave = (double)(t_group.get_sum_score() + s.person.score) / (t_group.get_member_num() + 1);
-                        weight += std::abs(solution.get_ave() - t_group.score_average()) / Group::N * solution.get_score_parameter();
-                        weight -= std::abs(solution.get_ave() - new_ave) / Group::N * solution.get_score_parameter();
-                        graph[s.id].push_back(Edge(t.id, -weight));
+                        for (auto&& r : solution.get_each_group_item_relation(s.item, t_group_id)) {
+                            weight += r * solution.get_relation_parameter();
+                        }
+                        for (auto&& r : s.item.group_relations[t_group_id]) {
+                            weight += r * solution.get_relation_parameter();
+                        }
+                        for (size_t i = 0; i < Item::v_size; ++i) {
+                            weight -= std::abs(solution.get_ave()[i] - t_group.value_average(i)) / Group::N * solution.get_ave_balance_parameter();
+                            double new_ave = (t_group.get_sum_values()[i] + s.item.values[i]) / (t_group.get_member_num() + 1);
+                            weight += std::abs(solution.get_ave()[i] - new_ave) / Group::N * solution.get_ave_balance_parameter();
+
+                            weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
+                            weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] + s.item.values[i])) * solution.get_sum_balance_parameter();
+                        }
+                        graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
                     }
                 }
-                else if (t_group.diff_penalty({&s.person}, {&t.person}) == 0) {
-                    double weight = 0;
-                    weight += solution.get_group_relation(s.person, t_group_id) * solution.get_relation_parameter();
-                    //weight += t_group.group_relation(s.person) * solution.get_relation_parameter();
-                    weight += solution.get_group_score_distance(s.person, t_group_id) * solution.get_balance_parameter();
-                    //weight += t_group.group_score_distance(s.person) * solution.get_balance_parameter();
-                    weight -= solution.get_group_relation(t.person, t_group_id) * solution.get_relation_parameter();
-                    //weight -= t_group.group_relation(t.person) * solution.get_relation_parameter();
-                    weight -= solution.get_group_score_distance(t.person, t_group_id) * solution.get_balance_parameter();
-                    //weight -= t_group.group_score_distance(t.person) * solution.get_balance_parameter();
-                    weight -= (s.person.relations[t.person.id] - s.person.times[t.person.id]) * solution.get_relation_parameter();
-                    weight -= s.person.score_distances[t.person.id] * solution.get_balance_parameter();
-                    double new_ave = (double)(t_group.get_sum_score() - t.person.score + s.person.score) / t_group.get_member_num();
-                    weight += std::abs(solution.get_ave() - t_group.score_average()) / Group::N * solution.get_score_parameter();
-                    weight -= std::abs(solution.get_ave() - new_ave) / Group::N * solution.get_score_parameter();
-                    graph[s.id].push_back(Edge(t.id, -weight));
+                else {
+                    double penalty = t_group.diff_weight_penalty({&s.item}, {&t.item});
+                    penalty += s.item.group_penalty[t_group_id] - t.item.group_penalty[t_group_id];
+                    penalty += solution.get_each_group_item_penalty(s.item, t_group_id) - solution.get_each_group_item_penalty(t.item, t_group_id) - s.item.item_penalty[t.item.id];
+                    if (penalty <= 0 || std::abs(penalty) < 1e-10) {
+                        double weight = 0;
+                        for (auto&& r : solution.get_each_group_item_relation(t.item, t_group_id)) {
+                            weight -= r * solution.get_relation_parameter();
+                        }
+                        for (auto&& r : solution.get_each_group_item_relation(s.item, t_group_id)) {
+                            weight += r * solution.get_relation_parameter();
+                        }
+                        for (size_t i = 0; i < Item::item_r_size; ++i) {
+                            weight -= s.item.item_relations[t.item.id][i];
+                        }
+
+                        for (auto&& r : t.item.group_relations[t_group_id]) {
+                            weight -= r * solution.get_relation_parameter();
+                        }
+                        for (auto&& r : s.item.group_relations[t_group_id]) {
+                            weight += r * solution.get_relation_parameter();
+                        }
+
+                        for (size_t i = 0; i < Item::v_size; ++i) {
+                            weight -= std::abs(solution.get_ave()[i] - t_group.value_average(i)) / Group::N * solution.get_ave_balance_parameter();
+                            double new_ave = (t_group.get_sum_values()[i] + s.item.values[i] - t.item.values[i]) / t_group.get_member_num();
+                            weight += std::abs(solution.get_ave()[i] - new_ave) / Group::N * solution.get_ave_balance_parameter();
+
+                            weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
+                            weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] + s.item.values[i] - t.item.values[i])) * solution.get_sum_balance_parameter();
+                        }
+                        graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
+                    }
                 }
             }
         }
@@ -146,27 +182,27 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
         }
         cycle.push_back(v1);
 
-        vector<MovePerson> move_persons;
-        move_persons.reserve(l + 1);
+        vector<MoveItem> move_items;
+        move_items.reserve(l + 1);
         bool is_duplicated = false;
         unsigned int flag = 0;
         for (auto ritr = cycle.rbegin(), rend = --cycle.rend(); ritr != rend; ++ritr) {
-            Person& p = vertices[*ritr].person;
+            const Item& item = vertices[*ritr].item;
             int now_group_id;
-            if (p.id < Person::N) {
-                now_group_id = neighborhood_solution.get_group_id(p);
-                Person& next_p = vertices[*std::next(ritr)].person;
+            if (item.id < Item::N) {
+                now_group_id = neighborhood_solution.get_group_id(item);
+                const Item& next_item = vertices[*std::next(ritr)].item;
                 int next_group_id;
-                if (next_p.id < Person::N) {
-                    next_group_id = neighborhood_solution.get_group_id(next_p);
+                if (next_item.id < Item::N) {
+                    next_group_id = neighborhood_solution.get_group_id(next_item);
                 }
                 else {
-                    next_group_id = next_p.id - Person::N;
+                    next_group_id = next_item.id - Item::N;
                 }
-                move_persons.push_back(MovePerson(p, now_group_id, next_group_id));
+                move_items.push_back(MoveItem(item, now_group_id, next_group_id));
             }
             else {
-                now_group_id = p.id - Person::N;
+                now_group_id = item.id - Item::N;
             }
 
             if (!(flag & (1<<now_group_id))) {
@@ -180,7 +216,7 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
         if (is_duplicated) continue;
 
         //std::cerr << sp.first << std::endl;
-        if (neighborhood_solution.move_check(move_persons)) break;
+        if (neighborhood_solution.move_check(move_items)) break;
     }
     return neighborhood_solution;
 }

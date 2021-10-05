@@ -44,6 +44,7 @@ public:
     Solution(std::vector<Item>& items);                                                                                         //コンストラクタ
     double get_eval_value() const;                                                                                              //評価値を取得
     const std::vector<double>& get_ave() const;                                                                                 //valueのアイテム単位での平均を取得
+    const std::vector<double>& get_sum_values() const;                                                                          //valueの合計を取得
     const std::vector<double>& get_each_group_item_relation(const Item& item, int group_id);                                    //each_group_item_relationの値を取得, なければ計算して取得
     int get_each_group_item_penalty(const Item& item, int group_id);                                                            //each_group_item_penaltyの値を取得, なければ計算して取得
     int get_group_id(const Item& item) const;                                                                                   //アイテムの所属するグループidを取得
@@ -54,8 +55,8 @@ public:
     auto evaluation_diff(const std::vector<MoveItem>& move_items) -> std::tuple<double, double, double, double>;                //評価値の変化量を計算
     auto evaluation_shift(const Item& item, int group_id) -> std::tuple<double, double, double, double>;                        //shift移動時の評価値の変化量を計算
     auto evaluation_swap(const Item& item1, const Item& item2) -> std::tuple<double, double, double, double>;                   //swap移動時の評価値の変化量を計算
-    bool shift_check(const Item& item, int group_id);                                                                                 //shift移動するかどうかを調査し, 必要に応じて移動する
-    bool swap_check(const Item& item1, const Item& item2);                                                                                  //swap移動するかどうかを調査し, 必要に応じて移動する
+    bool shift_check(const Item& item, int group_id);                                                                           //shift移動するかどうかを調査し, 必要に応じて移動する
+    bool swap_check(const Item& item1, const Item& item2);                                                                      //swap移動するかどうかを調査し, 必要に応じて移動する
     bool move_check(const std::vector<MoveItem>& move_items);                                                                   //move_itemsに基づいて移動するかどうかを調査し, 必要に応じて移動する
     void move(const std::vector<MoveItem>& move_items);                                                                         //move_itemsに基づいて移動する
     double get_relation() const;                                                                                                //関係値を取得
@@ -86,6 +87,11 @@ inline double Solution::get_eval_value() const {
 /*valueのアイテム単位での平均を取得*/
 inline const std::vector<double>& Solution::get_ave() const {
     return aves;
+}
+
+/*valueの合計を取得*/
+inline const std::vector<double>& Solution::get_sum_values() const {
+    return sum_values;
 }
 
 /*アイテムの所属するグループidを取得*/

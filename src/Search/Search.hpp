@@ -16,7 +16,7 @@ protected:
     Weight weight;                                              //選択確率を決める重み
 public:
     /*コンストラクタ*/
-    Search(const std::vector<Item>& items, int param) : items(items), weight(param) {}
+    Search(const std::vector<Item>& items, double init_weight, int param) : items(items), weight(init_weight, param) {}
     /*新たな解を生成*/
     virtual Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) = 0;
     virtual void update_weight(double score) final;

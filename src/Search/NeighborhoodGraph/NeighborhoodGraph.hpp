@@ -5,31 +5,30 @@
 #include <memory>
 #include <Search.hpp>
 
-struct Person;
+struct Item;
 class Solution;
 class Destroy;
 
-struct Vertex {
-    int id;
-    Person& person;
-    Vertex(int id, Person& person) : id(id), person(person) {}
-};
-
-
-struct Edge {
-    int target;
-    double weight;
-    Edge(int target, double weight) : target(target), weight(weight) {}
-};
-
 class NeighborhoodGraph : public Search {
+    struct Vertex {
+        int id;
+        const Item& item;
+        Vertex(int id, const Item& item) : id(id), item(item) {}
+    };
+
+    struct Edge {
+        int target;
+        double weight;
+        Edge(int target, double weight) : target(target), weight(weight) {}
+    };
+
 private:
     std::vector<Vertex> vertices;
     std::vector<std::vector<Edge>> graph;
-    std::vector<Person> dummy_persons;
+    std::vector<Item> dummy_items;
     void set_edge(Solution& solution);
 public:
-    NeighborhoodGraph(std::vector<Person>& persons, int param);
+    NeighborhoodGraph(const std::vector<Item>& items, double init_weight, int param);
     Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;
 };
 
