@@ -1,30 +1,30 @@
 #include "RandomDestroy.hpp"
 #include <Destroy.hpp>
 #include <Solution.hpp>
-#include <Person.hpp>
+#include <Item.hpp>
 #include <Group.hpp>
 #include <MyRandom.hpp>
 #include <vector>
 
 using std::vector;
 
-RandomDestroy::RandomDestroy(std::vector<Person>& persons, int destroy_num, int param) : Destroy(persons, param), destroy_num(destroy_num) {
-    shuffle_person_ids.reserve(Person::N);
-    for (auto&& p : persons) {
-        if (!p.is_leader) {
-            shuffle_person_ids.push_back(p.id);
+RandomDestroy::RandomDestroy(std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {
+    target_item_ids.reserve(Item::N);
+    for (auto&& item : items) {
+        if (item.predefined_group == -1) {
+            target_item_ids.push_back(item.id);
         }
     }
 }
 
 void RandomDestroy::operator()(Solution& solution) {
-    MyRandom::shuffle(shuffle_person_ids);
-    vector<MovePerson> move_persons;
-    move_persons.reserve(destroy_num);
+    MyRandom::shuffle(target_item_ids);
+    vector<MoveItem> move_items;
+    move_items.reserve(destroy_num);
 
-    for (int i = 0; i < destroy_num; ++i) {
-        Person& p = persons[shuffle_person_ids[i]];
-        move_persons.push_back(MovePerson(p, solution.get_group_id(p), Group::N));
+    for (size_t i = 0; i < destroy_num; ++i) {
+        const Item& item = items[target_item_ids[i]];
+        move_items.push_back(MoveItem(item, solution.get_group_id(item), Group::N));
     }
-    solution.move(move_persons);
+    solution.move(move_items);
 }

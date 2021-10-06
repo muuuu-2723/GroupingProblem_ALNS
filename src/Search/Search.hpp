@@ -36,6 +36,8 @@ inline double Search::get_weight() const {
 #include "NeighborhoodGraph\NeighborhoodGraph.hpp"
 #include "ShiftNeighborhood\ShiftNeighborhood.hpp"
 #include "SwapNeighborhood\SwapNeighborhood.hpp"
+#include "GroupPenaltyGreedy\GroupPenaltyGreedy.hpp"
+#include "ItemPenaltyGreedy\ItemPenaltyGreedy.hpp"
 #include "WeightPenaltyGreedy\WeightPenaltyGreedy.hpp"
 #include "RelationGreedy\RelationGreedy.hpp"
 #include "ValueDiversityGreedy\ValueDiversityGreedy.hpp"

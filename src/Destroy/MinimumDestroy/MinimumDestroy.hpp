@@ -5,14 +5,14 @@
 #include <vector>
 #include <iostream>
 
-struct Person;
+struct Item;
 class Solution;
 
 class MinimumDestroy : public Destroy {
 private:
     int destroy_num;
 public:
-    MinimumDestroy(std::vector<Person>& persons, int destroy_num, int param) : Destroy(persons, param), destroy_num(destroy_num) {}
+    MinimumDestroy(std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {}
     void operator()(Solution& solution) override;
     void add_destroy_num(int add_num);
     void set_destroy_num(int set_num);
@@ -20,14 +20,14 @@ public:
 };
 
 inline void MinimumDestroy::add_destroy_num(int add_num) {
-    if (destroy_num + add_num < persons.size() * 0.4 && destroy_num + add_num > 2) {
+    if (destroy_num + add_num < items.size() * 0.4 && destroy_num + add_num > 2) {
         destroy_num += add_num;
         std::cerr << "minimum:" << destroy_num << std::endl;
     }
 }
 
 inline void MinimumDestroy::set_destroy_num(int set_num) {
-    if (set_num < persons.size() * 0.4 && set_num > 2) {
+    if (set_num < items.size() * 0.4 && set_num > 2) {
         destroy_num = set_num;
         std::cerr << "minimum:" << destroy_num << std::endl;
     }

@@ -5,14 +5,14 @@
 #include <Group.hpp>
 #include <vector>
 
-struct Person;
+struct Item;
 class Solution;
 
 class MinimumGroupDestroy : public Destroy {
 private:
     int destroy_num;
 public:
-    MinimumGroupDestroy(std::vector<Person>& persons, int destroy_num, int param) : Destroy(persons, param), destroy_num(destroy_num) {}
+    MinimumGroupDestroy(std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {}
     void operator()(Solution& solution) override;
     void add_destroy_num(int add_num);
     void set_destroy_num(int set_num);

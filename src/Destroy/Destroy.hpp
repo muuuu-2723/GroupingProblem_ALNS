@@ -4,15 +4,15 @@
 #include <Weight.hpp>
 #include <vector>
 
-class Person;
+class Item;
 class Solution;
 
 class Destroy {
 protected:
-    std::vector<Person>& persons;
+    const std::vector<Item>& items;
     Weight weight;
 public:
-    Destroy(std::vector<Person>& persons, int param) : persons(persons), weight(param) {}
+    Destroy(std::vector<Item>& items, double init_weight, int param) : items(items), weight(init_weight ,param) {}
     virtual void operator()(Solution& solution) {}
     virtual void update_weight(double score) final;
     virtual double get_weight() const final;
