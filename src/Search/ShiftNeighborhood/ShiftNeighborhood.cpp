@@ -17,6 +17,7 @@ using std::vector;
  *shift近傍を探索
  *改善解があれば改善解を返す
  *なければ現在の解を返す
+ *destroy_ptrがDestroy以外の場合, エラー
  */
 Solution ShiftNeighborhood::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));

@@ -8,6 +8,7 @@
 
 using std::vector;
 
+/*コンストラクタ*/
 RandomDestroy::RandomDestroy(std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {
     target_item_ids.reserve(Item::N);
     for (auto&& item : items) {
@@ -17,6 +18,12 @@ RandomDestroy::RandomDestroy(std::vector<Item>& items, int destroy_num, double i
     }
 }
 
+/*
+ *破壊法を実行
+ *グループが固定されているアイテム以外のアイテムからランダムにdestroy_numだけ
+ *現在のグループから除去する
+ *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
+ */
 void RandomDestroy::operator()(Solution& solution) {
     MyRandom::shuffle(target_item_ids);
     vector<MoveItem> move_items;

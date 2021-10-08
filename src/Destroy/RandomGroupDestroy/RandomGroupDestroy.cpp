@@ -9,13 +9,20 @@
 
 using std::vector;
 
+/*
+ *破壊法を実行
+ *現在のグループからdestroy_numのグループを選び, 
+ *グループが固定されているアイテムを除くそのグループに所属するアイテムを除去する
+ *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
+ */
 void RandomGroupDestroy::operator()(Solution& solution) {
+    //グループに所属するアイテムがあるグループを対象にする
     vector<int> target_group_ids;
     target_group_ids.reserve(Group::N);
-    auto [group_begin, group_end] = solution.get_groups_range();
-    for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
-        if (g_itr->get_member_num() != 0) target_group_ids.push_back(g_itr->get_id());
+    for (auto&& group : solution.get_valid_groups()) {
+        target_group_ids.push_back(group->get_id());
     }
+
     MyRandom::shuffle(target_group_ids);
     vector<MoveItem> move_items;
     move_items.reserve(((Item::N / Group::N) + 1) * destroy_num);

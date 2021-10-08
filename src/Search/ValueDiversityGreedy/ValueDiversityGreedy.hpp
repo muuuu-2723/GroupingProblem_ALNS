@@ -7,10 +7,11 @@
 class Solution;
 class Destroy;
 
+/*グループ内のvalueのばらつきを大きくする貪欲法*/
 class ValueDiversityGreedy : public Search {
 public:
     using Search::Search;
-    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;
+    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;           //貪欲法で新たな解を生成
 };
 
 #endif

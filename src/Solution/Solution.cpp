@@ -28,9 +28,11 @@ Solution::Solution(vector<Item>& items) {
     ave_balance_parameter = 80;
     sum_balance_parameter = 1;
     groups.clear();
+    valid_groups.clear();
     groups.reserve(Group::N + 1);
     for (size_t i = 0; i < Group::N + 1; ++i) {
         groups.push_back(Group(i));
+        if (i != Group::N) valid_groups.emplace_back(std::make_unique<const Group>(&groups[i]));
     }
     each_group_item_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
     each_group_item_penalty.assign(Item::N, vector<std::optional<int>>(Group::N + 1, std::nullopt));
@@ -67,7 +69,7 @@ Solution::Solution(vector<Item>& items) {
     //score_greedy(items);
     RelationGreedy rg(items, 1, 1);
     //PenaltyGreedy rg(items, 1);
-    std::shared_ptr<Destroy> des = std::make_shared<Destroy>(items, 1);
+    std::shared_ptr<Destroy> des = std::make_shared<Destroy>(items, 1, 1);
     *this = std::move(rg(*this, des));
 }
 
@@ -99,24 +101,24 @@ double Solution::evaluation_all(const vector<Item>& items) {
     ave_balance = 0;
     sum_balance = 0;
     auto [group_begin, group_end] = get_groups_range();
-    for (auto citr = group_begin; citr != group_end; ++citr) {
+    for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
         //ペナルティ計算
-        penalty += citr->calc_weight_penalty();
-        penalty += citr->calc_sum_item_penalty(items);
-        penalty += citr->calc_group_penalty(items);
+        penalty += g_itr->calc_weight_penalty();
+        penalty += g_itr->calc_sum_item_penalty(items);
+        penalty += g_itr->calc_group_penalty(items);
 
         //valueの平滑化用
         for (size_t i = 0; i < Item::v_size; ++i) {
-            ave_balance += std::abs(aves[i] - citr->value_average(i));
+            ave_balance += std::abs(aves[i] - g_itr->value_average(i));
             //deviation += std::abs(sum_values[i] / Item::N - value_averages[i]);
-            sum_balance += std::abs(sum_values[i] / Group::N - citr->get_sum_values()[i]);
+            sum_balance += std::abs(sum_values[i] / Group::N - g_itr->get_sum_values()[i]);
         }
 
         //関係値の計算
-        for (const auto& r : citr->sum_item_relation(items)) {
+        for (const auto& r : g_itr->sum_item_relation(items)) {
             relation += r;
         }
-        for (const auto& r : citr->sum_group_relation(items)) {
+        for (const auto& r : g_itr->sum_group_relation(items)) {
             relation += r;
         }
     }
@@ -374,9 +376,17 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
         //std::cerr << mi.item.id << " ";
         assert(item_group_ids[mi.item.id] == mi.source);
         groups[mi.source].erase_member(mi.item);
+        if (groups[mi.destination].get_member_num() == 0) {
+            valid_groups.push_back(std::make_unique<const Group>(&groups[mi.destination]));
+        }
         groups[mi.destination].add_member(mi.item);
         item_group_ids[mi.item.id] = mi.destination;
     }
+
+    for (auto g_itr = valid_groups.begin(), end = valid_groups.end(); g_itr != end; ++g_itr) {
+        if ((*g_itr)->get_member_num() == 0) g_itr = valid_groups.erase(g_itr);
+    }
+    Group::N = valid_groups.size();
 }
 
 /*
@@ -433,9 +443,8 @@ void Solution::move(const vector<MoveItem>& move_items) {
 
 /*解の出力用*/
 std::ostream& operator<<(std::ostream& out, const Solution& s) {
-    auto [group_begin, group_end] = s.get_groups_range();
-    for (auto citr = group_begin; citr != group_end; ++citr) {
-        out << *citr << std::endl;
+    for (auto&& group : s.get_valid_groups()) {
+        out << *group << std::endl;
     }
     out << "評価値:" << s.get_eval_value() << std::endl;
     return out;

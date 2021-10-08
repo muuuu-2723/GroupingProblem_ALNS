@@ -11,40 +11,42 @@
 
 using std::vector;
 
+/*
+ *貪欲法で新たな解を生成
+ *destroy_ptrで解を破壊し, それぞれのアイテム間の関係値の平均とアイテムとグループの間の関係値の合計が高いグループに割り当てる
+ */
 Solution RelationGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
-    std::unique_ptr<Solution> best;
+    std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
     for (size_t i = 0; i < /*40*/5; ++i) {
+        //現在の解をコピーし, それを破壊
         std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
         (*destroy_ptr)(*neighborhood);
 
+        //破壊されたアイテム(ダミーグループ)の順番をシャッフル
         const auto& member_list = neighborhood->get_dummy_group().get_member_list();
-        vector<int> shuffle_member(member_list.begin(), member_list.end());
-        MyRandom::shuffle(shuffle_member);
+        vector<int> target_ids(member_list.begin(), member_list.end());
+        MyRandom::shuffle(target_ids);
 
-        for (const auto& id : shuffle_member) {
-            int max_group_id;
-            int member_num = INT_MAX;
+        //破壊されたアイテムを関係値が高いグループに割り当てる
+        for (const auto& id : target_ids) {
+            int assign_group_id;
             double max_value = -DBL_MAX;
             auto [group_begin, group_end] = neighborhood->get_groups_range();
-            for (auto citr = group_begin; citr != group_end; ++citr) {
-                int group_member_num = citr->get_member_num();
-                auto& item_relations = neighborhood->get_each_group_item_relation(items[id], citr->get_id());
+            for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
+                int group_member_num = g_itr->get_member_num();
+                //item_relationはアイテム数を多くすれば大きくなるため平均値で評価
+                auto& item_relations = neighborhood->get_each_group_item_relation(items[id], g_itr->get_id());
                 double value = std::accumulate(item_relations.begin(), item_relations.end(), 0.0);
-                value += std::accumulate(items[id].group_relations[citr->get_id()].begin(), items[id].group_relations[citr->get_id()].end(), 0.0);
                 value /= group_member_num;
-                if (member_num > group_member_num) {
-                    member_num = group_member_num;
+
+                value += std::accumulate(items[id].group_relations[g_itr->get_id()].begin(), items[id].group_relations[g_itr->get_id()].end(), 0.0);
+                if (value > max_value) {
                     max_value = value;
-                    max_group_id = citr->get_id();
-                }
-                else if (member_num == group_member_num) {
-                    if (value > max_value) {
-                        max_value = value;
-                        max_group_id = citr->get_id();
-                    }
+                    assign_group_id = g_itr->get_id();
                 }
             }
-            neighborhood->move({MoveItem(items[id], neighborhood->get_group_id(items[id]), max_group_id)});
+            //すでに割り当てが決定したアイテムとの関係値を考慮するために一人ずつ割り当てる
+            neighborhood->move({MoveItem(items[id], neighborhood->get_group_id(items[id]), assign_group_id)});
         }
 
         if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {

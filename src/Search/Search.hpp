@@ -40,6 +40,8 @@ inline double Search::get_weight() const {
 #include "ItemPenaltyGreedy\ItemPenaltyGreedy.hpp"
 #include "WeightPenaltyGreedy\WeightPenaltyGreedy.hpp"
 #include "RelationGreedy\RelationGreedy.hpp"
+#include "ValueAverageGreedy\ValueAverageGreedy.hpp"
 #include "ValueDiversityGreedy\ValueDiversityGreedy.hpp"
+#include "ValueSumGreedy\ValueSumGreedy.hpp"
 
 #endif

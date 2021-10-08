@@ -1,4 +1,4 @@
-#include <Person.hpp>
+#include <Item.hpp>
 #include <Group.hpp>
 #include <Solution.hpp>
 #include <MyRandom.hpp>
@@ -24,7 +24,7 @@
 
 using std::vector;
 
-vector<Person> persons;
+vector<Item> items;
 std::filesystem::path get_exe_path();
 void input(const std::filesystem::path& file_name);
 
@@ -89,32 +89,36 @@ int main(int argc, char* argv[]) {
         }
 
         auto start = std::chrono::high_resolution_clock::now();
-        Solution now(persons);
-        now.evaluation_all(persons);
+        Solution now(items);
+        now.evaluation_all(items);
         std::cerr << now;
         Solution best(now);
-        /*auto t_begin = now.debug_evaluation_all(persons);
+        /*auto t_begin = now.debug_evaluation_all(items);
         std::cout << std::get<2>(t_begin) << std::endl;*/
 
         vector<std::unique_ptr<Search>> searches;
-        searches.emplace_back(std::make_unique<PenaltyGreedy>(persons, 1));
-        searches.emplace_back(std::make_unique<RelationGreedy>(persons, 1));
-        searches.emplace_back(std::make_unique<ShiftNeighborhood>(persons, 1));
-        searches.emplace_back(std::make_unique<SwapNeighborhood>(persons, /*4*/2));
-        searches.emplace_back(std::make_unique<NeighborhoodGraph>(persons, 4));
-        searches.emplace_back(std::make_unique<ScoreGreedy>(persons, 1));
+        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<RelationGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<ValueAverageGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<ValueSumGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<ShiftNeighborhood>(items, 1, 1));
+        searches.emplace_back(std::make_unique<SwapNeighborhood>(items, 1, /*4*/2));
+        searches.emplace_back(std::make_unique<NeighborhoodGraph>(items, 1, 4));
+        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(items, 1, 1));
 
-        std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(persons, (1.5 * Person::N) / Group::N, 1);
-        std::shared_ptr<MinimumDestroy> minimum_destroy = std::make_shared<MinimumDestroy>(persons, (1.5 * Person::N) / Group::N, 1);
+        std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(items, (1.5 * Item::N) / Group::N, 1, 1);
+        std::shared_ptr<MinimumDestroy> minimum_destroy = std::make_shared<MinimumDestroy>(items, (1.5 * Item::N) / Group::N, 1, 1);
 
         vector<std::shared_ptr<Destroy>> destructions;
         destructions.emplace_back(random_destroy);
-        destructions.emplace_back(std::make_shared<RandomGroupDestroy>(persons, Group::N / 3, 1));
+        destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, Group::N / 3, 1, 1));
         destructions.emplace_back(minimum_destroy);
-        destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(persons, Group::N / 3, 1));
-        /*destructions.emplace_back(std::make_shared<RandomDestroy>(persons, Person::N / Group::N));
-        destructions.emplace_back(std::make_shared<MinimumDestroy>(persons, Person::N / Group::N));*/
-        destructions.emplace_back(std::make_shared<Destroy>(persons, 1));
+        destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, Group::N / 3, 1, 1));
+        /*destructions.emplace_back(std::make_shared<RandomDestroy>(items, Item::N / Group::N));
+        destructions.emplace_back(std::make_shared<MinimumDestroy>(items, Item::N / Group::N));*/
+        destructions.emplace_back(std::make_shared<Destroy>(items, 1, 1));
 
         vector<double> search_weights(searches.size(), 1);
         vector<double> destroy_weights(destructions.size() - 1, 1);
@@ -182,9 +186,9 @@ int main(int argc, char* argv[]) {
                 prev_next_eval = next_solution.get_eval_value();
             }
 
-            if (next_solution.get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005 && random_destroy->get_destroy_num() > (0.5 * Person::N) / Group::N) {
-                random_destroy->set_destroy_num((0.5 * Person::N) / Group::N);
-                minimum_destroy->set_destroy_num((0.5 * Person::N) / Group::N);
+            if (next_solution.get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005 && random_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
+                random_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
+                minimum_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
             }
 
             double score;
@@ -193,11 +197,11 @@ int main(int argc, char* argv[]) {
                 now = std::move(next_solution);
                 best = now;
                 best_change_cnt = cnt;
-                if (cnt != 0 && random_destroy->get_destroy_num() > (0.5 * Person::N) / Group::N) {
-                    random_destroy->set_destroy_num((0.5 * Person::N) / Group::N);
+                if (cnt != 0 && random_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
+                    random_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
                 }
-                if (cnt != 0 && minimum_destroy->get_destroy_num() > (0.5 * Person::N) / Group::N) {
-                    minimum_destroy->set_destroy_num((0.5 * Person::N) / Group::N);
+                if (cnt != 0 && minimum_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
+                    minimum_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
                 }
                 if (moving_idx != -1) {
                     searches[moving_idx]->update_weight(score);
@@ -263,9 +267,9 @@ int main(int argc, char* argv[]) {
                 random_destroy->add_destroy_num(-1);
                 minimum_destroy->add_destroy_num(-1);
             }
-            if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Person::N / Group::N)) == 0 && cnt != best_change_cnt) {
-                random_destroy->add_destroy_num(Person::N / Group::N);
-                minimum_destroy->add_destroy_num(Person::N / Group::N);
+            if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Item::N / Group::N)) == 0 && cnt != best_change_cnt) {
+                random_destroy->add_destroy_num(Item::N / Group::N);
+                minimum_destroy->add_destroy_num(Item::N / Group::N);
             }
 
             ++cnt;
@@ -307,7 +311,7 @@ int main(int argc, char* argv[]) {
         /*std::cout << "eval = " << now.get_eval_value() << std::endl;
         std::cout << "penalty = " << now.get_debug_penalty() << std::endl;
         std::cout << "deviation = " << std::sqrt(now.get_debug_dispersion()) << std::endl;*/
-        best.evaluation_all(persons);
+        best.evaluation_all(items);
         profit_ave += best.get_relation();
         penalty_ave += best.get_penalty();
         deviation_ave += best.get_deviation();
@@ -345,58 +349,58 @@ void input(const std::filesystem::path& file_name) {
         std::cerr << "not exist data file" << std::endl;
         exit(1);
     }
-    persons.clear();
+    items.clear();
 
     //l”, ”Ç”‚Ì“ü—Í
     int n, g;
     ifs >> n;
-    Person::N = n;
-    persons.reserve(Person::N);
+    Item::N = n;
+    items.reserve(Item::N);
     ifs >> g;
     Group::N = g;
 
-    //Person‚Ì“ü—Í
-    for (int i = 0; i < Person::N; i++) {
-        Person p;
-        ifs >> p.gender >> p.year >> p.campus >> p.score;
-        p.id = i;
-        p.is_leader = false;
-        p.relations.resize(Person::N);
-        p.times.resize(Person::N);
-        p.score_distances.resize(Person::N);
-        persons.push_back(p);
+    //Item‚Ì“ü—Í
+    for (int i = 0; i < Item::N; i++) {
+        Item item;
+        ifs >> item.gender >> item.year >> item.campus >> item.score;
+        item.id = i;
+        item.is_leader = false;
+        item.relations.resize(Item::N);
+        item.times.resize(Item::N);
+        item.score_distances.resize(Item::N);
+        items.push_back(item);
     }
 
     //”Ç’·‚Ì“ü—Í
     for (int i = 0; i < Group::N; i++) {
         int id;
         ifs >> id;
-        persons[id].is_leader = true;
+        items[id].is_leader = true;
     }
 
     //ŠÖŒW’l‚Ì“ü—Í
-    for (auto&& p1 : persons) {
-        for (const auto& p2 : persons) {
+    for (auto&& item1 : items) {
+        for (const auto& item2 : items) {
             int r;
             ifs >> r;
-            if ((r < 2 || r > 8) && p1.id != p2.id) {
+            if ((r < 2 || r > 8) && item1.id != item2.id) {
                 r = -100;
             }
-            p1.relations[p2.id] = r;
+            item1.relations[item2.id] = r;
         }
     }
 
     //“¯‚¶”Ç‚É‚È‚Á‚½‰ñ”‚Ì“ü—Í
-    for (auto&& p1 : persons) {
-        for (const auto& p2 : persons) {
-            ifs >> p1.times[p2.id];
-            p1.times[p2.id] *= 4;
+    for (auto&& item1 : items) {
+        for (const auto& item2 : items) {
+            ifs >> item1.times[item2.id];
+            item1.times[item2.id] *= 4;
         }
     }
 
-    for (auto&& p1 : persons) {
-        for (const auto& p2 : persons) {
-            p1.score_distances[p2.id] = std::abs(p1.score - p2.score);
+    for (auto&& item1 : items) {
+        for (const auto& item2 : items) {
+            item1.score_distances[item2.id] = std::abs(item1.score - item2.score);
         }
     }
 }

@@ -7,12 +7,15 @@
 class Item;
 class Solution;
 
+/*破壊法の基底クラス*/
 class Destroy {
 protected:
-    const std::vector<Item>& items;
-    Weight weight;
+    const std::vector<Item>& items;                                     //グループ分けするアイテムの集合
+    Weight weight;                                                      //選択確率を決める重み
 public:
+    /*コンストラクタ*/
     Destroy(std::vector<Item>& items, double init_weight, int param) : items(items), weight(init_weight ,param) {}
+    /*解を破壊*/
     virtual void operator()(Solution& solution) {}
     virtual void update_weight(double score) final;
     virtual double get_weight() const final;

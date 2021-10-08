@@ -9,7 +9,14 @@
 
 using std::vector;
 
+/*
+ *破壊法を実行
+ *関係値の和からペナルティの和を引いた値が低いアイテムを調査し, 
+ *destroy_num分のアイテムを除去する
+ *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
+ */
 void MinimumDestroy::operator()(Solution& solution) {
+    //関係値の和からペナルティの和を引いた値とアイテムのペアを作り, ソートする
     vector<std::pair<double, const Item&>> item_eval;
     item_eval.reserve(Item::N);
     for (const auto& item : items) {

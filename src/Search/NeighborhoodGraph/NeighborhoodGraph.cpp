@@ -15,6 +15,7 @@
 
 using std::vector;
 
+/*コンストラクタ*/
 NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weight, int param) : Search(items,init_weight , param) {
     vertices.reserve(Item::N + Group::N);
     int idx = 0;
@@ -24,6 +25,7 @@ NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weig
         }
     }
     dummy_items.reserve(Group::N);
+    //ダミーアイテムの設定. アイテムidをアイテム数以上に設定
     for (size_t i = 0; i < Group::N; ++i) {
         Item item;
         item.id = Item::N + i;
@@ -32,21 +34,31 @@ NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weig
     }
 }
 
+/*各頂点間に有効辺を必要に応じて設定*/
 void NeighborhoodGraph::set_edge(Solution& solution) {
     graph.assign(vertices.size(), vector<Edge>());
+
+    //sからtへの有効辺を設定
     for (const auto& s : vertices) {
         for (const auto& t : vertices) {
+            //ダミーアイテム同士には辺を張らない
             if (s.item.id >= Item::N && t.item.id >= Item::N) continue;
+
             int s_group_id = s.item.id < Item::N ? solution.get_group_id(s.item) : s.item.id - Item::N;
             int t_group_id = t.item.id < Item::N ? solution.get_group_id(t.item) : t.item.id - Item::N;
 
+            //同じグループのアイテム間には辺を張らない
             if (s_group_id != t_group_id) {
                 const Group& t_group = solution.get_groups()[t_group_id];
-                if (s.item.id >= Item::N) {
+                if (s.item.id >= Item::N) {                                                 //sがダミーアイテムの場合
+                    //tを現在のグループから削除したときのペナルティを計算
                     double penalty = t_group.diff_weight_penalty({}, {&t.item});
                     penalty -= t.item.group_penalty[t_group_id];
                     penalty -= solution.get_each_group_item_penalty(t.item, t_group_id);
+
+                    //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
+                        //ペナルティ以外の評価値の変化量を計算
                         double weight = 0;
                         for (auto&& r : solution.get_each_group_item_relation(t.item, t_group_id)) {
                             weight -= r * solution.get_relation_parameter();
@@ -62,14 +74,20 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                             weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
                             weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] - t.item.values[i])) * solution.get_sum_balance_parameter();
                         }
+
+                        //辺をグラフに追加
                         graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
                     }
                 }
-                else if (t.item.id >= Item::N) {
+                else if (t.item.id >= Item::N) {                                            //tがダミーアイテムの場合
+                    //sをt_groupに追加したときのペナルティを計算
                     double penalty = t_group.diff_weight_penalty({&s.item}, {});
                     penalty += s.item.group_penalty[t_group_id];
                     penalty += solution.get_each_group_item_penalty(s.item, t_group_id);
+
+                    //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
+                        //ペナルティ以外の評価値の変化量を計算
                         double weight = 0;
                         for (auto&& r : solution.get_each_group_item_relation(s.item, t_group_id)) {
                             weight += r * solution.get_relation_parameter();
@@ -85,14 +103,21 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                             weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
                             weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] + s.item.values[i])) * solution.get_sum_balance_parameter();
                         }
+
+                        //辺をグラフに追加
                         graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
                     }
                 }
-                else {
+                else {                                                                      //sとtがダミーアイテムでない場合
+                    
+                    //tを現在のグループから削除し, sをそのグループに追加したときのペナルティを計算
                     double penalty = t_group.diff_weight_penalty({&s.item}, {&t.item});
                     penalty += s.item.group_penalty[t_group_id] - t.item.group_penalty[t_group_id];
                     penalty += solution.get_each_group_item_penalty(s.item, t_group_id) - solution.get_each_group_item_penalty(t.item, t_group_id) - s.item.item_penalty[t.item.id];
+                    
+                    //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
+                        //ペナルティ以外の評価値の変化量を計算
                         double weight = 0;
                         for (auto&& r : solution.get_each_group_item_relation(t.item, t_group_id)) {
                             weight -= r * solution.get_relation_parameter();
@@ -119,6 +144,8 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                             weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
                             weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] + s.item.values[i] - t.item.values[i])) * solution.get_sum_balance_parameter();
                         }
+
+                        //辺をグラフに追加
                         graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
                     }
                 }
@@ -127,15 +154,25 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
     }
 }
 
+/*
+ *グラフを探索
+ *グラフ上の同じグループを2回通らない負閉路を探索
+ *上記の負閉路の移動を評価関数で評価し, 改善していれば移動する
+ *destroy_ptrがDestroy以外の場合, エラー
+ */
 Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));
+
     Solution neighborhood_solution(current_solution);
     set_edge(neighborhood_solution);
     vector<vector<vector<double>>> dp(vertices.size(), vector<vector<double>>(vertices.size(), vector<double>(Group::N - 1, DBL_MAX)));
     using TablePos = std::tuple<int, int, int>;
     vector<vector<vector<TablePos>>> prev(vertices.size(), vector<vector<TablePos>>(vertices.size(), vector<TablePos>(Group::N - 1, {-1, -1, -1})));
+    
+    //探索の効率化のためのラムダ関数
     auto lambda = [](const double& a) { return a < 0 ? a : DBL_MAX; };
     
+    //DPで負閉路を探索. 負閉路の長さはグループ数以下のものが探索の対象
     for (const auto& v1 : vertices) {
         for (const auto& e : graph[v1.id]) {
             dp[v1.id][e.target][0] = lambda(e.weight);
@@ -153,6 +190,7 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
         }
     }
 
+    //DPテーブルから負閉路毎に重みの合計と始点を抽出
     vector<std::pair<double, TablePos>> start_pos;
     for (const auto& v : vertices) {
         for (const auto& e : graph[v.id]) {
@@ -164,12 +202,14 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
         }
     }
     
+    //重みで負閉路をソート
     std::sort(start_pos.begin(), start_pos.end(), [](const auto& a, const auto& b) {
         return a.first < b.first;
     });
 
+    //負閉路を構築し, 同じグループを2回以上通っていないか調査
     for (const auto& sp : start_pos) {
-        //std::cerr << sp.first << std::endl;
+        //負閉路構築
         vector<int> cycle;
         auto [v1, v2, l] = sp.second;
         cycle.reserve(l + 2);
@@ -184,8 +224,10 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
 
         vector<MoveItem> move_items;
         move_items.reserve(l + 1);
-        bool is_duplicated = false;
-        unsigned int flag = 0;
+        bool is_duplicated = false;                     //同じグループを2回以上通っているかを表すbool型
+        unsigned int flag = 0;                          //グループを通ったかを管理するビットフラグ
+
+        //同じグループを2回以上通っていないか調査
         for (auto ritr = cycle.rbegin(), rend = --cycle.rend(); ritr != rend; ++ritr) {
             const Item& item = vertices[*ritr].item;
             int now_group_id;
@@ -205,17 +247,18 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
                 now_group_id = item.id - Item::N;
             }
 
-            if (!(flag & (1<<now_group_id))) {
+            if (!(flag & (1<<now_group_id))) {              //itemのグループにフラグが立っていない場合
+                //フラグを立てる
                 flag |= (1<<now_group_id);
             }
-            else {
+            else {                                          //itemのグループにすでにフラグが立っている場合
                 is_duplicated = true;
                 break;
             }
         }
         if (is_duplicated) continue;
 
-        //std::cerr << sp.first << std::endl;
+        //負閉路の移動が改善解になっている場合, 移動してループを抜ける
         if (neighborhood_solution.move_check(move_items)) break;
     }
     return neighborhood_solution;

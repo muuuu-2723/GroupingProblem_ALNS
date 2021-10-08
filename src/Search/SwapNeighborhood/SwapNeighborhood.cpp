@@ -17,6 +17,7 @@ using std::vector;
  *swap‹ß–T‚ğ’Tõ
  *‰ü‘P‰ğ‚ª‚ ‚ê‚Î‰ü‘P‰ğ‚ğ•Ô‚·
  *‚È‚¯‚ê‚ÎŒ»İ‚Ì‰ğ‚ğ•Ô‚·
+ *destroy_ptr‚ªDestroyˆÈŠO‚Ìê‡, ƒGƒ‰[
  */
 Solution SwapNeighborhood::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));
@@ -24,6 +25,8 @@ Solution SwapNeighborhood::operator()(const Solution& current_solution, std::sha
     Solution neighborhood_solution(current_solution);
     double max_diff = 0;
     std::unique_ptr<const Item> max_item1_ptr, max_item2_ptr;
+
+    //swap‹ß–T“à‚ÅÅ‚à—Ç‚¢‰ğ‚ğ’Tõ
     for (auto item1_itr = items.begin(), end = items.end(); item1_itr != end; ++item1_itr) {
         if (item1_itr->predefined_group != -1) continue;
         for (auto item2_itr = std::next(item1_itr); item2_itr != end; ++item2_itr) {

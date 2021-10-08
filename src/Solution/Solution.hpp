@@ -8,6 +8,8 @@
 #include <iostream>
 #include <tuple>
 #include <cmath>
+#include <memory>
+#include <list>
 
 /*アイテムの移動情報*/
 struct MoveItem {
@@ -23,6 +25,7 @@ struct MoveItem {
 class Solution {
 private:
     std::vector<Group> groups;                                                                  //グループの集合
+    std::list<std::unique_ptr<const Group>> valid_groups;                                     //現在使われているグループの参照集合
     std::vector<int> item_group_ids;                                                            //それぞれのアイテムが所属するグループid
     double relation;                                                                            //このグループ分けの関係値
     double penalty;                                                                             //このグループ分けのペナルティ
@@ -49,6 +52,7 @@ public:
     int get_each_group_item_penalty(const Item& item, int group_id);                                                            //each_group_item_penaltyの値を取得, なければ計算して取得
     int get_group_id(const Item& item) const;                                                                                   //アイテムの所属するグループidを取得
     auto get_groups_range() const -> const std::pair<std::vector<Group>::const_iterator, std::vector<Group>::const_iterator>;   //ダミーグループを除く(Group::N)グループを取得
+    auto get_valid_groups() const -> const std::list<std::unique_ptr<const Group>>&;                                            //現在使われているグループを取得
     const std::vector<Group>& get_groups() const;                                                                               //ダミーグループを含むすべてのグループを取得
     const Group& get_dummy_group() const;                                                                                       //ダミーグループを取得
     double evaluation_all(const std::vector<Item>& items);                                                                      //現在の解(グループ分け)を評価
@@ -102,6 +106,11 @@ inline int Solution::get_group_id(const Item& item) const {
 /*ダミーグループを除く(Group::N)グループを取得*/
 inline auto Solution::get_groups_range() const -> const std::pair<std::vector<Group>::const_iterator, std::vector<Group>::const_iterator> {
     return {groups.cbegin(), groups.cbegin() + Group::N};
+}
+
+/*現在使われているグループを取得*/
+inline auto Solution::get_valid_groups() const -> const std::list<std::unique_ptr<const Group>>& {
+    return valid_groups;
 }
 
 /*ダミーグループを含むすべてのグループを取得*/

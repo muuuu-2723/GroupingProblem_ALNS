@@ -4,6 +4,7 @@
 #include <random>
 #include <algorithm>
 
+/*—”ŠÖ˜A‚ğ‚Ü‚Æ‚ß‚é*/
 class MyRandom {
 protected:
     static std::mt19937_64 mt;
@@ -50,6 +51,7 @@ public:
     }
 };
 
+/*d‚İ‚ÉŠî‚Ã‚­—”‚ğ¶¬*/
 class DiscreteDistribution : public MyRandom {
 private:
     std::discrete_distribution<> dist;
@@ -62,6 +64,7 @@ public:
         return dist(mt);
     }
 
+    /*ÀÛ‚ÌŠm—¦‚ğæ“¾*/
     std::vector<double> get_probabilities() {
         return dist.probabilities();
     }

@@ -9,28 +9,35 @@
 
 using std::vector;
 
+/*
+ *破壊法を実行
+ *関係値の和からペナルティの和を引いた値の和が低いグループを調査し, 
+ *destroy_numグループを選び, そのグループに所属するアイテムを除去する
+ *(グループが固定しているアイテムを除く)
+ *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
+ */
 void MinimumGroupDestroy::operator()(Solution& solution) {
+    //関係値の和からペナルティの和を引いた値の和とグループのペアを作り, ソートする
     vector<std::pair<double, const Group&>> group_eval;
     group_eval.reserve(Group::N);
-    auto [group_begin, group_end] = solution.get_groups_range();
-    for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
+    for (auto&& group : solution.get_valid_groups()) {
         double eval = 0;
         vector<const Item*> target_member;
-        target_member.reserve(g_itr->get_member_num());
-        for (const auto& id : g_itr->get_member_list()) {
+        target_member.reserve(group->get_member_num());
+        for (const auto& id : group->get_member_list()) {
             if (items[id].predefined_group != -1) continue;
-            for (auto&& r : solution.get_each_group_item_relation(items[id], g_itr->get_id())) {
+            for (auto&& r : solution.get_each_group_item_relation(items[id], group->get_id())) {
                 eval += r * solution.get_relation_parameter();
             }
-            for (auto&& r : items[id].group_relations[g_itr->get_id()]) {
+            for (auto&& r : items[id].group_relations[group->get_id()]) {
                 eval += r * solution.get_relation_parameter();
             }
-            eval -= solution.get_each_group_item_penalty(items[id], g_itr->get_id()) * solution.get_penalty_parameter();
-            eval -= items[id].group_penalty[g_itr->get_id()] * solution.get_penalty_parameter();
+            eval -= solution.get_each_group_item_penalty(items[id], group->get_id()) * solution.get_penalty_parameter();
+            eval -= items[id].group_penalty[group->get_id()] * solution.get_penalty_parameter();
 
             target_member.push_back(&items[id]);
         }
-        eval += g_itr->diff_weight_penalty({}, target_member) * solution.get_penalty_parameter();
+        eval += group->diff_weight_penalty({}, target_member) * solution.get_penalty_parameter();
         for (auto m_itr1 = target_member.begin(), end = target_member.end(); m_itr1 != end; ++m_itr1) {
             for (auto m_itr2 = std::next(m_itr1); m_itr2 != end; ++m_itr2) {
                 eval += (*m_itr1)->item_penalty[(*m_itr2)->id] * solution.get_penalty_parameter();
@@ -40,7 +47,7 @@ void MinimumGroupDestroy::operator()(Solution& solution) {
             }
         }
 
-        group_eval.push_back({eval, *g_itr});
+        group_eval.push_back({eval, *group});
     }
 
     std::sort(group_eval.begin(), group_eval.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
