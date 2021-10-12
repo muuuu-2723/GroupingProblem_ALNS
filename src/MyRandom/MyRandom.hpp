@@ -56,16 +56,22 @@ class DiscreteDistribution : public MyRandom {
 private:
     std::discrete_distribution<> dist;
 public:
-    DiscreteDistribution(std::vector<double>& probabilities)
+    DiscreteDistribution(const std::vector<double>& probabilities)
         : dist(probabilities.begin(), probabilities.end()) {}
     
     /*確率分布に基づくインデックスを生成*/
-    int operator()() {
+    int operator()() const {
         return dist(mt);
     }
 
+    /*重みの設定*/
+    void set_weight(const std::vector<double>& probabilities) {
+        std::discrete_distribution<>::param_type param(probabilities.begin(), probabilities.end());
+        dist.param(param);
+    }
+
     /*実際の確率を取得*/
-    std::vector<double> get_probabilities() {
+    std::vector<double> get_probabilities() const {
         return dist.probabilities();
     }
 };

@@ -4,7 +4,8 @@
 #include <MyRandom.hpp>
 #include <Search.hpp>
 #include <Destroy.hpp>
-#include <matplotlib.hpp>
+#include <Debug.hpp>
+#include <Input.hpp>
 
 #include <iostream>
 #include <vector>
@@ -25,7 +26,6 @@
 using std::vector;
 
 vector<Item> items;
-std::filesystem::path get_exe_path();
 void input(const std::filesystem::path& file_name);
 
 int main(int argc, char* argv[]) {
@@ -57,11 +57,9 @@ int main(int argc, char* argv[]) {
         std::cout << "1:•]‰¿’l, 2:\’z–@‚ÌŠm—¦, 3:”j‰ó–@‚ÌŠm—¦" << std::endl;
         std::cout << "debug_num = ";
         std::cin >> debug_num;
-        is_debug = true;
     }
-    matplotlib g;
 
-    auto data_dir = get_exe_path().parent_path().parent_path().append("Data");
+    auto data_dir = Input::get_exe_path().parent_path().parent_path().append("Data");
     auto input_file_path = data_dir / datafile;
     if (!std::filesystem::exists(input_file_path)) {
         input_file_path = datafile;
@@ -73,20 +71,6 @@ int main(int argc, char* argv[]) {
         vector<double> search_p, destroy_p;
         vector<std::string> color_map;
         std::ofstream eval_out, search_out, destroy_out;
-        if (is_debug) {
-            output_dir = get_exe_path().parent_path();
-            eval_out.open(output_dir / ("eval_" + datafile.string()));
-            search_out.open(output_dir / ("search_" + datafile.string()));
-            destroy_out.open(output_dir / ("destroy_" + datafile.string()));
-            if (debug_num != 0) g.open();
-            if (debug_num == 1) {
-                g.screen(0, 45000, M, 46000);
-            }
-            else if (debug_num != 0) {
-                color_map = {"turquoise", "orange", "green", "tomato", "orchid", "sienna", "fuchsia", "grey", "gold", "cyan"};
-                g.screen(0, 0, M, 100);
-            }
-        }
 
         auto start = std::chrono::high_resolution_clock::now();
         Solution now(items);
@@ -103,6 +87,7 @@ int main(int argc, char* argv[]) {
         searches.emplace_back(std::make_unique<RelationGreedy>(items, 1, 1));
         searches.emplace_back(std::make_unique<ValueAverageGreedy>(items, 1, 1));
         searches.emplace_back(std::make_unique<ValueSumGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<DecreaseGroup>(items, 1, 1));
         searches.emplace_back(std::make_unique<ShiftNeighborhood>(items, 1, 1));
         searches.emplace_back(std::make_unique<SwapNeighborhood>(items, 1, /*4*/2));
         searches.emplace_back(std::make_unique<NeighborhoodGraph>(items, 1, 4));
@@ -125,26 +110,25 @@ int main(int argc, char* argv[]) {
 
         int cnt = 0;
         int best_change_cnt = cnt;
-        double prev_next_eval;
-        if (is_debug) {
-            eval_out << std::fixed << std::setprecision(8) << cnt << " " << now.get_eval_value() << " " << best.get_eval_value() << std::endl;
-            if (debug_num != 0) {
-                prev_next_eval = now.get_eval_value();
-            }
-        }
         vector<double> search_time(searches.size(), 0);
         vector<int> counter(searches.size(), 0);
         int moving_idx = -1;
         vector<vector<int>> score_cnt(searches.size(), vector<int>(4, 0));
 
-        while (cnt < M) {
-            auto search_itr = searches.begin();
-            std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { return (*search_itr++)->get_weight(); });
-            DiscreteDistribution search_random(search_weights);
-            auto destroy_itr = destructions.begin();
-            std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
-            DiscreteDistribution destroy_random(destroy_weights);
+        auto search_itr = searches.begin();
+        std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { return (*search_itr++)->get_weight(); });
+        DiscreteDistribution search_random(search_weights);
+        auto destroy_itr = destructions.begin();
+        std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
+        DiscreteDistribution destroy_random(destroy_weights);
 
+        std::unique_ptr<Debug> debug_ptr;
+        if (is_debug) {
+            double max_eval = 4000;
+            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, datafile, debug_num, M, max_eval);
+        }
+
+        while (cnt < M) {
             int search_idx = search_random();
             int destroy_idx = destructions.size() - 1;
             if (search_idx < 2) {
@@ -155,21 +139,6 @@ int main(int argc, char* argv[]) {
                     destroy_idx = destroy_random();
                 } while (destroy_idx != 1 && destroy_idx != 3);
             }
-            if (is_debug) {
-                search_p = search_random.get_probabilities();
-                destroy_p = destroy_random.get_probabilities();
-                
-                search_out << cnt;
-                for (auto&& p : search_p) {
-                    search_out << " " << p * 100;
-                }
-                search_out << std::endl;
-                destroy_out << cnt;
-                for (auto&& p : destroy_p) {
-                    destroy_out << " " << p * 100;
-                }
-                destroy_out << std::endl;
-            }
 
             //std::cerr << search_idx << std::endl;
             auto sstart = std::chrono::high_resolution_clock::now();
@@ -179,12 +148,6 @@ int main(int argc, char* argv[]) {
             search_time[search_idx] += stime;
             ++counter[search_idx];
             double prev_now_eval, prev_best_eval;
-            if (is_debug && debug_num != 0) {
-                prev_now_eval = now.get_eval_value();
-                prev_best_eval = best.get_eval_value();
-                //g.line(cnt, prev_next_eval, cnt + 1, next_solution.get_eval_value(), "cyan");
-                prev_next_eval = next_solution.get_eval_value();
-            }
 
             if (next_solution.get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005 && random_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
                 random_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
@@ -232,35 +195,15 @@ int main(int argc, char* argv[]) {
                 destructions[destroy_idx]->update_weight(score);
                 //destroy_weights[destroy_idx] = destroy_weights[destroy_idx] * lambda + score * (1 - lambda);
             }
+            search_itr = searches.begin();
+            std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { return (*search_itr++)->get_weight(); });
+            search_random.set_weight(search_weights);
+            destroy_itr = destructions.begin();
+            std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
+            destroy_random.set_weight(destroy_weights);
 
             if (is_debug) {
-                eval_out << cnt + 1 << " " << now.get_eval_value() << " " << best.get_eval_value() << std::endl;
-                if (debug_num == 1) {
-                    g.line(cnt, prev_now_eval, cnt + 1, now.get_eval_value(), "lightgreen");
-                    g.line(cnt, prev_best_eval, cnt + 1, best.get_eval_value(), "red");
-                }
-                else if (debug_num != 0) {
-                    g.line(cnt, prev_now_eval - 700, cnt + 1, now.get_eval_value() - 700, "lightgreen");
-                    g.line(cnt, prev_best_eval - 700, cnt + 1, best.get_eval_value() - 700, "red");
-                }
-                /*else*/ if (debug_num == 2) {
-                    search_itr = searches.begin();
-                    std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { return (*search_itr++)->get_weight(); });
-                    DiscreteDistribution next_search(search_weights);
-                    vector<double> next_p = next_search.get_probabilities();
-                    for (int j = 0; j < search_p.size(); ++j) {
-                        g.line(cnt, search_p[j] * 100, cnt + 1, next_p[j] * 100, color_map[j].c_str());
-                    }
-                }
-                else if (debug_num == 3) {
-                    destroy_itr = destructions.begin();
-                    std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
-                    DiscreteDistribution next_destroy(destroy_weights);
-                    vector<double> next_p = next_destroy.get_probabilities();
-                    for (int j = 0; j < destroy_weights.size(); ++j) {
-                        g.line(cnt, destroy_p[j] * 100, cnt + 1, next_p[j] * 100, color_map[j].c_str());
-                    }
-                }
+                debug_ptr->output();
             }
 
             if (cnt % (M / 100) == 0) {
@@ -274,20 +217,6 @@ int main(int argc, char* argv[]) {
 
             ++cnt;
             //if (cnt > M / 3 && cnt > best_change_cnt * 2) break;
-        }
-        if (is_debug) {
-            DiscreteDistribution next_search(search_weights);
-            search_out << cnt;
-            for (auto&& p : next_search.get_probabilities()) {
-                search_out << " " << p * 100;
-            }
-            search_out << std::endl;
-            DiscreteDistribution next_destroy(destroy_weights);
-            destroy_out << cnt;
-            for (auto&& p : next_destroy.get_probabilities()) {
-                destroy_out << " " << p * 100;
-            }
-            destroy_out << std::endl;
         }
 
         for (int j = 0; j < searches.size(); ++j) {
@@ -403,10 +332,4 @@ void input(const std::filesystem::path& file_name) {
             item1.score_distances[item2.id] = std::abs(item1.score - item2.score);
         }
     }
-}
-
-std::filesystem::path get_exe_path() {
-    wchar_t path[MAX_PATH] = { 0 };
-    GetModuleFileNameW(NULL, path, MAX_PATH);
-    return path;
 }

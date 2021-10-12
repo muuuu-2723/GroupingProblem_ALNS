@@ -43,5 +43,6 @@ inline double Search::get_weight() const {
 #include "ValueAverageGreedy\ValueAverageGreedy.hpp"
 #include "ValueDiversityGreedy\ValueDiversityGreedy.hpp"
 #include "ValueSumGreedy\ValueSumGreedy.hpp"
+#include "DecreaseGroup\DecreaseGroup.hpp"
 
 #endif
