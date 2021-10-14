@@ -12,7 +12,7 @@ struct Item {
     static size_t group_r_size;                         //group_relationの種類数
 
     size_t id;                                          //0～N-1
-    size_t predefined_group;                            //あらかじめ決められた固定グループ(-1 : 該当なし)
+    int predefined_group;                               //あらかじめ決められた固定グループ(-1 : 該当なし)
     std::vector<double> weight;                         //各アイテムの重み(制約条件, ペナルティ用)
     std::vector<double> values;                         //各アイテムがもつ値(目的関数用)
     std::vector<std::vector<double>> item_relations;    //それぞれのアイテム間の関係値  item_relation[item_id][type]
