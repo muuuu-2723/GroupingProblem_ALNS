@@ -26,9 +26,61 @@
 using std::vector;
 
 vector<Item> items;
-void input(const std::filesystem::path& file_name);
+void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num);
 
 int main(int argc, char* argv[]) {
+    bool is_debug = false;
+    int debug_num;
+    std::filesystem::path data_file("random_data.dat");
+    std::filesystem::path problem_file("problem.dat");
+
+    try {
+        std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-ip InputProblemFile] [-id InputDataFile]");
+        if (argc > 6) {
+            throw argument_error;
+        }
+        for (int i = 1; i < argc; ++i) {
+            if (std::strcmp(argv[i], "-d") == 0) {
+                is_debug = true;
+            }
+            else if (std::strcmp(argv[i], "-ip") == 0) {
+                if (++i == argc) {
+                    throw argument_error;
+                }
+                problem_file = argv[i];
+            }
+            else if (std::strcmp(argv[i], "-id") == 0) {
+                if (++i == argc) {
+                    throw argument_error;
+                }
+                data_file = argv[i];
+            }
+            else {
+                throw argument_error;
+            }
+        }
+        
+        if (is_debug) {
+            do {
+                std::cout << "リアルタイムグラフで描画するものを選択" << std::endl;
+                std::cout << "0:なし, 1:評価値, 2:構築法の確率, 3:破壊法の確率" << std::endl;
+                std::cout << "debug_num = ";
+                std::cin >> debug_num;
+            } while (debug_num < 0 || debug_num > 3);
+        }
+
+        Input input(problem_file, data_file);
+        solve(input, data_file, is_debug, debug_num);
+    }
+    catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        std::exit(1);
+    }
+
+    return 0;
+}
+
+void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num) {
     double profit_ave = 0;
     double penalty_ave = 0;
     double deviation_ave = 0;
@@ -36,38 +88,8 @@ int main(int argc, char* argv[]) {
     double time_ave = 0;
     int N = 1;
     int M = 30000;
-    bool is_debug = false;
-    int debug_num;
-    std::filesystem::path datafile("random_data.dat");
 
-    if (argc > 3) {
-        std::cerr << "引数エラー" << std::endl;
-        std::cerr << "run.exe [-d] [inputfile]" << std::endl;
-        exit(1);
-    }
-    for (int i = 1; i < argc; ++i) {
-        if (std::strcmp(argv[i], "-d") == 0) {
-            is_debug = true;
-        }
-        else {
-            datafile = argv[i];
-        }
-    }
-    if (is_debug) {
-        std::cout << "1:評価値, 2:構築法の確率, 3:破壊法の確率" << std::endl;
-        std::cout << "debug_num = ";
-        std::cin >> debug_num;
-    }
-
-    auto data_dir = Input::get_exe_path().parent_path().parent_path().append("Data");
-    auto input_file_path = data_dir / datafile;
-    if (!std::filesystem::exists(input_file_path)) {
-        input_file_path = datafile;
-        datafile = datafile.filename();
-    }
-    std::filesystem::path output_dir;
     for (int i = 0; i < N; i++) {
-        input(input_file_path);
         vector<double> search_p, destroy_p;
         vector<std::string> color_map;
         std::ofstream eval_out, search_out, destroy_out;
@@ -125,7 +147,7 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<Debug> debug_ptr;
         if (is_debug) {
             double max_eval = 4000;
-            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, datafile, debug_num, M, max_eval);
+            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, data_file.filename().string(), debug_num, M, max_eval);
         }
 
         while (cnt < M) {
@@ -245,12 +267,6 @@ int main(int argc, char* argv[]) {
         penalty_ave += best.get_penalty();
         deviation_ave += best.get_deviation();
         eval_ave += best.get_eval_value();
-        if (is_debug && debug_num != 0) {
-            std::string output_fig = "fig_" + datafile.stem().string() + ".pdf";
-            auto current_path = std::filesystem::current_path();
-            g.save(output_dir.lexically_relative(current_path).append(output_fig).generic_string().c_str());
-            g.close();
-        }
         /*for (const auto& group : now.get_groups()) {
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 2; j++) {
@@ -268,68 +284,4 @@ int main(int argc, char* argv[]) {
     std::cout << "deviation_ave:" << deviation_ave / N << std::endl;
     std::cout << "eval_ave:" << eval_ave / N << std::endl;
     std::cout << "time_ave:" << time_ave / N << "[ms]" << std::endl;
-
-    return 0;
-}
-
-void input(const std::filesystem::path& file_name) {
-    std::ifstream ifs(file_name);
-    if (!ifs) {
-        std::cerr << "not exist data file" << std::endl;
-        exit(1);
-    }
-    items.clear();
-
-    //人数, 班数の入力
-    int n, g;
-    ifs >> n;
-    Item::N = n;
-    items.reserve(Item::N);
-    ifs >> g;
-    Group::N = g;
-
-    //Itemの入力
-    for (int i = 0; i < Item::N; i++) {
-        Item item;
-        ifs >> item.gender >> item.year >> item.campus >> item.score;
-        item.id = i;
-        item.is_leader = false;
-        item.relations.resize(Item::N);
-        item.times.resize(Item::N);
-        item.score_distances.resize(Item::N);
-        items.push_back(item);
-    }
-
-    //班長の入力
-    for (int i = 0; i < Group::N; i++) {
-        int id;
-        ifs >> id;
-        items[id].is_leader = true;
-    }
-
-    //関係値の入力
-    for (auto&& item1 : items) {
-        for (const auto& item2 : items) {
-            int r;
-            ifs >> r;
-            if ((r < 2 || r > 8) && item1.id != item2.id) {
-                r = -100;
-            }
-            item1.relations[item2.id] = r;
-        }
-    }
-
-    //同じ班になった回数の入力
-    for (auto&& item1 : items) {
-        for (const auto& item2 : items) {
-            ifs >> item1.times[item2.id];
-            item1.times[item2.id] *= 4;
-        }
-    }
-
-    for (auto&& item1 : items) {
-        for (const auto& item2 : items) {
-            item1.score_distances[item2.id] = std::abs(item1.score - item2.score);
-        }
-    }
 }
