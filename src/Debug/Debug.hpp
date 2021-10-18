@@ -22,6 +22,7 @@ private:
     std::ofstream eval_out;
     std::ofstream search_out;
     std::ofstream destroy_out;
+    std::string fig_file_path;
     std::vector<std::string> color_map;
     std::vector<double> prev_p;
     double prev_eval;
@@ -31,6 +32,7 @@ private:
 public:
     Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const Solution& solution,
           const Solution& best, const int& x, const std::string& datafile, int debug_num, int max_x, double max_eval);
+    ~Debug();
     void output();
 };
 

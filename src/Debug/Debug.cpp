@@ -27,6 +27,11 @@ Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistributi
             this->debug_num = 0;
             std::cerr << "graph output is error" << std::endl;
         }
+        else {
+            std::string fig_file = "fig_" + std::filesystem::path(datafile).stem().string() + ".pdf";
+            auto current_path = std::filesystem::current_path();
+            fig_file_path = output_dir.lexically_relative(current_path).append(fig_file).generic_string();
+        }
     }
 
     color_map = {"turquoise", "orange", "green", "tomato", "orchid", "sienna", "fuchsia", "grey", "gold", "cyan"};
@@ -63,6 +68,17 @@ Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistributi
         destroy_out << " " << p * 100;
     }
     destroy_out << std::endl;
+}
+
+Debug::~Debug() {
+    eval_out.close();
+    search_out.close();
+    destroy_out.close();
+
+    if (debug_num != 0) {
+        g.save(fig_file_path.c_str());
+        g.close();
+    }
 }
 
 void Debug::output() {
