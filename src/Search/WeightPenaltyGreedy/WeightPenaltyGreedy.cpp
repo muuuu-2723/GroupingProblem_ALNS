@@ -54,12 +54,12 @@ Solution WeightPenaltyGreedy::operator()(const Solution& current_solution, std::
         std::sort(priority_type.begin(), priority_type.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
 
         //下限に足りていないグループに優先してアイテムを割り当てる
-        auto& lower = Group::get_lower();
         for (auto [type, cnt] : priority_type) {
             for (auto m_itr = member_list.begin(); m_itr != member_list.end(); ++m_itr) {
                 const Item& item = items[*m_itr];
                 auto [group_begin, group_end] = neighborhood->get_groups_range();
                 for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
+                    auto& lower = g_itr->get_lower();
                     if (item.weight[type] != 0 && g_itr->get_sum_weight()[type] < lower[type]) {
                         neighborhood->move({MoveItem(item, neighborhood->get_group_id(item), g_itr->get_id())});
                         m_itr = member_list.erase(m_itr);

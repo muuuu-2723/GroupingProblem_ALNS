@@ -32,8 +32,7 @@ Solution ShiftNeighborhood::operator()(const Solution& current_solution, std::sh
         if (item.predefined_group != -1) continue;
         for (size_t g_id = 0; g_id < Group::N; ++g_id) {
             if (g_id != neighborhood_solution.get_group_id(item)) {
-                auto [diff_r, diff_p, diff_ave, diff_sum] = neighborhood_solution.evaluation_shift(item, g_id);
-                double diff_eval = diff_r * neighborhood_solution.get_relation_parameter() - diff_p * neighborhood_solution.get_penalty_parameter() - diff_ave * neighborhood_solution.get_ave_balance_parameter() + diff_sum * neighborhood_solution.get_sum_balance_parameter();
+                double diff_eval = neighborhood_solution.calc_diff_eval(neighborhood_solution.evaluation_shift(item, g_id));
                 if (diff_eval > max_diff) {
                     max_item_ptr.reset(&item);
                     max_group_id = g_id;

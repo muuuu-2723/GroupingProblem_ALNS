@@ -21,6 +21,8 @@ private:
     std::vector<double> weight_upper;
     std::vector<double> weight_lower;
     std::vector<Item> items;
+    size_t item_penalty_num;
+    size_t group_penalty_num;
     void read_problem_file(const std::filesystem::path& problem_file_path, const std::filesystem::path& data_file_path);
     void read_data_file(const std::filesystem::path& file_path);
 public:
@@ -33,6 +35,8 @@ public:
     const std::vector<double>& get_weight_upper() const;
     const std::vector<double>& get_weight_lower() const;
     const std::vector<Item>& get_items() const;
+    size_t get_item_penalty_num() const;
+    size_t get_group_penalty_num() const;
 };
 
 inline const std::vector<double>& Input::get_item_relation_params() const {
@@ -61,6 +65,14 @@ inline const std::vector<double>& Input::get_weight_lower() const {
 
 inline const std::vector<Item>& Input::get_items() const {
     return items;
+}
+
+inline size_t Input::get_item_penalty_num() const {
+    return item_penalty_num;
+}
+
+inline size_t Input::get_group_penalty_num() const {
+    return group_penalty_num;
 }
 
 #endif

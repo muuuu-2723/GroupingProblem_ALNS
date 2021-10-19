@@ -119,20 +119,27 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path, co
     weight_lower.resize(Item::w_size);
     input_params(ifs, weight_lower);
 
-    int num;
-    ifs >> num;
-    for (size_t i = 0; i < num; ++i) {
+    ifs >> item_penalty_num;
+    for (size_t i = 0; i < item_penalty_num; ++i) {
         int id1, id2;
         ifs >> id1 >> id2;
         items[id1].item_penalty[id2] = 1;
         items[id2].item_penalty[id1] = 1;
     }
 
+    ifs >> group_penalty_num;
+    for (size_t i = 0; i < group_penalty_num; ++i) {
+        int item_id, group_id;
+        ifs >> item_id >> group_id;
+        items[item_id].group_penalty[group_id] = 1;
+    }
+
+    size_t num;
     ifs >> num;
     for (size_t i = 0; i < num; ++i) {
         int item_id, group_id;
         ifs >> item_id >> group_id;
-        items[item_id].group_penalty[group_id] = 1;
+        items[item_id].predefined_group = group_id;
     }
 
     ifs.close();

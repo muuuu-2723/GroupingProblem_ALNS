@@ -14,15 +14,15 @@ using std::cerr;
 using std::endl;
 
 int Group::N = 0;
-vector<double> Group::upper_weight;
-vector<double> Group::lower_weight;
 
 /*コンストラクタ*/
-Group::Group(int group_id) {
+Group::Group(int group_id, const std::vector<double>& upper, const std::vector<double>& lower) {
     id = group_id;
     member_num = 0;
     sum_weight.assign(Item::w_size, 0);
     sum_values.assign(Item::v_size, 0);
+    upper_weight = upper;
+    lower_weight = lower;
 }
 
 /*メンバー指定のコンストラクタ*/
@@ -70,23 +70,23 @@ void Group::add_member(const Item& item) {
 }
 
 /*あるアイテムとこのグループのitem_relation*/
-vector<double> Group::item_relation(const Item& item) const {
+vector<double> Group::item_relation(const Item& item, const std::vector<double>& params) const {
     vector<double> result(Item::item_r_size, 0);
     for (const auto& m_id : member_id) {
         for (size_t i = 0; i < Item::item_r_size; ++i) {
-            result[i] += item.item_relations[m_id][i];
+            result[i] += item.item_relations[m_id][i] * params[i];
         }
     }
     return std::move(result);
 }
 
 /*このグループのitem_relationの合計*/
-vector<double> Group::sum_item_relation(const vector<Item>& items) const {
+vector<double> Group::sum_item_relation(const vector<Item>& items, const std::vector<double>& params) const {
     vector<double> result(Item::item_r_size, 0);
     for (auto itr1 = member_id.begin(), end = member_id.end(); itr1 != end; ++itr1) {
         for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
             for (size_t i = 0; i < Item::item_r_size; ++i) {
-                result[i] += items[*itr1].item_relations[*itr2][i];
+                result[i] += items[*itr1].item_relations[*itr2][i] * params[i];
             }
         }
     }
@@ -94,11 +94,11 @@ vector<double> Group::sum_item_relation(const vector<Item>& items) const {
 }
 
 /*このグループのgroup_relationの合計*/
-vector<double> Group::sum_group_relation(const vector<Item>& items) const {
+vector<double> Group::sum_group_relation(const vector<Item>& items, const std::vector<double>& params) const {
     vector<double> result(Item::group_r_size, 0);
     for (const auto& m_id : member_id) {
         for (size_t i = 0; i < Item::group_r_size; ++i) {
-            result[i] += items[m_id].group_relations[id][i];
+            result[i] += items[m_id].group_relations[id][i] * params[i];
         }
     }
     return std::move(result);
@@ -172,16 +172,6 @@ int Group::calc_group_penalty(const vector<Item>& items) const {
         penalty += items[m_id].group_penalty[id];
     }
     return penalty;
-}
-
-/*weightの上下限を設定*/
-void Group::set_upper_and_lower(const vector<double>& upper, const vector<double>& lower) {
-    if (upper.size() != Item::w_size || lower.size() != Item::w_size) {
-        std::cerr << "weightの上下限のサイズエラー" << std::endl;
-        std::exit(1);
-    }
-    upper_weight = upper;
-    lower_weight = lower;
 }
 
 /*グループの出力用*/

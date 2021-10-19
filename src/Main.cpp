@@ -34,6 +34,8 @@ int main(int argc, char* argv[]) {
     std::filesystem::path data_file("random_data.dat");
     std::filesystem::path problem_file("problem.dat");
 
+    std::unique_ptr<Input> input;
+
     try {
         std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-ip InputProblemFile] [-id InputDataFile]");
         if (argc > 6) {
@@ -59,23 +61,24 @@ int main(int argc, char* argv[]) {
                 throw argument_error;
             }
         }
-        
-        if (is_debug) {
-            do {
-                std::cout << "リアルタイムグラフで描画するものを選択" << std::endl;
-                std::cout << "0:なし, 1:評価値, 2:構築法の確率, 3:破壊法の確率" << std::endl;
-                std::cout << "debug_num = ";
-                std::cin >> debug_num;
-            } while (debug_num < 0 || debug_num > 3);
-        }
 
-        Input input(problem_file, data_file);
-        solve(input, data_file, is_debug, debug_num);
+        input = std::make_unique<Input>(problem_file, data_file);
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         std::exit(1);
     }
+    
+    if (is_debug) {
+        do {
+            std::cout << "リアルタイムグラフで描画するものを選択" << std::endl;
+            std::cout << "0:なし, 1:評価値, 2:構築法の確率, 3:破壊法の確率" << std::endl;
+            std::cout << "debug_num = ";
+            std::cin >> debug_num;
+        } while (debug_num < 0 || debug_num > 3);
+    }
+
+    solve(*input, data_file, is_debug, debug_num);
 
     return 0;
 }

@@ -58,25 +58,11 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
 
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
-                        //ペナルティ以外の評価値の変化量を計算
-                        double weight = 0;
-                        for (auto&& r : solution.get_each_group_item_relation(t.item, t_group_id)) {
-                            weight -= r * solution.get_relation_parameter();
-                        }
-                        for (auto&& r : t.item.group_relations[t_group_id]) {
-                            weight -= r * solution.get_relation_parameter();
-                        }
-                        for (size_t i = 0; i < Item::v_size; ++i) {
-                            weight -= std::abs(solution.get_ave()[i] - t_group.value_average(i)) / Group::N * solution.get_ave_balance_parameter();
-                            double new_ave = (t_group.get_sum_values()[i] - t.item.values[i]) / (t_group.get_member_num() - 1);
-                            weight += std::abs(solution.get_ave()[i] - new_ave) / Group::N * solution.get_ave_balance_parameter();
-
-                            weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
-                            weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] - t.item.values[i])) * solution.get_sum_balance_parameter();
-                        }
+                        //評価値の変化量を計算
+                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(t.item, t_group_id, Group::N)}));
 
                         //辺をグラフに追加
-                        graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
+                        graph[s.id].push_back(Edge(t.id, -weight));
                     }
                 }
                 else if (t.item.id >= Item::N) {                                            //tがダミーアイテムの場合
@@ -87,25 +73,11 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
 
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
-                        //ペナルティ以外の評価値の変化量を計算
-                        double weight = 0;
-                        for (auto&& r : solution.get_each_group_item_relation(s.item, t_group_id)) {
-                            weight += r * solution.get_relation_parameter();
-                        }
-                        for (auto&& r : s.item.group_relations[t_group_id]) {
-                            weight += r * solution.get_relation_parameter();
-                        }
-                        for (size_t i = 0; i < Item::v_size; ++i) {
-                            weight -= std::abs(solution.get_ave()[i] - t_group.value_average(i)) / Group::N * solution.get_ave_balance_parameter();
-                            double new_ave = (t_group.get_sum_values()[i] + s.item.values[i]) / (t_group.get_member_num() + 1);
-                            weight += std::abs(solution.get_ave()[i] - new_ave) / Group::N * solution.get_ave_balance_parameter();
-
-                            weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
-                            weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] + s.item.values[i])) * solution.get_sum_balance_parameter();
-                        }
+                        //評価値の変化量を計算
+                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(s.item, Group::N, t_group_id)}));
 
                         //辺をグラフに追加
-                        graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
+                        graph[s.id].push_back(Edge(t.id, -weight));
                     }
                 }
                 else {                                                                      //sとtがダミーアイテムでない場合
@@ -117,36 +89,11 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                     
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
-                        //ペナルティ以外の評価値の変化量を計算
-                        double weight = 0;
-                        for (auto&& r : solution.get_each_group_item_relation(t.item, t_group_id)) {
-                            weight -= r * solution.get_relation_parameter();
-                        }
-                        for (auto&& r : solution.get_each_group_item_relation(s.item, t_group_id)) {
-                            weight += r * solution.get_relation_parameter();
-                        }
-                        for (size_t i = 0; i < Item::item_r_size; ++i) {
-                            weight -= s.item.item_relations[t.item.id][i];
-                        }
-
-                        for (auto&& r : t.item.group_relations[t_group_id]) {
-                            weight -= r * solution.get_relation_parameter();
-                        }
-                        for (auto&& r : s.item.group_relations[t_group_id]) {
-                            weight += r * solution.get_relation_parameter();
-                        }
-
-                        for (size_t i = 0; i < Item::v_size; ++i) {
-                            weight -= std::abs(solution.get_ave()[i] - t_group.value_average(i)) / Group::N * solution.get_ave_balance_parameter();
-                            double new_ave = (t_group.get_sum_values()[i] + s.item.values[i] - t.item.values[i]) / t_group.get_member_num();
-                            weight += std::abs(solution.get_ave()[i] - new_ave) / Group::N * solution.get_ave_balance_parameter();
-
-                            weight -= std::abs((solution.get_sum_values()[i] / Group::N) - t_group.get_sum_values()[i]) * solution.get_sum_balance_parameter();
-                            weight += std::abs((solution.get_sum_values()[i] / Group::N) - (t_group.get_sum_values()[i] + s.item.values[i] - t.item.values[i])) * solution.get_sum_balance_parameter();
-                        }
+                        //評価値の変化量を計算
+                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(s.item, Group::N, t_group_id), MoveItem(t.item, t_group_id, Group::N)}));
 
                         //辺をグラフに追加
-                        graph[s.id].push_back(Edge(t.id, -weight + penalty * solution.get_penalty_parameter()));
+                        graph[s.id].push_back(Edge(t.id, -weight));
                     }
                 }
             }
