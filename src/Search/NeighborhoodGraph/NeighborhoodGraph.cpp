@@ -52,9 +52,16 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                 const Group& t_group = solution.get_groups()[t_group_id];
                 if (s.item.id >= Item::N) {                                                 //sがダミーアイテムの場合
                     //tを現在のグループから削除したときのペナルティを計算
-                    double penalty = t_group.diff_weight_penalty({}, {&t.item});
-                    penalty -= t.item.group_penalty[t_group_id];
-                    penalty -= solution.get_each_group_item_penalty(t.item, t_group_id);
+                    double penalty = 0;
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
+                        penalty += t_group.diff_weight_penalty({}, {&t.item});
+                    }
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_PENA)) {
+                        penalty -= t.item.group_penalty[t_group_id];
+                    }
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
+                        penalty -= solution.get_each_group_item_penalty(t.item, t_group_id);
+                    }
 
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
@@ -67,9 +74,16 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                 }
                 else if (t.item.id >= Item::N) {                                            //tがダミーアイテムの場合
                     //sをt_groupに追加したときのペナルティを計算
-                    double penalty = t_group.diff_weight_penalty({&s.item}, {});
-                    penalty += s.item.group_penalty[t_group_id];
-                    penalty += solution.get_each_group_item_penalty(s.item, t_group_id);
+                    double penalty = 0;
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
+                        penalty += t_group.diff_weight_penalty({&s.item}, {});
+                    }
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_PENA)) {
+                        penalty += s.item.group_penalty[t_group_id];
+                    }
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
+                        penalty += solution.get_each_group_item_penalty(s.item, t_group_id);
+                    }
 
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
@@ -83,9 +97,16 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                 else {                                                                      //sとtがダミーアイテムでない場合
                     
                     //tを現在のグループから削除し, sをそのグループに追加したときのペナルティを計算
-                    double penalty = t_group.diff_weight_penalty({&s.item}, {&t.item});
-                    penalty += s.item.group_penalty[t_group_id] - t.item.group_penalty[t_group_id];
-                    penalty += solution.get_each_group_item_penalty(s.item, t_group_id) - solution.get_each_group_item_penalty(t.item, t_group_id) - s.item.item_penalty[t.item.id];
+                    double penalty = 0;
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
+                        penalty += t_group.diff_weight_penalty({&s.item}, {&t.item});
+                    }
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_PENA)) {
+                        penalty += s.item.group_penalty[t_group_id] - t.item.group_penalty[t_group_id];
+                    }
+                    if (solution.get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
+                        penalty += solution.get_each_group_item_penalty(s.item, t_group_id) - solution.get_each_group_item_penalty(t.item, t_group_id) - s.item.item_penalty[t.item.id];
+                    }
                     
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {

@@ -77,7 +77,10 @@ Solution WeightPenaltyGreedy::operator()(const Solution& current_solution, std::
             for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
                 vector<const Item*> tmp = add_members[g_itr->get_id()];
                 tmp.push_back(&items[id]);
-                int diff_penalty = g_itr->diff_weight_penalty(tmp, {}) - g_itr->diff_weight_penalty(add_members[g_itr->get_id()], {});
+                int diff_penalty = 0;
+                if (neighborhood->get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
+                    diff_penalty += g_itr->diff_weight_penalty(tmp, {}) - g_itr->diff_weight_penalty(add_members[g_itr->get_id()], {});
+                }
                 if (diff_penalty < min_penalty) {
                     min_penalty = diff_penalty;
                     min_group_id = g_itr->get_id();

@@ -31,7 +31,10 @@ Solution ItemPenaltyGreedy::operator()(const Solution& current_solution, std::sh
             int min_penalty = INT_MAX;
             auto [group_begin, gorup_end] = neighborhood->get_groups_range();
             for (auto g_itr = group_begin; g_itr != gorup_end; ++g_itr) {
-                int penalty = neighborhood->get_each_group_item_penalty(items[id], g_itr->get_id());
+                int penalty = 0;
+                if (neighborhood->get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
+                    penalty = neighborhood->get_each_group_item_penalty(items[id], g_itr->get_id());
+                }
                 if (min_penalty > penalty) {
                     min_penalty = penalty;
                     assign_group_id = g_itr->get_id();

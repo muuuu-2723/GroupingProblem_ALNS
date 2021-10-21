@@ -25,7 +25,10 @@ Solution DecreaseGroup::operator()(const Solution& current_solution, std::shared
             for (auto&& group : neighborhood->get_valid_groups()) {
                 vector<const Item*> tmp = add_members[group->get_id()];
                 tmp.push_back(&items[id]);
-                int diff_penalty = group->diff_weight_penalty(tmp, {}) - group->diff_weight_penalty(add_members[group->get_id()], {});
+                int diff_penalty = 0;
+                if (neighborhood->get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
+                    diff_penalty += group->diff_weight_penalty(tmp, {}) - group->diff_weight_penalty(add_members[group->get_id()], {});
+                }
                 if (diff_penalty < min_penalty) {
                     min_penalty = diff_penalty;
                     assign_group_id = group->get_id();

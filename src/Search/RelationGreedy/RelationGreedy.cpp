@@ -35,11 +35,18 @@ Solution RelationGreedy::operator()(const Solution& current_solution, std::share
             for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
                 int group_member_num = g_itr->get_member_num();
                 //item_relationはアイテム数を多くすれば大きくなるため平均値で評価
-                auto& item_relations = neighborhood->get_each_group_item_relation(items[id], g_itr->get_id());
-                double value = std::accumulate(item_relations.begin(), item_relations.end(), 0.0);
-                value /= group_member_num;
+                double value = 0;
+                if (neighborhood->get_eval_flags().test(Solution::EvalIdx::ITEM_R)) {
+                    auto& item_relations = neighborhood->get_each_group_item_relation(items[id], g_itr->get_id());
+                    value += std::accumulate(item_relations.begin(), item_relations.end(), 0.0);
+                    value /= group_member_num;
+                }
 
-                value += std::accumulate(items[id].group_relations[g_itr->get_id()].begin(), items[id].group_relations[g_itr->get_id()].end(), 0.0);
+                if (neighborhood->get_eval_flags().test(Solution::EvalIdx::GROUP_R)) {
+                    value += std::transform_reduce(items[id].group_relations[g_itr->get_id()].begin(), items[id].group_relations[g_itr->get_id()].end(),
+                                                   neighborhood->get_group_relation_params().begin(), 0);
+                }
+
                 if (value > max_value) {
                     max_value = value;
                     assign_group_id = g_itr->get_id();
