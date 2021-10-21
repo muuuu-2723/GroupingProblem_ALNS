@@ -3,6 +3,7 @@
 
 #include <Group.hpp>
 #include <Item.hpp>
+#include <Input.hpp>
 #include <vector>
 #include <optional>
 #include <iostream>
@@ -11,8 +12,6 @@
 #include <memory>
 #include <list>
 #include <bitset>
-
-class Input;
 
 /*アイテムの移動情報*/
 struct MoveItem {
@@ -38,19 +37,22 @@ private:
     std::vector<std::vector<std::optional<int>>> each_group_item_penalty;                       //それぞれのグループに対するitem_penalty each_group_item_penalty[アイテム][グループ]
     std::vector<double> aves;                                                                   //valueのアイテム単位での平均
     std::vector<double> sum_values;                                                             //valueの合計
+    Input::Opt opt;
     std::vector<double> item_relation_params;
     std::vector<double> group_relation_params;
     std::vector<double> value_ave_params;
     std::vector<double> value_sum_params;
     int penalty_param;
-    std::bitset<7> eval_flags;
+    double group_num_param;
+    double constant;
+    std::bitset<8> eval_flags;
 
     void move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double>& diff);  //移動処理
     void set_eval_value(int relation, int penalty, double ave_balance, double sum_balance);                                 //評価値の元となるrelation, penalty, ave_balance, sum_balamceの設定
 
 public:
     enum EvalIdx {
-        WEIGHT_PENA, ITEM_PENA, GROUP_PENA, ITEM_R, GROUP_R, VALUE_AVE, VALUE_SUM
+        WEIGHT_PENA, ITEM_PENA, GROUP_PENA, ITEM_R, GROUP_R, VALUE_AVE, VALUE_SUM, GROUP_NUM
     };
     Solution(const Input& input);                                                                                         //コンストラクタ
     double get_eval_value() const;                                                                                              //評価値を取得
@@ -77,7 +79,7 @@ public:
     double get_ave_balance() const;                                                                                             //各グループのvalueの平均値のばらつきを取得
     double get_sum_balance() const;                                                                                             //各グループのvalueの合計のばらつきを取得                                                                                    //sum_balanceのパラメータを取得
     const std::vector<double>& get_group_relation_params() const;
-    const std::bitset<7>& get_eval_flags() const;
+    const std::bitset<8>& get_eval_flags() const;
 
     friend std::ostream& operator<<(std::ostream&, const Solution&);                                                            //解の出力用
 };
@@ -92,7 +94,7 @@ inline void Solution::set_eval_value(int relation, int penalty, double ave_balan
 
 /*評価値を取得*/
 inline double Solution::get_eval_value() const {
-    return relation - penalty * penalty_param + ave_balance + sum_balance;
+    return relation - penalty * penalty_param + ave_balance + sum_balance + constant;
 }
 
 inline double Solution::calc_diff_eval(const std::tuple<double, double, double, double>& diff) const {
@@ -159,7 +161,7 @@ inline const std::vector<double>& Solution::get_group_relation_params() const {
     return group_relation_params;
 }
 
-inline const std::bitset<7>& Solution::get_eval_flags() const {
+inline const std::bitset<8>& Solution::get_eval_flags() const {
     return eval_flags;
 }
 

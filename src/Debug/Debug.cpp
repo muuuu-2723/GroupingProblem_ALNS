@@ -14,13 +14,20 @@ using std::vector;
 using std::string;
 
 Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const Solution& solution,
-             const Solution& best, const int& x, const std::string& datafile, int debug_num, int max_x, double max_eval)
+             const Solution& best, const int& x, const std::string& datafile, int debug_num, int max_x, double max_eval, const Input& input)
              : search_random(search_random), destroy_random(destroy_random), solution(solution), best(best), x(x), debug_num(debug_num) {
     
     auto output_dir = Input::get_exe_path().parent_path();
     eval_out.open(output_dir / ("eval_" + datafile));
     search_out.open(output_dir / ("search_" + datafile));
     destroy_out.open(output_dir / ("destroy_" + datafile));
+
+    if (input.get_opt() == Input::Opt::MAX) {
+        param = 1;
+    }
+    else {
+        param = -1;
+    }
 
     if (this->debug_num != 0) {
         if (!g.open()) {
@@ -45,8 +52,8 @@ Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistributi
     }
 
     if (this->debug_num != 0) {
-        prev_eval = solution.get_eval_value();
-        prev_best_eval = best.get_eval_value();
+        prev_eval = solution.get_eval_value() * param;
+        prev_best_eval = best.get_eval_value() * param;
     }
     if (this->debug_num == 2) {
         prev_p = search_random.get_probabilities();
@@ -95,12 +102,12 @@ void Debug::output() {
     destroy_out << std::endl;
 
     if (debug_num == 1) {
-        g.line(x, prev_eval, x + 1, solution.get_eval_value(), "lightgreen");
-        g.line(x, prev_best_eval, x + 1, best.get_eval_value(), "red");
+        g.line(x, prev_eval, x + 1, solution.get_eval_value() * param, "lightgreen");
+        g.line(x, prev_best_eval, x + 1, best.get_eval_value() * param, "red");
     }
     else if (debug_num != 0) {
-        g.line(x, prev_eval - lower_eval, x + 1, solution.get_eval_value() - lower_eval, "lightgreen");
-        g.line(x, prev_best_eval - lower_eval, x + 1, best.get_eval_value() - lower_eval, "red");
+        g.line(x, prev_eval - lower_eval, x + 1, solution.get_eval_value() * param - lower_eval, "lightgreen");
+        g.line(x, prev_best_eval - lower_eval, x + 1, best.get_eval_value() * param - lower_eval, "red");
     }
 
     if (debug_num == 2) {
@@ -118,7 +125,7 @@ void Debug::output() {
         prev_p = std::move(now_p);
     }
     if (debug_num != 0) {
-        prev_eval = solution.get_eval_value();
-        prev_best_eval = best.get_eval_value();
+        prev_eval = solution.get_eval_value() * param;
+        prev_best_eval = best.get_eval_value() * param;
     }
 }

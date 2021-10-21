@@ -25,7 +25,7 @@ void RandomGroupDestroy::operator()(Solution& solution) {
 
     MyRandom::shuffle(target_group_ids);
     vector<MoveItem> move_items;
-    move_items.reserve(((Item::N / Group::N) + 1) * destroy_num);
+    move_items.reserve(Item::N);
 
     for (int i = 0; i < destroy_num; ++i) {
         const Group& g = solution.get_groups()[target_group_ids[i]];

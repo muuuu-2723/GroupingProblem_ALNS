@@ -119,6 +119,9 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path, co
     weight_lower.resize(Item::w_size);
     input_params(ifs, weight_lower);
 
+    ifs >> group_num_param;
+    ifs >> constant;
+
     ifs >> item_penalty_num;
     for (size_t i = 0; i < item_penalty_num; ++i) {
         int id1, id2;
@@ -160,9 +163,14 @@ void Input::read_data_file(const std::filesystem::path& file_path) {
             ifs >> w;
         }
 
-        item.values.resize(Item::v_size);
-        for (auto&& v : item.values) {
-            ifs >> v;
+        if (Item::v_size == 0) {
+            item.values.assign(1, 0);
+        }
+        else {
+            item.values.resize(Item::v_size);
+            for (auto&& v : item.values) {
+                ifs >> v;
+            }
         }
 
         item.item_relations.assign(Item::N, vector<double>(Item::item_r_size, 0));
