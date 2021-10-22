@@ -25,7 +25,6 @@
 
 using std::vector;
 
-vector<Item> items;
 void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num);
 
 int main(int argc, char* argv[]) {
@@ -84,13 +83,15 @@ int main(int argc, char* argv[]) {
 }
 
 void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num) {
-    double profit_ave = 0;
+    double relation_ave = 0;
     double penalty_ave = 0;
-    double deviation_ave = 0;
+    double ave_balance_ave = 0;
+    double sum_balance_ave = 0;
+    double group_num_ave = 0;
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 30000;
+    int M = 3000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -98,37 +99,35 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         std::ofstream eval_out, search_out, destroy_out;
 
         auto start = std::chrono::high_resolution_clock::now();
-        Solution now(items);
-        now.evaluation_all(items);
+        Solution now(input);
+        now.evaluation_all(input.get_items());
         std::cerr << now;
         Solution best(now);
-        /*auto t_begin = now.debug_evaluation_all(items);
+        /*auto t_begin = now.debug_evaluation_all(input.get_items());
         std::cout << std::get<2>(t_begin) << std::endl;*/
 
         vector<std::unique_ptr<Search>> searches;
-        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(items, 1, 1));
-        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(items, 1, 1));
-        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(items, 1, 1));
-        searches.emplace_back(std::make_unique<RelationGreedy>(items, 1, 1));
-        searches.emplace_back(std::make_unique<ValueAverageGreedy>(items, 1, 1));
-        searches.emplace_back(std::make_unique<ValueSumGreedy>(items, 1, 1));
-        searches.emplace_back(std::make_unique<DecreaseGroup>(items, 1, 1));
-        searches.emplace_back(std::make_unique<ShiftNeighborhood>(items, 1, 1));
-        searches.emplace_back(std::make_unique<SwapNeighborhood>(items, 1, /*4*/2));
-        searches.emplace_back(std::make_unique<NeighborhoodGraph>(items, 1, 4));
-        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(items, 1, 1));
+        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<RelationGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<ValueAverageGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2));
+        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4));
+        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1));
 
-        std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(items, (1.5 * Item::N) / Group::N, 1, 1);
-        std::shared_ptr<MinimumDestroy> minimum_destroy = std::make_shared<MinimumDestroy>(items, (1.5 * Item::N) / Group::N, 1, 1);
+        std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
+        std::shared_ptr<MinimumDestroy> minimum_destroy = std::make_shared<MinimumDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
 
         vector<std::shared_ptr<Destroy>> destructions;
         destructions.emplace_back(random_destroy);
-        destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, Group::N / 3, 1, 1));
+        destructions.emplace_back(std::make_shared<RandomGroupDestroy>(input.get_items(), Group::N / 3, 1, 1));
         destructions.emplace_back(minimum_destroy);
-        destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, Group::N / 3, 1, 1));
-        /*destructions.emplace_back(std::make_shared<RandomDestroy>(items, Item::N / Group::N));
-        destructions.emplace_back(std::make_shared<MinimumDestroy>(items, Item::N / Group::N));*/
-        destructions.emplace_back(std::make_shared<Destroy>(items, 1, 1));
+        destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(input.get_items(), Group::N / 3, 1, 1));
+        destructions.emplace_back(std::make_shared<Destroy>(input.get_items(), 1, 1));
 
         vector<double> search_weights(searches.size(), 1);
         vector<double> destroy_weights(destructions.size() - 1, 1);
@@ -265,10 +264,12 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         /*std::cout << "eval = " << now.get_eval_value() << std::endl;
         std::cout << "penalty = " << now.get_debug_penalty() << std::endl;
         std::cout << "deviation = " << std::sqrt(now.get_debug_dispersion()) << std::endl;*/
-        best.evaluation_all(items);
-        profit_ave += best.get_relation();
+        best.evaluation_all(input.get_items());
+        relation_ave += best.get_relation();
         penalty_ave += best.get_penalty();
-        deviation_ave += best.get_deviation();
+        ave_balance_ave += best.get_ave_balance();
+        sum_balance_ave += best.get_sum_balance();
+        group_num_ave += best.get_valid_groups().size();
         eval_ave += best.get_eval_value();
         /*for (const auto& group : now.get_groups()) {
             for (int i = 0; i < 3; i++) {
@@ -282,9 +283,11 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         }
         std::cout << now;*/
     }
-    std::cout << "profit_ave:" << profit_ave / N << std::endl;
+    std::cout << "relation_ave:" << relation_ave / N << std::endl;
     std::cout << "penalty_ave:" << penalty_ave / N << std::endl;
-    std::cout << "deviation_ave:" << deviation_ave / N << std::endl;
+    std::cout << "ave_balance_ave:" << ave_balance_ave / N << std::endl;
+    std::cout << "sum_balance_ave:" << sum_balance_ave / N << std::endl;
+    std::cout << "group_num_ave:" << group_num_ave / N << std::endl;
     std::cout << "eval_ave:" << eval_ave / N << std::endl;
     std::cout << "time_ave:" << time_ave / N << "[ms]" << std::endl;
 }
