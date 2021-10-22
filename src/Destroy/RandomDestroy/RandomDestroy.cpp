@@ -9,7 +9,7 @@
 using std::vector;
 
 /*コンストラクタ*/
-RandomDestroy::RandomDestroy(std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {
+RandomDestroy::RandomDestroy(const std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {
     target_item_ids.reserve(Item::N);
     for (auto&& item : items) {
         if (item.predefined_group == -1) {

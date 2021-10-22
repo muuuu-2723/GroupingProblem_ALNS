@@ -55,6 +55,10 @@ public:
         WEIGHT_PENA, ITEM_PENA, GROUP_PENA, ITEM_R, GROUP_R, VALUE_AVE, VALUE_SUM, GROUP_NUM
     };
     Solution(const Input& input);                                                                                                   //コンストラクタ
+    Solution(const Solution& s);
+    Solution(Solution&& s) = default;
+    Solution& operator=(const Solution& s);
+    Solution& operator=(Solution&& s) = default;
     double get_eval_value() const;                                                                                                  //評価値を取得
     double calc_diff_eval(const std::tuple<double, double, double, double, int>& diff) const;                                       //変化量に対する評価値を計算
     const std::vector<double>& get_ave() const;                                                                                     //valueのアイテム単位での平均を取得
@@ -83,6 +87,38 @@ public:
 
     friend std::ostream& operator<<(std::ostream&, const Solution&);                                                                //解の出力用
 };
+
+inline Solution& Solution::operator=(const Solution& s) {
+    std::cerr << "コピー代入演算子" << std::endl;
+    groups = s.groups;
+    item_group_ids = s.item_group_ids;
+    relation = s.relation;
+    penalty = s.penalty;
+    ave_balance = s.ave_balance;
+    sum_balance = s.sum_balance;
+    each_group_item_relation = s.each_group_item_relation;
+    each_group_item_penalty = s.each_group_item_penalty;
+    aves = s.aves;
+    sum_values = s.sum_values;
+    opt = s.opt;
+    item_relation_params = s.item_relation_params;
+    group_relation_params = s.group_relation_params;
+    value_ave_params = s.value_ave_params;
+    value_sum_params = s.value_sum_params;
+    penalty_param = s.penalty_param;
+    group_num_param = s.group_num_param;
+    constant = s.constant;
+    eval_flags = s.eval_flags;
+
+    valid_groups.clear();
+    for (size_t i = 0; i < Group::N; ++i) {
+        if (groups[i].get_member_num() != 0) {
+            valid_groups.emplace_back(std::make_unique<const Group>(groups[i]));
+        }
+    }
+
+    return *this;
+}
 
 /*評価値の元となるrelation, penalty, ave_balance, sum_balamceの設定*/
 inline void Solution::set_eval_value(int relation, int penalty, double ave_balance, double sum_balance) {

@@ -121,7 +121,7 @@ Solution ValueDiversityGreedy::operator()(const Solution& current_solution, std:
             vector<vector<int>> assignment(blocks.size(), vector<int>(blocks[0].size(), 0));
             for (auto&& block : blocks[0]) {
                 std::sort(block.begin(), block.end(), [&](const auto& a, const auto& b) {
-                    std::accumulate(assignment[block_id[a]].begin(), assignment[block_id[a]].end(), 0) < std::accumulate(assignment[block_id[b]].begin(), assignment[block_id[b]].end(), 0);
+                    return std::accumulate(assignment[block_id[a]].begin(), assignment[block_id[a]].end(), 0) < std::accumulate(assignment[block_id[b]].begin(), assignment[block_id[b]].end(), 0);
                 });
                 for (auto&& id : block) {
                     int idx = 0;

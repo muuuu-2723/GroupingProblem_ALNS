@@ -4,8 +4,8 @@
 #include <list>
 #include <vector>
 #include <iostream>
-
-struct Item;
+#include <cfloat>
+#include <Item.hpp>
 
 /*アイテムを分けるグループ*/
 class Group {
@@ -44,8 +44,6 @@ public:
 
     friend std::ostream& operator<<(std::ostream&, const Group&);                                                       //グループの出力用
 };
-
-Group::Group(int group_id) : Group(group_id, vector<double>(Item::w_size, DBL_MAX), vector<double>(Item::w_size, 0)) {}
 
 /*グループのid(番号)を取得*/
 inline int Group::get_id() const {

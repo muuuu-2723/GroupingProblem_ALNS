@@ -43,8 +43,9 @@ Solution RelationGreedy::operator()(const Solution& current_solution, std::share
                 }
 
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::GROUP_R)) {
-                    value += std::transform_reduce(items[id].group_relations[g_itr->get_id()].begin(), items[id].group_relations[g_itr->get_id()].end(),
-                                                   neighborhood->get_group_relation_params().begin(), 0);
+                    for (size_t i = 0; i < Item::group_r_size; ++i) {
+                        value += items[id].group_relations[g_itr->get_id()][i] * neighborhood->get_group_relation_params()[i];
+                    }
                 }
 
                 if (value > max_value) {
@@ -54,6 +55,8 @@ Solution RelationGreedy::operator()(const Solution& current_solution, std::share
             }
             //すでに割り当てが決定したアイテムとの関係値を考慮するために一人ずつ割り当てる
             neighborhood->move({MoveItem(items[id], neighborhood->get_group_id(items[id]), assign_group_id)});
+            //std::cerr << "re" << std::endl;
+            //std::cerr << *neighborhood << std::endl;
         }
 
         if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {

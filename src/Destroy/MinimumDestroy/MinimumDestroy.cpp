@@ -17,12 +17,12 @@ using std::vector;
  */
 void MinimumDestroy::operator()(Solution& solution) {
     //関係値の和からペナルティの和を引いた値とアイテムのペアを作り, ソートする
-    vector<std::pair<double, const Item&>> item_eval;
+    vector<std::pair<double, size_t>> item_eval;
     item_eval.reserve(Item::N);
     for (const auto& item : items) {
         if (item.predefined_group == -1) {
             double eval = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(item, solution.get_group_id(item), Group::N)}));
-            item_eval.push_back({eval, item});
+            item_eval.push_back({eval, item.id});
         }
     }
 
@@ -31,7 +31,8 @@ void MinimumDestroy::operator()(Solution& solution) {
     vector<MoveItem> move_items;
     move_items.reserve(destroy_num);
     for (size_t i = 0; i < destroy_num; ++i) {
-        move_items.push_back(MoveItem(item_eval[i].second, solution.get_group_id(item_eval[i].second), Group::N));
+        const Item& item = items[item_eval[i].second];
+        move_items.push_back(MoveItem(item, solution.get_group_id(item), Group::N));
     }
 
     solution.move(move_items);

@@ -34,6 +34,9 @@ Group::Group(Item& leader, vector<Item>& members, int group_id)
     }
 }
 
+Group::Group(int group_id) : Group(group_id, std::vector<double>(Item::w_size, DBL_MAX), std::vector<double>(Item::w_size, 0)) {}
+
+
 /*Š‘®‚·‚éƒAƒCƒeƒ€‚Ìíœ*/
 void Group::erase_member(const Item& item) {
     if (item.predefined_group != -1) {

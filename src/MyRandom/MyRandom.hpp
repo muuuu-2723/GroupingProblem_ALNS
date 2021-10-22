@@ -60,7 +60,7 @@ public:
         : dist(probabilities.begin(), probabilities.end()) {}
     
     /*確率分布に基づくインデックスを生成*/
-    int operator()() const {
+    int operator()() {
         return dist(mt);
     }
 

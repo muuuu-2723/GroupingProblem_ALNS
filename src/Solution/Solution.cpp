@@ -60,7 +60,7 @@ Solution::Solution(const Input& input) {
     groups.reserve(Group::N + 1);
     for (size_t i = 0; i < Group::N; ++i) {
         groups.push_back(Group(i, input.get_weight_upper(), input.get_weight_lower()));
-        valid_groups.emplace_back(std::make_unique<const Group>(&groups[i]));
+        valid_groups.emplace_back(std::make_unique<const Group>(groups[i]));
     }
     groups.push_back(Group(Group::N));
     each_group_item_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
@@ -100,6 +100,21 @@ Solution::Solution(const Input& input) {
     //PenaltyGreedy rg(items, 1);
     std::shared_ptr<Destroy> des = std::make_shared<Destroy>(input.get_items(), 1, 1);
     *this = std::move(rg(*this, des));
+}
+
+Solution::Solution(const Solution& s) : /*groups(s.groups), */item_group_ids(s.item_group_ids), relation(s.relation), penalty(s.penalty), ave_balance(s.ave_balance),
+                                        sum_balance(s.sum_balance), each_group_item_relation(s.each_group_item_relation), each_group_item_penalty(s.each_group_item_penalty),
+                                        aves(s.aves), sum_values(s.sum_values), opt(s.opt), item_relation_params(s.item_relation_params), group_relation_params(s.group_relation_params),
+                                        value_ave_params(s.value_ave_params), value_sum_params(s.value_sum_params), penalty_param(s.penalty_param), group_num_param(s.group_num_param),
+                                        constant(s.constant), eval_flags(s.eval_flags) {
+
+    groups = s.groups;
+    for (size_t i = 0; i < Group::N; ++i) {
+        if (groups[i].get_member_num() != 0) {
+            valid_groups.emplace_back(std::make_unique<const Group>(groups[i]));
+        }
+    }
+    std::cerr << "コピーコンストラクタ" << std::endl;
 }
 
 /*each_group_item_relationの値を取得, なければ計算して取得*/
@@ -550,16 +565,19 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
 
     //移動
     for (const auto& mi : move_items) {
-        //std::cerr << mi.item.id << " ";
+        //std::cerr << mi.item.id << " " << mi.source << " " << mi.destination << std::endl;
         assert(item_group_ids[mi.item.id] == mi.source);
         groups[mi.source].erase_member(mi.item);
         if (eval_flags.test(EvalIdx::GROUP_NUM)) {
             if (groups[mi.destination].get_member_num() == 0 && mi.destination != Group::N) {
-                valid_groups.push_back(std::make_unique<const Group>(&groups[mi.destination]));
+                valid_groups.emplace_back(std::make_unique<const Group>(groups[mi.destination]));
             }
         }
         groups[mi.destination].add_member(mi.item);
         item_group_ids[mi.item.id] = mi.destination;
+    }
+    for (auto&& group : groups) {
+        //std::cerr << group << std::endl;
     }
 
     if (eval_flags.test(EvalIdx::GROUP_NUM)) {
@@ -620,8 +638,11 @@ void Solution::move(const vector<MoveItem>& move_items) {
 
 /*解の出力用*/
 std::ostream& operator<<(std::ostream& out, const Solution& s) {
-    for (auto&& group : s.get_valid_groups()) {
+    /*for (auto&& group : s.get_valid_groups()) {
         out << *group << std::endl;
+    }*/
+    for (auto&& g : s.groups) {
+        out << g << std::endl;
     }
     out << "評価値:";
     if (s.opt == Input::Opt::MAX) {

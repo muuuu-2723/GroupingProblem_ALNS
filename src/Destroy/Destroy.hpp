@@ -14,7 +14,7 @@ protected:
     Weight weight;                                                      //選択確率を決める重み
 public:
     /*コンストラクタ*/
-    Destroy(std::vector<Item>& items, double init_weight, int param) : items(items), weight(init_weight ,param) {}
+    Destroy(const std::vector<Item>& items, double init_weight, int param) : items(items), weight(init_weight ,param) {}
     /*解を破壊*/
     virtual void operator()(Solution& solution) {}
     virtual void update_weight(double score) final;

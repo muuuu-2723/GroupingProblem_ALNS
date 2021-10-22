@@ -149,7 +149,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         std::unique_ptr<Debug> debug_ptr;
         if (is_debug) {
             double max_eval = 4000;
-            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, data_file.filename().string(), debug_num, M, max_eval);
+            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, data_file.filename().string(), debug_num, M, max_eval, input);
         }
 
         while (cnt < M) {

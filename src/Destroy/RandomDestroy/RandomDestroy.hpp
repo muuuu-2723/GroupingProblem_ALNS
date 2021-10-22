@@ -14,7 +14,7 @@ private:
     int destroy_num;                                        //除去するアイテム数
     std::vector<int> target_item_ids;                       //選ばれる可能性があるアイテムのid
 public:
-    RandomDestroy(std::vector<Item>& items, int destroy_num, double init_weight, int param);    //コンストラクタ
+    RandomDestroy(const std::vector<Item>& items, int destroy_num, double init_weight, int param);    //コンストラクタ
     void operator()(Solution& solution) override;                                               //破壊法を実行
     void add_destroy_num(int add_num);                                                          //除去するアイテム数をadd_num分増加
     void set_destroy_num(int set_num);                                                          //除去するアイテム数を設定
