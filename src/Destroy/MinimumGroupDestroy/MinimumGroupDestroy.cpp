@@ -17,6 +17,8 @@ using std::vector;
  *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
  */
 void MinimumGroupDestroy::operator()(Solution& solution) {
+    std::cerr << solution << std::endl;
+    std::cerr << "minimum_group" << std::endl;
     //関係値の和からペナルティの和を引いた値の和とグループのペアを作り, ソートする
     vector<std::pair<double, size_t>> group_eval;
     group_eval.reserve(Group::N);
@@ -25,13 +27,14 @@ void MinimumGroupDestroy::operator()(Solution& solution) {
         target_items.reserve(group->get_member_num());
         for (auto&& id : group->get_member_list()) {
             if (items[id].predefined_group != -1) continue;
+            std::cerr << id << std::endl;
             target_items.push_back(MoveItem(items[id], group->get_id(), Group::N));
         }
 
         double eval = solution.calc_diff_eval(solution.evaluation_diff(target_items));
         group_eval.push_back({eval, group->get_id()});
     }
-
+    std::cerr << "minimum_group" << std::endl;
     std::sort(group_eval.begin(), group_eval.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
 
     vector<MoveItem> move_items;
@@ -42,6 +45,6 @@ void MinimumGroupDestroy::operator()(Solution& solution) {
             move_items.push_back(MoveItem(items[id], g.get_id(), Group::N));
         }
     }
-
+    std::cerr << "minimum_group" << std::endl;
     solution.move(move_items);
 }

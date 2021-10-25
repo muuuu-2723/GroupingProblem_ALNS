@@ -56,9 +56,9 @@ public:
     };
     Solution(const Input& input);                                                                                                   //コンストラクタ
     Solution(const Solution& s);
-    Solution(Solution&& s) = default;
+    Solution(Solution&& s) = delete;
     Solution& operator=(const Solution& s);
-    Solution& operator=(Solution&& s) = default;
+    Solution& operator=(Solution&& s) = delete;
     double get_eval_value() const;                                                                                                  //評価値を取得
     double calc_diff_eval(const std::tuple<double, double, double, double, int>& diff) const;                                       //変化量に対する評価値を計算
     const std::vector<double>& get_ave() const;                                                                                     //valueのアイテム単位での平均を取得
@@ -135,7 +135,7 @@ inline double Solution::get_eval_value() const {
 
 /*変化量に対する評価値を計算*/
 inline double Solution::calc_diff_eval(const std::tuple<double, double, double, double, int>& diff) const {
-    return std::get<0>(diff) - std::get<1>(diff) * penalty_param + std::get<2>(diff) + std::get<3>(diff) + std::get<4>(diff) * group_num_param;
+    return -std::get<0>(diff) * penalty_param + std::get<1>(diff) + std::get<2>(diff) + std::get<3>(diff) + std::get<4>(diff) * group_num_param;
 }
 
 /*valueのアイテム単位での平均を取得*/

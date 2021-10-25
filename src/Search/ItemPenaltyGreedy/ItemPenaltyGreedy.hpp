@@ -11,7 +11,7 @@ class Destroy;
 class ItemPenaltyGreedy : public Search {
 public:
     using Search::Search;
-    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy) override;               //貪欲法で新たな解を生成
+    std::unique_ptr<Solution> operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy) override;               //貪欲法で新たな解を生成
 };
 
 #endif

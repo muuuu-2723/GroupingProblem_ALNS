@@ -13,12 +13,14 @@ using std::vector;
  *各グループのvalueの平均を平滑化する貪欲法
  *destroy_ptrで解を破壊し, 追加したときにグループの平均がアイテム全体の平均により近いグループに割り当てる
  */
-Solution ValueAverageGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> ValueAverageGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
     for (size_t i = 0; i < 40; ++i) {
         //現在の解をコピーし, それを破壊
-        std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+        auto neighborhood = std::make_unique<Solution>(current_solution);
+        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
+        std::cerr << "test" << std::endl;
 
         //破壊されたアイテム(ダミーグループ)の順番をシャッフル
         auto& member_list = neighborhood->get_dummy_group().get_member_list();
@@ -51,5 +53,5 @@ Solution ValueAverageGreedy::operator()(const Solution& current_solution, std::s
         }
     }
 
-    return std::move(*best);
+    return std::move(best);
 }

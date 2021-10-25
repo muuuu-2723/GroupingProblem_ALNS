@@ -12,7 +12,7 @@ class Destroy;
 class SwapNeighborhood : public Search {
 public:
     using Search::Search;
-    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;   //swap‹ß–T‚ğ’Tõ
+    std::unique_ptr<Solution> operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;   //swap‹ß–T‚ğ’Tõ
 };
 
 #endif

@@ -19,10 +19,11 @@ using std::vector;
  *‚È‚¯‚ê‚ÎŒ»İ‚Ì‰ğ‚ğ•Ô‚·
  *destroy_ptr‚ªDestroyˆÈŠO‚Ìê‡, ƒGƒ‰[
  */
-Solution SwapNeighborhood::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));
 
-    Solution neighborhood_solution(current_solution);
+    auto neighborhood_solution = std::make_unique<Solution>(current_solution);
+    std::cerr << "swa_test" << std::endl;
     double max_diff = 0;
     std::unique_ptr<const Item> max_item1_ptr, max_item2_ptr;
 
@@ -31,8 +32,8 @@ Solution SwapNeighborhood::operator()(const Solution& current_solution, std::sha
         if (item1_itr->predefined_group != -1) continue;
         for (auto item2_itr = std::next(item1_itr); item2_itr != end; ++item2_itr) {
             if (item2_itr->predefined_group != -1) continue;
-            if (neighborhood_solution.get_group_id(*item1_itr) != neighborhood_solution.get_group_id(*item2_itr)) {
-                double diff_eval = neighborhood_solution.calc_diff_eval(neighborhood_solution.evaluation_swap(*item1_itr, *item2_itr));
+            if (neighborhood_solution->get_group_id(*item1_itr) != neighborhood_solution->get_group_id(*item2_itr)) {
+                double diff_eval = neighborhood_solution->calc_diff_eval(neighborhood_solution->evaluation_swap(*item1_itr, *item2_itr));
                 if (diff_eval > max_diff) {
                     max_item1_ptr.reset(&(*item1_itr));
                     max_item2_ptr.reset(&(*item2_itr));
@@ -43,7 +44,7 @@ Solution SwapNeighborhood::operator()(const Solution& current_solution, std::sha
     }
 
     if (max_diff != 0) {
-        neighborhood_solution.swap_check(*max_item1_ptr, *max_item2_ptr);
+        neighborhood_solution->swap_check(*max_item1_ptr, *max_item2_ptr);
     }
-    return neighborhood_solution;
+    return std::move(neighborhood_solution);
 }

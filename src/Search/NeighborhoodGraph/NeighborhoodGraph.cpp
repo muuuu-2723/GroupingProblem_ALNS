@@ -128,11 +128,12 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
  *ã‹L‚Ì•‰•Â˜H‚ÌˆÚ“®‚ğ•]‰¿ŠÖ”‚Å•]‰¿‚µ, ‰ü‘P‚µ‚Ä‚¢‚ê‚ÎˆÚ“®‚·‚é
  *destroy_ptr‚ªDestroyˆÈŠO‚Ìê‡, ƒGƒ‰[
  */
-Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));
 
-    Solution neighborhood_solution(current_solution);
-    set_edge(neighborhood_solution);
+    auto neighborhood_solution = std::make_unique<Solution>(current_solution);
+    std::cerr << "nei_test" << std::endl;
+    set_edge(*neighborhood_solution);
     vector<vector<vector<double>>> dp(vertices.size(), vector<vector<double>>(vertices.size(), vector<double>(Group::N - 1, DBL_MAX)));
     using TablePos = std::tuple<int, int, int>;
     vector<vector<vector<TablePos>>> prev(vertices.size(), vector<vector<TablePos>>(vertices.size(), vector<TablePos>(Group::N - 1, {-1, -1, -1})));
@@ -200,11 +201,11 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
             const Item& item = vertices[*ritr].item;
             int now_group_id;
             if (item.id < Item::N) {
-                now_group_id = neighborhood_solution.get_group_id(item);
+                now_group_id = neighborhood_solution->get_group_id(item);
                 const Item& next_item = vertices[*std::next(ritr)].item;
                 int next_group_id;
                 if (next_item.id < Item::N) {
-                    next_group_id = neighborhood_solution.get_group_id(next_item);
+                    next_group_id = neighborhood_solution->get_group_id(next_item);
                 }
                 else {
                     next_group_id = next_item.id - Item::N;
@@ -227,7 +228,7 @@ Solution NeighborhoodGraph::operator()(const Solution& current_solution, std::sh
         if (is_duplicated) continue;
 
         //•‰•Â˜H‚ÌˆÚ“®‚ª‰ü‘P‰ğ‚É‚È‚Á‚Ä‚¢‚éê‡, ˆÚ“®‚µ‚Äƒ‹[ƒv‚ğ”²‚¯‚é
-        if (neighborhood_solution.move_check(move_items)) break;
+        if (neighborhood_solution->move_check(move_items)) break;
     }
-    return neighborhood_solution;
+    return std::move(neighborhood_solution);
 }

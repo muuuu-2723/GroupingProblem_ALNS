@@ -15,12 +15,14 @@ using std::vector;
  *貪欲法で新たな解を生成
  *destroy_ptrで解を破壊し, それぞれのアイテム間の関係値の平均とアイテムとグループの間の関係値の合計が高いグループに割り当てる
  */
-Solution RelationGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> RelationGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
     for (size_t i = 0; i < /*40*/5; ++i) {
         //現在の解をコピーし, それを破壊
-        std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+        auto neighborhood = std::make_unique<Solution>(current_solution);
+        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
+        std::cerr << "test" << std::endl;
 
         //破壊されたアイテム(ダミーグループ)の順番をシャッフル
         const auto& member_list = neighborhood->get_dummy_group().get_member_list();
@@ -64,5 +66,5 @@ Solution RelationGreedy::operator()(const Solution& current_solution, std::share
         }
     }
 
-    return std::move(*best);
+    return std::move(best);
 }

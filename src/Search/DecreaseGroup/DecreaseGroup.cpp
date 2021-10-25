@@ -9,11 +9,13 @@
 
 using std::vector;
 
-Solution DecreaseGroup::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> DecreaseGroup::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;
     for (size_t i = 0; i < 40; ++i) {
-        std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+        auto neighborhood = std::make_unique<Solution>(current_solution);
+        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
+        std::cerr << "test" << std::endl;
 
         auto& dummy_group = neighborhood->get_dummy_group();
         vector<MoveItem> move_items;
@@ -44,5 +46,5 @@ Solution DecreaseGroup::operator()(const Solution& current_solution, std::shared
         }
     }
 
-    return std::move(*best);
+    return std::move(best);
 }

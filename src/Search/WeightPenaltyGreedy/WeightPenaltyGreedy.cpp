@@ -21,7 +21,7 @@ using std::vector;
  *その後, 上限を超えないグループに割り当てていく
  *関係あるアイテム(weight[type]!=0)が少ないtypeのweightを優先する
  */
-Solution WeightPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
     size_t N = 7/*13*/;
 
@@ -32,8 +32,10 @@ Solution WeightPenaltyGreedy::operator()(const Solution& current_solution, std::
 
     for (size_t i = 0; i < N; ++i) {
         //現在の解をコピーし, それを破壊
-        std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+        auto neighborhood = std::make_unique<Solution>(current_solution);
+        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
+        std::cerr << "test" << std::endl;
 
         const Group& dummy_group = neighborhood->get_dummy_group();
         vector<MoveItem> move_items;
@@ -95,5 +97,5 @@ Solution WeightPenaltyGreedy::operator()(const Solution& current_solution, std::
             best = std::move(neighborhood);
         }
     }
-    return std::move(*best);
+    return std::move(best);
 }

@@ -16,13 +16,14 @@ using std::vector;
  *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
  */
 void RandomGroupDestroy::operator()(Solution& solution) {
+    std::cerr << solution << std::endl;
     //グループに所属するアイテムがあるグループを対象にする
     vector<int> target_group_ids;
     target_group_ids.reserve(Group::N);
     for (auto&& group : solution.get_valid_groups()) {
         target_group_ids.push_back(group->get_id());
     }
-
+    std::cerr << "random_group" << std::endl;
     MyRandom::shuffle(target_group_ids);
     vector<MoveItem> move_items;
     move_items.reserve(Item::N);
@@ -34,6 +35,6 @@ void RandomGroupDestroy::operator()(Solution& solution) {
             move_items.push_back(MoveItem(items[id], solution.get_group_id(items[id]), Group::N));
         }
     }
-
+    std::cerr << "random_group" << std::endl;
     solution.move(move_items);
 }

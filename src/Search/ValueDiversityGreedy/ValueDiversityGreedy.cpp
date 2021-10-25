@@ -20,7 +20,7 @@ using std::vector;
  *2種類のvalueまで対応し, それ以上の種類がある場合はランダムに2種類を選ぶ
  *MinimumGroupDestroyとRandomGroupDestroy以外の破壊法の場合はエラー
  */
-Solution ValueDiversityGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(RandomGroupDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy));
 
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
@@ -28,8 +28,10 @@ Solution ValueDiversityGreedy::operator()(const Solution& current_solution, std:
     if (Item::v_size < 2) {                                                             //valueの種類が0 or 1種類の時
         for (size_t i = 0; i < 30; ++i) {
             //現在の解をコピーし, それを破壊
-            std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+            auto neighborhood = std::make_unique<Solution>(current_solution);
+            std::cerr << "test" << std::endl;
             (*destroy_ptr)(*neighborhood);
+            std::cerr << "test" << std::endl;
 
             vector<int> search_group_ids;
             search_group_ids.reserve(Group::N);
@@ -84,7 +86,7 @@ Solution ValueDiversityGreedy::operator()(const Solution& current_solution, std:
             MyRandom::shuffle(value_type);
 
             //現在の解をコピーし, それを破壊
-            std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+            auto neighborhood = std::make_unique<Solution>(current_solution);
             (*destroy_ptr)(*neighborhood);
 
             vector<int> search_group_ids;
@@ -139,5 +141,5 @@ Solution ValueDiversityGreedy::operator()(const Solution& current_solution, std:
         }
     }
     
-    return std::move(*best);
+    return std::move(best);
 }

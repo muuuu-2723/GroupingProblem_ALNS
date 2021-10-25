@@ -12,12 +12,14 @@ using std::vector;
  *貪欲法で新たな解を生成
  *destroy_ptrで解を破壊し, アイテムとグループのペナルティが少ないグループに割り当てる
  */
-Solution GroupPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> GroupPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
     for (size_t i = 0; i < 40; ++i) {
         //現在の解をコピーし, それを破壊
-        std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+        auto neighborhood = std::make_unique<Solution>(current_solution);
+        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
+        std::cerr << "test" << std::endl;
 
         //破壊されたアイテム(ダミーグループ)をgroup_penaltyが最も少ないグループに割り当て
         auto& dummy_group = neighborhood->get_dummy_group();
@@ -46,5 +48,5 @@ Solution GroupPenaltyGreedy::operator()(const Solution& current_solution, std::s
         }
     }
 
-    return std::move(*best);
+    return std::move(best);
 }

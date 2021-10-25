@@ -25,13 +25,15 @@ RandomDestroy::RandomDestroy(const std::vector<Item>& items, int destroy_num, do
  *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
  */
 void RandomDestroy::operator()(Solution& solution) {
+    std::cerr << solution << std::endl;
     MyRandom::shuffle(target_item_ids);
     vector<MoveItem> move_items;
     move_items.reserve(destroy_num);
-
+    std::cerr << "random" << std::endl;
     for (size_t i = 0; i < destroy_num; ++i) {
         const Item& item = items[target_item_ids[i]];
         move_items.push_back(MoveItem(item, solution.get_group_id(item), Group::N));
     }
+    std::cerr << "random" << std::endl;
     solution.move(move_items);
 }

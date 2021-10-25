@@ -13,7 +13,7 @@
 using std::vector;
 using std::string;
 
-Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const Solution& solution,
+Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const std::unique_ptr<Solution>& solution,
              const Solution& best, const int& x, const std::string& datafile, int debug_num, int max_x, double max_eval, const Input& input)
              : search_random(search_random), destroy_random(destroy_random), solution(solution), best(best), x(x), debug_num(debug_num) {
     
@@ -52,7 +52,7 @@ Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistributi
     }
 
     if (this->debug_num != 0) {
-        prev_eval = solution.get_eval_value() * param;
+        prev_eval = solution->get_eval_value() * param;
         prev_best_eval = best.get_eval_value() * param;
     }
     if (this->debug_num == 2) {
@@ -89,7 +89,7 @@ Debug::~Debug() {
 }
 
 void Debug::output() {
-    eval_out << x + 1 << " " << solution.get_eval_value() << " " << best.get_eval_value() << std::endl;
+    eval_out << x + 1 << " " << solution->get_eval_value() << " " << best.get_eval_value() << std::endl;
     search_out << x + 1;
     for (auto&& p : search_random.get_probabilities()) {
         search_out << " " << p * 100;
@@ -102,11 +102,11 @@ void Debug::output() {
     destroy_out << std::endl;
 
     if (debug_num == 1) {
-        g.line(x, prev_eval, x + 1, solution.get_eval_value() * param, "lightgreen");
+        g.line(x, prev_eval, x + 1, solution->get_eval_value() * param, "lightgreen");
         g.line(x, prev_best_eval, x + 1, best.get_eval_value() * param, "red");
     }
     else if (debug_num != 0) {
-        g.line(x, prev_eval - lower_eval, x + 1, solution.get_eval_value() * param - lower_eval, "lightgreen");
+        g.line(x, prev_eval - lower_eval, x + 1, solution->get_eval_value() * param - lower_eval, "lightgreen");
         g.line(x, prev_best_eval - lower_eval, x + 1, best.get_eval_value() * param - lower_eval, "red");
     }
 
@@ -125,7 +125,7 @@ void Debug::output() {
         prev_p = std::move(now_p);
     }
     if (debug_num != 0) {
-        prev_eval = solution.get_eval_value() * param;
+        prev_eval = solution->get_eval_value() * param;
         prev_best_eval = best.get_eval_value() * param;
     }
 }

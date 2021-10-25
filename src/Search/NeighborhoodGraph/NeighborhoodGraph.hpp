@@ -32,7 +32,7 @@ private:
     void set_edge(Solution& solution);                  //各頂点間に有効辺を必要に応じて設定
 public:
     NeighborhoodGraph(const std::vector<Item>& items, double init_weight, int param);                           //コンストラクタ
-    Solution operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;       //グラフを探索
+    std::unique_ptr<Solution> operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;       //グラフを探索
 };
 
 #endif

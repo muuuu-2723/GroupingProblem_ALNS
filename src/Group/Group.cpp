@@ -114,23 +114,23 @@ vector<double> Group::sum_group_relation(const vector<Item>& items, const std::v
 double Group::diff_weight_penalty(const vector<const Item*>& add, const vector<const Item*>& erase) const {
     double penalty = 0;
     for (size_t i = 0; i < Item::w_size; ++i) {
-        double diff_weight = sum_weight[i];
+        double next_weight = sum_weight[i];
         for (const auto& item : add) {
-            diff_weight += item->weight[i];
+            next_weight += item->weight[i];
         }
         for (const auto& item : erase) {
-            diff_weight -= item->weight[i];
+            next_weight -= item->weight[i];
         }
 
-        if (diff_weight < lower_weight[i]) {
-            penalty += lower_weight[i] - diff_weight;
+        if (next_weight < lower_weight[i]) {
+            penalty += lower_weight[i] - next_weight;
         }
-        else if (diff_weight > upper_weight[i]) {
-            penalty += diff_weight - upper_weight[i];
+        else if (next_weight > upper_weight[i]) {
+            penalty += next_weight - upper_weight[i];
         }
     }
     
-    return penalty;
+    return penalty - calc_weight_penalty();
 }
 
 /*このグループのweight_penaltyを計算*/
@@ -182,6 +182,10 @@ std::ostream& operator<<(std::ostream& out, const Group& g) {
     out << std::setw((int)std::log10(Group::N) + 1) << g.id << ":";
     for (const auto& member : g.member_id) {
         out << std::setw((int)std::log10(Item::N) + 2) << member;
+    }
+    out << ",\t\t\t\t";
+    for (auto&& w : g.sum_weight) {
+        out << " " << w;
     }
     return out;
 }

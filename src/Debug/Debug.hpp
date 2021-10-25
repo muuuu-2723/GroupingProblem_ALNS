@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <memory>
 
 class Solution;
 class DiscreteDistribution;
@@ -16,7 +17,7 @@ private:
     matplotlib g;
     const DiscreteDistribution& search_random;
     const DiscreteDistribution& destroy_random;
-    const Solution& solution;
+    const std::unique_ptr<Solution>& solution;
     const Solution& best;
     const int& x;
     int debug_num;
@@ -32,7 +33,7 @@ private:
     int param;
     
 public:
-    Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const Solution& solution,
+    Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const std::unique_ptr<Solution>& solution,
           const Solution& best, const int& x, const std::string& datafile, int debug_num, int max_x, double max_eval, const Input& input);
     ~Debug();
     void output();

@@ -13,12 +13,14 @@ using std::vector;
  *貪欲法で新たな解を生成
  *destroy_ptrで解を破壊し, 追加したときにグループの合計がアイテム全体の合計をグループ数で割った値により近いグループに割り当てる
  */
-Solution ValueSumGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> ValueSumGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
     for (size_t i = 0; i < 40; ++i) {
         //現在の解をコピーし, それを破壊
-        std::unique_ptr<Solution> neighborhood(new Solution(current_solution));
+        auto neighborhood = std::make_unique<Solution>(current_solution);
+        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
+        std::cerr << "test" << std::endl;
 
         //破壊されたアイテム(ダミーグループ)の順番をシャッフル
         auto& member_list = neighborhood->get_dummy_group().get_member_list();
@@ -51,5 +53,5 @@ Solution ValueSumGreedy::operator()(const Solution& current_solution, std::share
         }
     }
 
-    return std::move(*best);
+    return std::move(best);
 }
