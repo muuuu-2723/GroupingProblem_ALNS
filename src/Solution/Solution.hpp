@@ -27,7 +27,7 @@ struct MoveItem {
 class Solution {
 private:
     std::vector<Group> groups;                                                                  //グループの集合
-    std::list<std::unique_ptr<const Group>> valid_groups;                                       //現在使われているグループの参照集合
+    std::list<const Group*> valid_groups;                                       //現在使われているグループの参照集合
     std::vector<int> item_group_ids;                                                            //それぞれのアイテムが所属するグループid
     double relation;                                                                            //このグループ分けの関係値
     double penalty;                                                                             //このグループ分けのペナルティ
@@ -67,7 +67,7 @@ public:
     int get_each_group_item_penalty(const Item& item, int group_id);                                                                //each_group_item_penaltyの値を取得, なければ計算して取得
     int get_group_id(const Item& item) const;                                                                                       //アイテムの所属するグループidを取得
     auto get_groups_range() const -> const std::pair<std::vector<Group>::const_iterator, std::vector<Group>::const_iterator>;       //ダミーグループを除く(Group::N)グループを取得
-    auto get_valid_groups() const -> const std::list<std::unique_ptr<const Group>>&;                                                //現在使われているグループを取得
+    auto get_valid_groups() const -> const std::list<const Group*>&;                                                //現在使われているグループを取得
     const std::vector<Group>& get_groups() const;                                                                                   //ダミーグループを含むすべてのグループを取得
     const Group& get_dummy_group() const;                                                                                           //ダミーグループを取得
     double evaluation_all(const std::vector<Item>& items);                                                                          //現在の解(グループ分け)を評価
@@ -78,6 +78,8 @@ public:
     bool swap_check(const Item& item1, const Item& item2);                                                                          //swap移動するかどうかを調査し, 必要に応じて移動する
     bool move_check(const std::vector<MoveItem>& move_items);                                                                       //move_itemsに基づいて移動するかどうかを調査し, 必要に応じて移動する
     void move(const std::vector<MoveItem>& move_items);                                                                             //move_itemsに基づいて移動する
+    void shift_move(const Item& item, int group_id);
+    void swap_move(const Item& item1, const Item& item2);
     double get_relation() const;                                                                                                    //関係値を取得
     double get_penalty() const;                                                                                                     //ペナルティを取得
     double get_ave_balance() const;                                                                                                 //各グループのvalueの平均値のばらつきを取得
@@ -111,10 +113,8 @@ inline Solution& Solution::operator=(const Solution& s) {
     eval_flags = s.eval_flags;
 
     valid_groups.clear();
-    for (size_t i = 0; i < Group::N; ++i) {
-        if (groups[i].get_member_num() != 0) {
-            valid_groups.emplace_back(std::make_unique<const Group>(groups[i]));
-        }
+    for (auto&& g_ptr : s.valid_groups) {
+        valid_groups.push_back(&groups[g_ptr->get_id()]);
     }
 
     return *this;
@@ -159,7 +159,7 @@ inline auto Solution::get_groups_range() const -> const std::pair<std::vector<Gr
 }
 
 /*現在使われているグループを取得*/
-inline auto Solution::get_valid_groups() const -> const std::list<std::unique_ptr<const Group>>& {
+inline auto Solution::get_valid_groups() const -> const std::list<const Group*>& {
     return valid_groups;
 }
 

@@ -61,7 +61,7 @@ Solution::Solution(const Input& input) {
     groups.reserve(Group::N + 1);
     for (size_t i = 0; i < Group::N; ++i) {
         groups.push_back(Group(i, input.get_weight_upper(), input.get_weight_lower()));
-        valid_groups.emplace_back(std::make_unique<const Group>(groups[i]));
+        valid_groups.push_back(&groups[i]);
     }
     groups.push_back(Group(Group::N));
     each_group_item_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
@@ -110,10 +110,8 @@ Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_
                                         constant(s.constant), eval_flags(s.eval_flags) {
 
     //groups = s.groups;
-    for (size_t i = 0; i < Group::N; ++i) {
-        if (groups[i].get_member_num() != 0) {
-            valid_groups.emplace_back(std::make_unique<const Group>(groups[i]));
-        }
+    for (auto&& g_ptr : s.valid_groups) {
+        valid_groups.push_back(&groups[g_ptr->get_id()]);
     }
     //std::cerr << "コピーコンストラクタ" << std::endl;
 }
@@ -565,7 +563,7 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
         groups[mi.source].erase_member(mi.item);
         if (eval_flags.test(EvalIdx::GROUP_NUM)) {
             if (groups[mi.destination].get_member_num() == 0 && mi.destination != Group::N) {
-                valid_groups.emplace_back(std::make_unique<const Group>(groups[mi.destination]));
+                valid_groups.push_back(&groups[mi.destination]);
             }
         }
         groups[mi.destination].add_member(mi.item);
@@ -576,8 +574,9 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
     }
 
     if (eval_flags.test(EvalIdx::GROUP_NUM)) {
-        for (auto g_itr = valid_groups.begin(), end = valid_groups.end(); g_itr != end; ++g_itr) {
+        for (auto g_itr = valid_groups.begin(); g_itr != valid_groups.end();) {
             if ((*g_itr)->get_member_num() == 0) g_itr = valid_groups.erase(g_itr);
+            else ++g_itr;
         }
     }
 }
@@ -629,6 +628,15 @@ bool Solution::move_check(const vector<MoveItem>& move_items) {
 /*move_itemsに基づいて移動する*/
 void Solution::move(const vector<MoveItem>& move_items) {
     move_processing(move_items, evaluation_diff(move_items));
+}
+
+void Solution::shift_move(const Item& item, int group_id) {
+    move_processing({MoveItem(item, item_group_ids[item.id], group_id)}, evaluation_shift(item, group_id));
+}
+
+void Solution::swap_move(const Item& item1, const Item& item2) {
+    int g1_id = item_group_ids[item1.id], g2_id = item_group_ids[item2.id];
+    move_processing({MoveItem(item1, g1_id, g2_id), MoveItem(item2, g2_id, g1_id)}, evaluation_swap(item1, item2));
 }
 
 /*解の出力用*/

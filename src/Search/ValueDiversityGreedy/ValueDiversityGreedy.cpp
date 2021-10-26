@@ -24,14 +24,13 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
     assert(typeid(*destroy_ptr) == typeid(RandomGroupDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy));
 
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
-
+    std::cout << "vd_test" << std::endl;
+    std::cout << current_solution << std::endl;
     if (Item::v_size < 2) {                                                             //valueの種類が0 or 1種類の時
         for (size_t i = 0; i < 30; ++i) {
             //現在の解をコピーし, それを破壊
             auto neighborhood = std::make_unique<Solution>(current_solution);
-            std::cerr << "test" << std::endl;
             (*destroy_ptr)(*neighborhood);
-            std::cerr << "test" << std::endl;
 
             vector<int> search_group_ids;
             search_group_ids.reserve(Group::N);
@@ -140,6 +139,6 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
             }
         }
     }
-    
+    std::cout << *best << std::endl;
     return std::move(best);
 }

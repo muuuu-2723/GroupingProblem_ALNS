@@ -23,19 +23,19 @@ using std::vector;
  */
 std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
-    size_t N = 7/*13*/;
+    size_t N = 20;
 
     //ランダム破壊でない場合, 繰り返す必要がないためN = 1にする
     if (typeid(*destroy_ptr) == typeid(MinimumDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy)) {
         N = 1;
     }
+    std::cout << "wp_test" << std::endl;
+    std::cout << current_solution << std::endl;
 
     for (size_t i = 0; i < N; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
-        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
-        std::cerr << "test" << std::endl;
 
         const Group& dummy_group = neighborhood->get_dummy_group();
         vector<MoveItem> move_items;
@@ -54,7 +54,6 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
             priority_type[j].second = cnt;
         }
         std::sort(priority_type.begin(), priority_type.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
-
         //下限に足りていないグループに優先してアイテムを割り当てる
         for (auto [type, cnt] : priority_type) {
             for (auto m_itr = member_list.begin(); m_itr != member_list.end(); ++m_itr) {
@@ -65,11 +64,12 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
                     if (item.weight[type] != 0 && g_itr->get_sum_weight()[type] < lower[type]) {
                         neighborhood->move({MoveItem(item, neighborhood->get_group_id(item), g_itr->get_id())});
                         m_itr = member_list.erase(m_itr);
+                        --m_itr;
+                        break;
                     }
                 }
             }
         }
-
         //残りのアイテムを上限を超えないグループに割り当てる
         vector<vector<const Item*>> add_members(Group::N);
         for (const auto& id : member_list) {
@@ -92,10 +92,10 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
             add_members[min_group_id].push_back(&items[id]);
         }
         neighborhood->move(move_items);
-        
         if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {
             best = std::move(neighborhood);
         }
     }
+    std::cout << *best << std::endl;
     return std::move(best);
 }

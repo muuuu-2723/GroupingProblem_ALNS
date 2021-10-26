@@ -15,12 +15,12 @@ using std::vector;
  */
 std::unique_ptr<Solution> ItemPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                             //生成した解で一番良い評価値の解
+    std::cout << "ip_test" << std::endl;
+    std::cout << current_solution << std::endl;
     for (size_t i = 0; i < 40; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
-        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
-        std::cerr << "test" << std::endl;
 
         //破壊されたアイテム(ダミーグループ)の順番をシャッフル
         auto& member_list = neighborhood->get_dummy_group().get_member_list();
@@ -31,8 +31,8 @@ std::unique_ptr<Solution> ItemPenaltyGreedy::operator()(const Solution& current_
         for (const auto& id : target_ids) {
             int assign_group_id;
             int min_penalty = INT_MAX;
-            auto [group_begin, gorup_end] = neighborhood->get_groups_range();
-            for (auto g_itr = group_begin; g_itr != gorup_end; ++g_itr) {
+            auto [group_begin, group_end] = neighborhood->get_groups_range();
+            for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
                 int penalty = 0;
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
                     penalty = neighborhood->get_each_group_item_penalty(items[id], g_itr->get_id());
@@ -50,6 +50,6 @@ std::unique_ptr<Solution> ItemPenaltyGreedy::operator()(const Solution& current_
             best = std::move(neighborhood);
         }
     }
-
+    std::cout << *best << std::endl;
     return std::move(best);
 }

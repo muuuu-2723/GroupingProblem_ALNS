@@ -24,7 +24,7 @@ std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_s
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
     std::cerr << "swa_test" << std::endl;
-    double max_diff = 0;
+    double max_diff = -DBL_MAX;
     size_t max_item1_id, max_item2_id;
 
     //swap‹ß–T“à‚ÅÅ‚à—Ç‚¢‰ð‚ð’Tõ
@@ -43,8 +43,6 @@ std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_s
         }
     }
 
-    if (max_diff != 0) {
-        neighborhood_solution->swap_check(items[max_item1_id], items[max_item2_id]);
-    }
+    neighborhood_solution->swap_move(items[max_item1_id], items[max_item2_id]);
     return std::move(neighborhood_solution);
 }

@@ -15,12 +15,12 @@ using std::vector;
  */
 std::unique_ptr<Solution> ValueAverageGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
+    std::cout << "va_test" << std::endl;
+    std::cout << current_solution << std::endl;
     for (size_t i = 0; i < 40; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
-        std::cerr << "test" << std::endl;
         (*destroy_ptr)(*neighborhood);
-        std::cerr << "test" << std::endl;
 
         //破壊されたアイテム(ダミーグループ)の順番をシャッフル
         auto& member_list = neighborhood->get_dummy_group().get_member_list();
@@ -52,6 +52,7 @@ std::unique_ptr<Solution> ValueAverageGreedy::operator()(const Solution& current
             best = std::move(neighborhood);
         }
     }
+    std::cout << *best << std::endl;
 
     return std::move(best);
 }

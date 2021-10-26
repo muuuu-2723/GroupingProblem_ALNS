@@ -107,17 +107,17 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         std::cout << std::get<2>(t_begin) << std::endl;*/
 
         vector<std::unique_ptr<Search>> searches;
-        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(input.get_items(), 0, 1));
-        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(input.get_items(), 0, 1));
-        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(input.get_items(), 0, 1));
-        searches.emplace_back(std::make_unique<RelationGreedy>(input.get_items(), 0, 1));
-        searches.emplace_back(std::make_unique<ValueAverageGreedy>(input.get_items(), 0, 1));
-        searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 0, 1));
-        searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 0, 1));
+        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<RelationGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<ValueAverageGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1));
         searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1));
         searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2));
         searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4));
-        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 0, 1));
+        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1));
 
         std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
         std::shared_ptr<MinimumDestroy> minimum_destroy = std::make_shared<MinimumDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
@@ -164,7 +164,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 } while (destroy_idx != 1 && destroy_idx != 3);
             }
 
-            std::cerr << search_idx << " " << destroy_idx << std::endl;
+            std::cout << search_idx << " " << destroy_idx << "idx" << std::endl;
             auto sstart = std::chrono::high_resolution_clock::now();
             auto next_solution = (*searches[search_idx])(*now, destructions[destroy_idx]);
             //std::cerr << *next_solution << std::endl;
@@ -203,8 +203,8 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 now = std::move(next_solution);
                 score_cnt[search_idx][1]++;
             }
-            else if (next_solution->get_eval_value() < now->get_eval_value() && now->get_penalty() - next_solution->get_penalty() < 1) {
-                score = 0.5;
+            else if (next_solution->get_eval_value() <= now->get_eval_value() && now->get_penalty() >= next_solution->get_penalty() - 1) {
+                score = 5;
                 now = std::move(next_solution);
                 moving_idx = destroy_idx;
                 score_cnt[search_idx][2]++;
