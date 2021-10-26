@@ -121,9 +121,9 @@ inline Solution& Solution::operator=(const Solution& s) {
 }
 
 /*•]‰¿’l‚ÌŒ³‚Æ‚È‚érelation, penalty, ave_balance, sum_balamce‚ÌÝ’è*/
-inline void Solution::set_eval_value(int relation, int penalty, double ave_balance, double sum_balance) {
-    this->relation = relation;
+inline void Solution::set_eval_value(int penalty, int relation, double ave_balance, double sum_balance) {
     this->penalty = penalty;
+    this->relation = relation;
     this->ave_balance = ave_balance;
     this->sum_balance = sum_balance;
 }

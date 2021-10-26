@@ -115,8 +115,8 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 0, 1));
         searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 0, 1));
         searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 0, /*4*/2));
-        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 0, 4));
+        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2));
+        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4));
         searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 0, 1));
 
         std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
@@ -223,8 +223,8 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 //destroy_weights[destroy_idx] = destroy_weights[destroy_idx] * lambda + score * (1 - lambda);
             }
             search_itr = searches.begin();
-            std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { std::cout << (*search_itr)->get_weight() << " "; return (*search_itr++)->get_weight(); });
-            std::cout << std::endl;
+            std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { std::cerr << (*search_itr)->get_weight() << " "; return (*search_itr++)->get_weight(); });
+            std::cerr << std::endl;
             search_random.set_weight(search_weights);
             destroy_itr = destructions.begin();
             std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
@@ -268,6 +268,12 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         /*std::cout << "eval = " << now.get_eval_value() << std::endl;
         std::cout << "penalty = " << now.get_debug_penalty() << std::endl;
         std::cout << "deviation = " << std::sqrt(now.get_debug_dispersion()) << std::endl;*/
+        std::cerr << "relation:" << best.get_relation() << std::endl;
+        std::cerr << "penalty:" << best.get_penalty() << std::endl;
+        std::cerr << "ave_balance:" << best.get_ave_balance() << std::endl;
+        std::cerr << "sum_balance:" << best.get_sum_balance() << std::endl;
+        std::cerr << "group_num:" << best.get_valid_groups().size() << std::endl;
+        std::cerr << "eval:" << best.get_eval_value() << std::endl;
         best.evaluation_all(input.get_items());
         relation_ave += best.get_relation();
         penalty_ave += best.get_penalty();

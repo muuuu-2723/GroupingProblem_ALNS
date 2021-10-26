@@ -54,7 +54,7 @@ Solution::Solution(const Input& input) {
     if (value_ave_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_AVE);
     if (value_sum_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_SUM);
     if (group_num_param == 0) eval_flags.reset(EvalIdx::GROUP_NUM);
-    eval_flags.reset(EvalIdx::ITEM_PENA);
+    std::cout << eval_flags << std::endl;
 
     groups.clear();
     valid_groups.clear();
@@ -115,7 +115,7 @@ Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_
             valid_groups.emplace_back(std::make_unique<const Group>(groups[i]));
         }
     }
-    std::cerr << "コピーコンストラクタ" << std::endl;
+    //std::cerr << "コピーコンストラクタ" << std::endl;
 }
 
 /*each_group_item_relationの値を取得, なければ計算して取得*/
@@ -456,8 +456,8 @@ auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tup
     //ペナルティの差分を計算
     double diff_penalty = 0;
     if (eval_flags.test(EvalIdx::WEIGHT_PENA)) {
-        diff_penalty += g1.diff_weight_penalty({&item1}, {&item2});
-        diff_penalty += g2.diff_weight_penalty({&item2}, {&item1});
+        diff_penalty += g1.diff_weight_penalty({&item2}, {&item1});
+        diff_penalty += g2.diff_weight_penalty({&item1}, {&item2});
     }
     
     if (eval_flags.test(EvalIdx::ITEM_PENA)) {
@@ -533,8 +533,8 @@ auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tup
 
 /*移動処理*/
 void Solution::move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double, int>& diff) {
-    auto [diff_relation, diff_penalty, diff_ave_balance, diff_sum_balance, diff_group_num] = diff;
-    set_eval_value(relation + diff_relation, penalty + diff_penalty, ave_balance + diff_ave_balance, sum_balance + diff_sum_balance);
+    auto [diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance, diff_group_num] = diff;
+    set_eval_value(penalty + diff_penalty, relation + diff_relation, ave_balance + diff_ave_balance, sum_balance + diff_sum_balance);
 
     //値の更新
     for (const auto& mi : move_items) {
@@ -546,7 +546,7 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
             }
             if (each_group_item_relation[i][mi.destination] && mi.destination < Group::N) {
                 for (size_t j = 0; j < Item::item_r_size; ++j) {
-                    each_group_item_relation[i][mi.source].value()[j] += mi.item.item_relations[i][j] * item_relation_params[j];
+                    each_group_item_relation[i][mi.destination].value()[j] += mi.item.item_relations[i][j] * item_relation_params[j];
                 }
             }
             if (each_group_item_penalty[i][mi.source] && mi.source < Group::N) {
@@ -588,7 +588,6 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
  */
 bool Solution::shift_check(const Item& item, int group_id) {
     auto diff = evaluation_shift(item, group_id);
-    std::cerr << std::get<0>(diff) << " " << std::get<1>(diff) << " " << std::get<2>(diff) << " " << std::get<3>(diff) << " " << std::get<4>(diff) << std::endl;
     double increace = calc_diff_eval(diff);
     if (increace > 0 && std::abs(increace) > 1e-10) {
         move_processing({MoveItem(item, item_group_ids[item.id], group_id)}, diff);
