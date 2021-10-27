@@ -18,6 +18,7 @@
 #include <memory>
 #include <cassert>
 #include <algorithm>
+#include <set>
 
 using std::vector;
 
@@ -39,7 +40,6 @@ Solution::Solution(const Input& input) {
         std::for_each(group_relation_params.begin(), group_relation_params.end(), [](auto& p) { p *= -1; });
         std::for_each(value_ave_params.begin(), value_ave_params.end(), [](auto& p) { p *= -1; });
         std::for_each(value_sum_params.begin(), value_sum_params.end(), [](auto& p) { p *= -1; });
-        penalty_param *= -1;
         group_num_param *= -1;
         constant *= -1;
     }
@@ -61,7 +61,9 @@ Solution::Solution(const Input& input) {
     groups.reserve(Group::N + 1);
     for (size_t i = 0; i < Group::N; ++i) {
         groups.push_back(Group(i, input.get_weight_upper(), input.get_weight_lower()));
-        valid_groups.push_back(&groups[i]);
+        if (!eval_flags.test(EvalIdx::GROUP_NUM)) {
+            valid_groups.push_back(&groups[i]);
+        }
     }
     groups.push_back(Group(Group::N));
     each_group_item_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
@@ -534,6 +536,7 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
     auto [diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance, diff_group_num] = diff;
     set_eval_value(penalty + diff_penalty, relation + diff_relation, ave_balance + diff_ave_balance, sum_balance + diff_sum_balance);
 
+    std::set<int> add_id;
     //ílÇÃçXêV
     for (const auto& mi : move_items) {
         for (int i = 0; i < Item::N; ++i) {
@@ -553,7 +556,12 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
             if (each_group_item_penalty[i][mi.destination] && mi.destination < Group::N) {
                 each_group_item_penalty[i][mi.destination].value() += mi.item.item_penalty[i];
             }
-         }
+        }
+        if (eval_flags.test(EvalIdx::GROUP_NUM)) {
+            if (groups[mi.destination].get_member_num() == 0 && mi.destination != Group::N) {
+                add_id.insert(mi.destination);
+            }
+        }
     }
 
     //à⁄ìÆ
@@ -561,19 +569,13 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
         //std::cerr << mi.item.id << " " << mi.source << " " << mi.destination << std::endl;
         assert(item_group_ids[mi.item.id] == mi.source);
         groups[mi.source].erase_member(mi.item);
-        if (eval_flags.test(EvalIdx::GROUP_NUM)) {
-            if (groups[mi.destination].get_member_num() == 0 && mi.destination != Group::N) {
-                valid_groups.push_back(&groups[mi.destination]);
-            }
-        }
         groups[mi.destination].add_member(mi.item);
         item_group_ids[mi.item.id] = mi.destination;
     }
-    for (auto&& group : groups) {
-        //std::cerr << group << std::endl;
-    }
-
     if (eval_flags.test(EvalIdx::GROUP_NUM)) {
+        for (auto&& id : add_id) {
+            valid_groups.push_back(&groups[id]);
+        }
         for (auto g_itr = valid_groups.begin(); g_itr != valid_groups.end();) {
             if ((*g_itr)->get_member_num() == 0) g_itr = valid_groups.erase(g_itr);
             else ++g_itr;

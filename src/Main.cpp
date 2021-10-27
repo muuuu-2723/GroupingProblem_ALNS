@@ -91,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 3000;
+    int M = 300000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -116,17 +116,20 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1));
         searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1));
         searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2));
-        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4));
+        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 40));
         searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1));
 
         std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
+        std::shared_ptr<RandomGroupDestroy> random_group_destroy = std::make_shared<RandomGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
         std::shared_ptr<MinimumDestroy> minimum_destroy = std::make_shared<MinimumDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
+        std::shared_ptr<MinimumGroupDestroy> minimum_group_destroy = std::make_shared<MinimumGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
+        
 
         vector<std::shared_ptr<Destroy>> destructions;
         destructions.emplace_back(random_destroy);
-        destructions.emplace_back(std::make_shared<RandomGroupDestroy>(input.get_items(), Group::N / 3, 1, 1));
+        destructions.emplace_back(random_group_destroy);
         destructions.emplace_back(minimum_destroy);
-        destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(input.get_items(), Group::N / 3, 1, 1));
+        destructions.emplace_back(minimum_group_destroy);
         destructions.emplace_back(std::make_shared<Destroy>(input.get_items(), 1, 1));
 
         vector<double> search_weights(searches.size(), 1);
@@ -148,7 +151,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
 
         std::unique_ptr<Debug> debug_ptr;
         if (is_debug) {
-            double max_eval = 4000;
+            double max_eval = 100;
             debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, data_file.filename().string(), debug_num, M, max_eval, input);
         }
 
@@ -237,6 +240,10 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
             if (cnt % (M / 100) == 0) {
                 random_destroy->add_destroy_num(-1);
                 minimum_destroy->add_destroy_num(-1);
+                if (now->get_eval_flags().test(Solution::EvalIdx::GROUP_NUM)) {
+                    random_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
+                    minimum_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
+                }
             }
             if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Item::N / Group::N)) == 0 && cnt != best_change_cnt) {
                 random_destroy->add_destroy_num(Item::N / Group::N);
@@ -244,6 +251,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
             }
 
             ++cnt;
+            std::cerr << "cnt = " << cnt << std::endl;
             //if (cnt > M / 3 && cnt > best_change_cnt * 2) break;
         }
 

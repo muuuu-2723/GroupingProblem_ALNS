@@ -1,3 +1,3 @@
 #include "Weight.hpp"
 
-double Weight::lambda = 0.999;
+double Weight::lambda = 0.99;

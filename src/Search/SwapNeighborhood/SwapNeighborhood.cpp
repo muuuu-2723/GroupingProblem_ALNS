@@ -23,7 +23,7 @@ std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_s
     assert(typeid(*destroy_ptr) == typeid(Destroy));
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
-    std::cerr << "swa_test" << std::endl;
+    std::cout << "swa_test" << std::endl;
     double max_diff = -DBL_MAX;
     size_t max_item1_id, max_item2_id;
 
@@ -33,6 +33,7 @@ std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_s
         for (auto item2_itr = std::next(item1_itr); item2_itr != end; ++item2_itr) {
             if (item2_itr->predefined_group != -1) continue;
             if (neighborhood_solution->get_group_id(*item1_itr) != neighborhood_solution->get_group_id(*item2_itr)) {
+                //std::cout << item1_itr->id << " " << item2_itr->id << std::endl;
                 double diff_eval = neighborhood_solution->calc_diff_eval(neighborhood_solution->evaluation_swap(*item1_itr, *item2_itr));
                 if (diff_eval > max_diff) {
                     max_item1_id = item1_itr->id;
@@ -42,7 +43,8 @@ std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_s
             }
         }
     }
-
-    neighborhood_solution->swap_move(items[max_item1_id], items[max_item2_id]);
+    if (max_diff != -DBL_MAX) {
+        neighborhood_solution->swap_move(items[max_item1_id], items[max_item2_id]);
+    }
     return std::move(neighborhood_solution);
 }

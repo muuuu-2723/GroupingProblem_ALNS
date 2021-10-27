@@ -38,7 +38,11 @@ void MinimumGroupDestroy::operator()(Solution& solution) {
     std::sort(group_eval.begin(), group_eval.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
 
     vector<MoveItem> move_items;
-    for (size_t i = 0; i < destroy_num; ++i) {
+    size_t actual_destroy_num = destroy_num;
+    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_NUM)) {
+        actual_destroy_num = std::min(destroy_num, (int)solution.get_valid_groups().size());
+    }
+    for (size_t i = 0; i < actual_destroy_num; ++i) {
         const Group& g = solution.get_groups()[group_eval[i].second];
         for (const auto& id : g.get_member_list()) {
             if (items[id].predefined_group != -1) continue;

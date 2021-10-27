@@ -23,7 +23,7 @@ std::unique_ptr<Solution> ShiftNeighborhood::operator()(const Solution& current_
     assert(typeid(*destroy_ptr) == typeid(Destroy));
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
-    std::cerr << "shi_test" << std::endl;
+    std::cout << "shi_test" << std::endl;
     double max_diff = -DBL_MAX;
     int max_group_id;
     size_t max_item_id;
@@ -35,6 +35,7 @@ std::unique_ptr<Solution> ShiftNeighborhood::operator()(const Solution& current_
             if (g_id != neighborhood_solution->get_group_id(item)) {
                 //std::cerr << item.id << " " << g_id << std::endl;
                 double diff_eval = neighborhood_solution->calc_diff_eval(neighborhood_solution->evaluation_shift(item, g_id));
+                //std::cout << item.id << " " << g_id << " " << diff_eval << std::endl;
                 if (diff_eval > max_diff) {
                     max_item_id = item.id;
                     max_group_id = g_id;
@@ -43,9 +44,11 @@ std::unique_ptr<Solution> ShiftNeighborhood::operator()(const Solution& current_
             }
         }
     }
-    std::cerr << max_diff << " " << max_group_id << " " << max_item_id << std::endl;
+    std::cout << max_diff << " " << max_group_id << " " << max_item_id << std::endl;
 
-    neighborhood_solution->shift_move(items[max_item_id], max_group_id);
+    if (max_diff != -DBL_MAX) {
+        neighborhood_solution->shift_move(items[max_item_id], max_group_id);
+    }
 
     return std::move(neighborhood_solution);
 }

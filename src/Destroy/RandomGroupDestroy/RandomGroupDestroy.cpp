@@ -27,8 +27,11 @@ void RandomGroupDestroy::operator()(Solution& solution) {
     MyRandom::shuffle(target_group_ids);
     vector<MoveItem> move_items;
     move_items.reserve(Item::N);
-
-    for (int i = 0; i < destroy_num; ++i) {
+    size_t actual_destroy_num = destroy_num;
+    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_NUM)) {
+        actual_destroy_num = std::min(destroy_num, (int)target_group_ids.size());
+    }
+    for (int i = 0; i < actual_destroy_num; ++i) {
         const Group& g = solution.get_groups()[target_group_ids[i]];
         for (const auto& id : g.get_member_list()) {
             if (items[id].predefined_group != -1) continue;
