@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <iostream>
 #include <string>
+#include <cmath>
 
 using std::vector;
 
@@ -119,6 +120,12 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path, co
     weight_lower.resize(Item::w_size);
     input_params(ifs, weight_lower);
 
+    for (size_t i = 0; i < Item::v_size; ++i) {
+        double param;
+        ifs >> param;
+        item_relation_params.push_back(param);
+    }
+
     ifs >> group_num_param;
     ifs >> constant;
 
@@ -173,7 +180,7 @@ void Input::read_data_file(const std::filesystem::path& file_path) {
             }
         }
 
-        item.item_relations.assign(Item::N, vector<double>(Item::item_r_size, 0));
+        item.item_relations.assign(Item::N, vector<double>(Item::item_r_size + Item::v_size, 0));
         item.group_relations.assign(Group::N, vector<double>(Item::group_r_size, 0));
         item.item_penalty.assign(Item::N, 0);
         item.group_penalty.assign(Group::N, 0);
@@ -193,6 +200,14 @@ void Input::read_data_file(const std::filesystem::path& file_path) {
         for (auto&& item : items) {
             for (auto&& group_r : item.group_relations) {
                 ifs >> group_r[i];
+            }
+        }
+    }
+
+    for (size_t i = Item::item_r_size; i < Item::item_r_size + Item::v_size; ++i) {
+        for (auto&& item : items) {
+            for (size_t j = 0; j < Item::N; ++j) {
+                item.item_relations[j][i] = std::abs(item.values[i - Item::item_r_size] - items[j].values[i - Item::item_r_size]);
             }
         }
     }

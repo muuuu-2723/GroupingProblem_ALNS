@@ -27,7 +27,7 @@ ax1.set_xlim(0, x[-1])
 
 exist_file("search_" + data_file)
 search = np.loadtxt("search_" + data_file)
-search_labels = ["Penalty", "Relation", "Shift", "Swap", "Graph", "Score"]
+search_labels = ["GroupPenalty", "ItemPenalty", "WeightPenalty", "Relation", "ValueAve", "ValueSum", "Decrease", "Shift", "Swap", "Graph", "ValueDiv"]
 cmap = plt.get_cmap("tab10")
 #ax2 = fig1.add_subplot(122)
 ax2 = ax1.twinx()

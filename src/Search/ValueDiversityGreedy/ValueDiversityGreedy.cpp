@@ -25,7 +25,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
 
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
     std::cout << "vd_test" << std::endl;
-    std::cout << current_solution << std::endl;
+    //std::cout << current_solution << std::endl;
     if (Item::v_size < 2) {                                                             //valueの種類が0 or 1種類の時
         for (size_t i = 0; i < 30; ++i) {
             //現在の解をコピーし, それを破壊
@@ -139,6 +139,6 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
             }
         }
     }
-    std::cout << *best << std::endl;
+    //std::cout << *best << std::endl;
     return std::move(best);
 }

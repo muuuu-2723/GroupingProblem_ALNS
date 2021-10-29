@@ -89,7 +89,7 @@ Debug::~Debug() {
 }
 
 void Debug::output() {
-    eval_out << x + 1 << " " << solution->get_eval_value() << " " << best.get_eval_value() << std::endl;
+    eval_out << x + 1 << " " << solution->get_eval_value() * param << " " << best.get_eval_value() * param << std::endl;
     search_out << x + 1;
     for (auto&& p : search_random.get_probabilities()) {
         search_out << " " << p * 100;

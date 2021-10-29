@@ -25,7 +25,7 @@ using std::vector;
 /*コンストラクタ*/
 Solution::Solution(const Input& input) {
     //パラメータ設定
-    penalty_param = 100;
+    penalty_param = 100000;
     opt = input.get_opt();
     item_relation_params = input.get_item_relation_params();
     group_relation_params = input.get_group_relation_params();

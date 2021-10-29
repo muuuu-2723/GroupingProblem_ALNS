@@ -30,7 +30,7 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         N = 1;
     }
     std::cout << "wp_test" << std::endl;
-    std::cout << current_solution << std::endl;
+    //std::cout << current_solution << std::endl;
 
     for (size_t i = 0; i < N; ++i) {
         //現在の解をコピーし, それを破壊
@@ -56,18 +56,20 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         std::sort(priority_type.begin(), priority_type.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
         //下限に足りていないグループに優先してアイテムを割り当てる
         for (auto [type, cnt] : priority_type) {
-            for (auto m_itr = member_list.begin(); m_itr != member_list.end(); ++m_itr) {
+            for (auto m_itr = member_list.begin(); m_itr != member_list.end();) {
                 const Item& item = items[*m_itr];
+                bool is_move = false;
                 auto [group_begin, group_end] = neighborhood->get_groups_range();
                 for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
                     auto& lower = g_itr->get_lower();
                     if (item.weight[type] != 0 && g_itr->get_sum_weight()[type] < lower[type]) {
                         neighborhood->move({MoveItem(item, neighborhood->get_group_id(item), g_itr->get_id())});
                         m_itr = member_list.erase(m_itr);
-                        --m_itr;
+                        is_move = true;
                         break;
                     }
                 }
+                if (!is_move) ++m_itr;
             }
         }
         //残りのアイテムを上限を超えないグループに割り当てる
@@ -96,6 +98,6 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
             best = std::move(neighborhood);
         }
     }
-    std::cout << *best << std::endl;
+    //std::cout << *best << std::endl;
     return std::move(best);
 }

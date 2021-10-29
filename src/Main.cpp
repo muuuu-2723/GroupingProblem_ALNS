@@ -91,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 300000;
+    int M = 10000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -116,7 +116,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1));
         searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1));
         searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2));
-        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 40));
+        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4));
         searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1));
 
         std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
@@ -151,7 +151,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
 
         std::unique_ptr<Debug> debug_ptr;
         if (is_debug) {
-            double max_eval = 100;
+            double max_eval = 350000;
             debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, data_file.filename().string(), debug_num, M, max_eval, input);
         }
 
@@ -201,12 +201,18 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 }*/
                 score_cnt[search_idx][0]++;
             }
-            else if (next_solution->get_eval_value() > now->get_eval_value()) {
-                score = 60;
-                now = std::move(next_solution);
-                score_cnt[search_idx][1]++;
+            else if (next_solution->get_eval_value() >= now->get_eval_value()) {
+                if (search_idx == 7 || search_idx == 8) {
+                    score = 0.1;
+                    score_cnt[search_idx][3]++;
+                }
+                else {
+                    score = 60;
+                    now = std::move(next_solution);
+                    score_cnt[search_idx][1]++;
+                }
             }
-            else if (next_solution->get_eval_value() <= now->get_eval_value() && now->get_penalty() >= next_solution->get_penalty() - 1) {
+            else if (next_solution->get_eval_value() < now->get_eval_value() && now->get_penalty() >= next_solution->get_penalty() - 1) {
                 score = 5;
                 now = std::move(next_solution);
                 moving_idx = destroy_idx;
@@ -218,6 +224,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
             }
 
             std::cerr << score << std::endl;
+            std::cout << *now << std::endl;
 
             searches[search_idx]->update_weight(score);
             //search_weights[search_idx] = search_weights[search_idx] * lambda + score * (1 - lambda);
