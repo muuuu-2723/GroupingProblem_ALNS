@@ -132,38 +132,42 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
     assert(typeid(*destroy_ptr) == typeid(Destroy));
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
+    size_t valid_group_size = neighborhood_solution->get_valid_groups().size();
     std::cerr << "nei_test" << std::endl;
     set_edge(*neighborhood_solution);
-    vector<vector<vector<double>>> dp(vertices.size(), vector<vector<double>>(vertices.size(), vector<double>(Group::N - 1, DBL_MAX)));
+    vector<vector<vector<double>>> dp(vertices.size(), vector<vector<double>>(vertices.size(), vector<double>(valid_group_size - 1, DBL_MAX)));
     using TablePos = std::tuple<int, int, int>;
-    vector<vector<vector<TablePos>>> prev(vertices.size(), vector<vector<TablePos>>(vertices.size(), vector<TablePos>(Group::N - 1, {-1, -1, -1})));
+    vector<vector<vector<TablePos>>> prev(vertices.size(), vector<vector<TablePos>>(vertices.size(), vector<TablePos>(valid_group_size - 1, {-1, -1, -1})));
     
     //íTçıÇÃå¯ó¶âªÇÃÇΩÇﬂÇÃÉâÉÄÉ_ä÷êî
     auto lambda = [](const double& a) { return a < 0 ? a : DBL_MAX; };
     
     //DPÇ≈ïâï¬òHÇíTçı. ïâï¬òHÇÃí∑Ç≥ÇÕÉOÉãÅ[Évêîà»â∫ÇÃÇ‡ÇÃÇ™íTçıÇÃëŒè€
-    for (const auto& v1 : vertices) {
-        for (const auto& e : graph[v1.id]) {
-            dp[v1.id][e.target][0] = lambda(e.weight);
-        }
+    if (valid_group_size > 1) {
+        for (const auto& v1 : vertices) {
+            for (const auto& e : graph[v1.id]) {
+                dp[v1.id][e.target][0] = lambda(e.weight);
+            }
 
-        for (int l = 1; l < Group::N - 1; ++l) {
-            for (const auto& v2 : vertices) {
-                for (const auto& e : graph[v2.id]) {
-                    if (dp[v1.id][v2.id][l - 1] != DBL_MAX && lambda(dp[v1.id][v2.id][l - 1] + e.weight) < dp[v1.id][e.target][l]) {
-                        dp[v1.id][e.target][l] = lambda(dp[v1.id][v2.id][l - 1] + e.weight);
-                        prev[v1.id][e.target][l] = {v1.id, v2.id, l - 1};
+            for (size_t l = 1, size = valid_group_size - 1; l < size; ++l) {
+                for (const auto& v2 : vertices) {
+                    for (const auto& e : graph[v2.id]) {
+                        if (dp[v1.id][v2.id][l - 1] != DBL_MAX && lambda(dp[v1.id][v2.id][l - 1] + e.weight) < dp[v1.id][e.target][l]) {
+                            dp[v1.id][e.target][l] = lambda(dp[v1.id][v2.id][l - 1] + e.weight);
+                            prev[v1.id][e.target][l] = {v1.id, v2.id, l - 1};
+                        }
                     }
                 }
             }
         }
     }
+    
 
     //DPÉeÅ[ÉuÉãÇ©ÇÁïâï¬òHñàÇ…èdÇ›ÇÃçáåvÇ∆énì_Çíäèo
     vector<std::pair<double, TablePos>> start_pos;
     for (const auto& v : vertices) {
         for (const auto& e : graph[v.id]) {
-            for (int l = 0; l < Group::N - 1; ++l) {
+            for (size_t l = 0, size = valid_group_size - 1; l < size; ++l) {
                 if (dp[e.target][v.id][l] + e.weight < 0) {
                     start_pos.push_back(std::make_pair(dp[e.target][v.id][l] + e.weight, std::make_tuple(e.target, v.id, l)));
                 }
@@ -225,10 +229,15 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
                 break;
             }
         }
-        if (is_duplicated) continue;
+        /*if (is_duplicated) continue;
 
         //ïâï¬òHÇÃà⁄ìÆÇ™â¸ëPâÇ…Ç»Ç¡ÇƒÇ¢ÇÈèÍçá, à⁄ìÆÇµÇƒÉãÅ[ÉvÇî≤ÇØÇÈ
-        if (neighborhood_solution->move_check(move_items)) break;
+        if (neighborhood_solution->move_check(move_items)) break;*/
+        if (!is_duplicated) {
+            std::cerr << move_items.size() << std::endl;
+            neighborhood_solution->move(move_items);
+            break;
+        }
     }
     return std::move(neighborhood_solution);
 }
