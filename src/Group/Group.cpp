@@ -170,7 +170,7 @@ int Group::calc_sum_item_penalty(const vector<Item>& items) const {
 
 /*このグループのgroup_penaltyを計算*/
 int Group::calc_group_penalty(const vector<Item>& items) const {
-    int penalty;
+    int penalty = 0;
     for (const auto& m_id : member_id) {
         penalty += items[m_id].group_penalty[id];
     }

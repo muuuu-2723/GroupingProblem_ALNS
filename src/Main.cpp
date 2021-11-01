@@ -29,7 +29,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
 
 int main(int argc, char* argv[]) {
     bool is_debug = false;
-    int debug_num;
+    int debug_num = -1;
     std::filesystem::path data_file("random_data.dat");
     std::filesystem::path problem_file("problem.dat");
 
@@ -91,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 10000;
+    int M = 3000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
