@@ -93,7 +93,8 @@ Solution::Solution(const Input& input) {
         aves[i] = sum_values[i] / Item::N;
     }
     
-
+    item_times.resize(Item::N, vector<int>(Item::N, 0));
+    group_times.resize(Item::N, vector<int>(Group::N, 0));
     //relation_greedy(items);
     
 
@@ -109,7 +110,7 @@ Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_
                                         sum_balance(s.sum_balance), each_group_item_relation(s.each_group_item_relation), each_group_item_penalty(s.each_group_item_penalty),
                                         aves(s.aves), sum_values(s.sum_values), opt(s.opt), item_relation_params(s.item_relation_params), group_relation_params(s.group_relation_params),
                                         value_ave_params(s.value_ave_params), value_sum_params(s.value_sum_params), penalty_param(s.penalty_param), group_num_param(s.group_num_param),
-                                        constant(s.constant), eval_flags(s.eval_flags) {
+                                        constant(s.constant), eval_flags(s.eval_flags), item_times(s.item_times), group_times(s.group_times) {
 
     //groups = s.groups;
     for (auto&& g_ptr : s.valid_groups) {
@@ -658,4 +659,17 @@ std::ostream& operator<<(std::ostream& out, const Solution& s) {
     }
     out << std::endl;
     return out;
+}
+
+void Solution::counter() {
+    for (auto&& group_ptr : valid_groups) {
+        auto& member_list = group_ptr->get_member_list();
+        for (auto m_itr1 = member_list.begin(), end = member_list.end(); m_itr1 != end; ++m_itr1) {
+            ++group_times[*m_itr1][group_ptr->get_id()];
+            for (auto m_itr2 = std::next(m_itr1); m_itr2 != end; ++m_itr2) {
+                ++item_times[*m_itr1][*m_itr2];
+                ++item_times[*m_itr2][*m_itr1];
+            }
+        }
+    }
 }

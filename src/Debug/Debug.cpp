@@ -128,4 +128,5 @@ void Debug::output() {
         prev_eval = solution->get_eval_value() * param;
         prev_best_eval = best.get_eval_value() * param;
     }
+    solution->counter();
 }

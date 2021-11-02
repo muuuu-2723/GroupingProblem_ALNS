@@ -3,6 +3,7 @@
 #include <Group.hpp>
 #include <Destroy.hpp>
 #include <Item.hpp>
+#include <MyRandom.hpp>
 #include <memory>
 #include <vector>
 #include <climits>
@@ -73,12 +74,16 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
             }
         }
         //残りのアイテムを上限を超えないグループに割り当てる
+        auto [group_begin, group_end] = neighborhood->get_groups_range();
+        vector<size_t> shuffle_group_ids(std::distance(group_begin, group_end));
+        std::iota(shuffle_group_ids.begin(), shuffle_group_ids.end(), 0);
+        MyRandom::shuffle(shuffle_group_ids);
         vector<vector<const Item*>> add_members(Group::N);
         for (const auto& id : member_list) {
             int min_group_id = -1;
             int min_penalty = INT_MAX;
-            auto [group_begin, group_end] = neighborhood->get_groups_range();
-            for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
+            for (auto&& id : shuffle_group_ids) {
+                auto g_itr = group_begin + id;
                 vector<const Item*> tmp = add_members[g_itr->get_id()];
                 tmp.push_back(&items[id]);
                 int diff_penalty = 0;

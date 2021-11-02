@@ -49,6 +49,8 @@ private:
 
     void move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double, int>& diff);     //ˆÚ“®ˆ—
     void set_eval_value(int relation, int penalty, double ave_balance, double sum_balance);                                         //•]‰¿’l‚ÌŒ³‚Æ‚È‚érelation, penalty, ave_balance, sum_balamce‚Ìİ’è
+    std::vector<std::vector<int>> item_times;
+    std::vector<std::vector<int>> group_times;
 
 public:
     enum EvalIdx {
@@ -88,6 +90,9 @@ public:
     const std::bitset<8>& get_eval_flags() const;                                                                                   //eval_flags‚ğæ“¾
 
     friend std::ostream& operator<<(std::ostream&, const Solution&);                                                                //‰ğ‚Ìo—Í—p
+    auto get_item_times() const -> const std::vector<std::vector<int>>&;
+    auto get_group_times() const -> const std::vector<std::vector<int>>&;
+    void counter();
 };
 
 inline Solution& Solution::operator=(const Solution& s) {
@@ -111,6 +116,8 @@ inline Solution& Solution::operator=(const Solution& s) {
     group_num_param = s.group_num_param;
     constant = s.constant;
     eval_flags = s.eval_flags;
+    item_times = s.item_times;
+    group_times = s.group_times;
 
     valid_groups.clear();
     for (auto&& g_ptr : s.valid_groups) {
@@ -201,6 +208,14 @@ inline const std::vector<double>& Solution::get_group_relation_params() const {
 /*eval_flags‚ğæ“¾*/
 inline const std::bitset<8>& Solution::get_eval_flags() const {
     return eval_flags;
+}
+
+inline auto Solution::get_item_times() const -> const std::vector<std::vector<int>>& {
+    return item_times;
+}
+
+inline auto Solution::get_group_times() const -> const std::vector<std::vector<int>>& {
+    return group_times;
 }
 
 #endif

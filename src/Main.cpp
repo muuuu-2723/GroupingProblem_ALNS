@@ -91,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 3000;
+    int M = 10000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -296,6 +296,19 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         sum_balance_ave += best.get_sum_balance();
         group_num_ave += best.get_valid_groups().size();
         eval_ave += best.get_eval_value();
+        for (auto&& vec : now->get_item_times()) {
+            for (auto&& count : vec) {
+                std::cout << std::setw((int)std::log10(M) + 2) << count;
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        for (auto&& vec : now->get_group_times()) {
+            for (auto&& count : vec) {
+                std::cout << std::setw((int)std::log10(M) + 2) << count;
+            }
+            std::cout << std::endl;
+        }
         /*for (const auto& group : now.get_groups()) {
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 2; j++) {
