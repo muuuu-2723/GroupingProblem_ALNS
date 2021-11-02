@@ -110,7 +110,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
             vector<vector<vector<int>>> blocks(2, vector<vector<int>>(value_sort_ids[0].size() / search_group_ids.size() + 1));
             std::unordered_map<int, int> block_id;
             for (size_t j = 0; j < 2; ++j) {
-                for (size_t k = 0, size = search_group_ids.size(); k < size; ++k) {
+                for (size_t k = 0, size = value_sort_ids[j].size(); k < size; ++k) {
                     blocks[j][k / search_group_ids.size()].push_back(value_sort_ids[j][k]);
                     if (j == 1) block_id[value_sort_ids[j][k]] = k / search_group_ids.size();
                 }
@@ -119,7 +119,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
             //ブロック内で割り当てられる場所が少ないアイテムを優先して割り当てる
             vector<MoveItem> move_items;
             move_items.reserve(value_sort_ids.size());
-            vector<vector<int>> assignment(blocks.size(), vector<int>(blocks[0].size(), 0));
+            vector<vector<int>> assignment(blocks[0].size(), vector<int>(blocks[0][0].size(), 0));
             for (auto&& block : blocks[0]) {
                 std::sort(block.begin(), block.end(), [&](const auto& a, const auto& b) {
                     return std::accumulate(assignment[block_id[a]].begin(), assignment[block_id[a]].end(), 0) < std::accumulate(assignment[block_id[b]].begin(), assignment[block_id[b]].end(), 0);

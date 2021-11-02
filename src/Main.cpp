@@ -181,7 +181,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 random_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
                 minimum_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
             }
-
+            std::cout << *next_solution << std::endl;
             double score;
             if (next_solution->get_eval_value() > best.get_eval_value()) {
                 score = 100;
