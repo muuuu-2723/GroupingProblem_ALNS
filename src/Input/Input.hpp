@@ -18,8 +18,8 @@ private:
     std::vector<double> group_relation_params;
     std::vector<double> value_ave_params;
     std::vector<double> value_sum_params;
-    std::vector<double> weight_upper;
-    std::vector<double> weight_lower;
+    std::vector<std::vector<double>> weight_upper;
+    std::vector<std::vector<double>> weight_lower;
     double group_num_param;
     double constant;
     std::vector<Item> items;
@@ -35,8 +35,8 @@ public:
     const std::vector<double>& get_group_relation_params() const;
     const std::vector<double>& get_value_ave_params() const;
     const std::vector<double>& get_value_sum_params() const;
-    const std::vector<double>& get_weight_upper() const;
-    const std::vector<double>& get_weight_lower() const;
+    const std::vector<double>& get_weight_upper(size_t g_idx) const;
+    const std::vector<double>& get_weight_lower(size_t g_idx) const;
     double get_group_num_param() const;
     double get_constant() const;
     const std::vector<Item>& get_items() const;
@@ -64,12 +64,12 @@ inline const std::vector<double>& Input::get_value_sum_params() const {
     return value_sum_params;
 }
 
-inline const std::vector<double>& Input::get_weight_upper() const {
-    return weight_upper;
+inline const std::vector<double>& Input::get_weight_upper(size_t g_idx) const {
+    return weight_upper[g_idx];
 }
 
-inline const std::vector<double>& Input::get_weight_lower() const {
-    return weight_lower;
+inline const std::vector<double>& Input::get_weight_lower(size_t g_idx) const {
+    return weight_lower[g_idx];
 }
 
 inline double Input::get_group_num_param() const {

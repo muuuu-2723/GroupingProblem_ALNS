@@ -60,7 +60,7 @@ Solution::Solution(const Input& input) {
     valid_groups.clear();
     groups.reserve(Group::N + 1);
     for (size_t i = 0; i < Group::N; ++i) {
-        groups.push_back(Group(i, input.get_weight_upper(), input.get_weight_lower()));
+        groups.push_back(Group(i, input.get_weight_upper(i), input.get_weight_lower(i)));
         if (!eval_flags.test(EvalIdx::GROUP_NUM)) {
             valid_groups.push_back(&groups[i]);
         }

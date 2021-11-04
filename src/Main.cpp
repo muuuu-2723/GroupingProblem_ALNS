@@ -91,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 10000;
+    int M = 5000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -119,10 +119,11 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4));
         searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1));
 
-        std::shared_ptr<RandomDestroy> random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
-        std::shared_ptr<RandomGroupDestroy> random_group_destroy = std::make_shared<RandomGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
-        std::shared_ptr<MinimumDestroy> minimum_destroy = std::make_shared<MinimumDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
-        std::shared_ptr<MinimumGroupDestroy> minimum_group_destroy = std::make_shared<MinimumGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
+        auto random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
+        auto random_group_destroy = std::make_shared<RandomGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
+        auto minimum_destroy = std::make_shared<MinimumDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
+        auto minimum_group_destroy = std::make_shared<MinimumGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
+        auto upper_weight_greedy_destroy = std::make_shared<UpperWeightGreedyDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
         
 
         vector<std::shared_ptr<Destroy>> destructions;
@@ -130,6 +131,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         destructions.emplace_back(random_group_destroy);
         destructions.emplace_back(minimum_destroy);
         destructions.emplace_back(minimum_group_destroy);
+        destructions.emplace_back(upper_weight_greedy_destroy);
         destructions.emplace_back(std::make_shared<Destroy>(input.get_items(), 1, 1));
 
         vector<double> search_weights(searches.size(), 1);
@@ -164,7 +166,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
             else if (search_idx == 10) {
                 do {
                     destroy_idx = destroy_random();
-                } while (destroy_idx != 1 && destroy_idx != 3);
+                } while (destroy_idx != 1 && destroy_idx != 3 && destroy_idx != 4);
             }
 
             std::cout << search_idx << " " << destroy_idx << "idx" << std::endl;
@@ -181,7 +183,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 random_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
                 minimum_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
             }
-            std::cout << *next_solution << std::endl;
+            //std::cout << *next_solution << std::endl;
             double score;
             if (next_solution->get_eval_value() > best.get_eval_value()) {
                 score = 100;
@@ -202,7 +204,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 score_cnt[search_idx][0]++;
             }
             else if (next_solution->get_eval_value() >= now->get_eval_value()) {
-                if (search_idx == 7 || search_idx == 8) {
+                if (search_idx >= 7 && search_idx <= 9 && next_solution->get_eval_value() == now->get_eval_value()) {
                     score = 0.1;
                     score_cnt[search_idx][3]++;
                 }
@@ -250,6 +252,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
                 if (now->get_eval_flags().test(Solution::EvalIdx::GROUP_NUM)) {
                     random_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
                     minimum_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
+                    upper_weight_greedy_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
                 }
             }
             if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Item::N / Group::N)) == 0 && cnt != best_change_cnt) {

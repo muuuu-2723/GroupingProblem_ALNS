@@ -114,11 +114,15 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path, co
     value_sum_params.resize(Item::v_size);
     input_params(ifs, value_sum_params);
 
-    weight_upper.resize(Item::w_size);
-    input_params(ifs, weight_upper);
+    weight_upper.resize(Group::N, vector<double>(Item::w_size));
+    for (size_t i = 0; i < Group::N; ++i) {
+        input_params(ifs, weight_upper[i]);
+    }
 
-    weight_lower.resize(Item::w_size);
-    input_params(ifs, weight_lower);
+    weight_lower.resize(Group::N, vector<double>(Item::w_size));
+    for (size_t i = 0; i < Group::N; ++i) {
+        input_params(ifs, weight_lower[i]);
+    }
 
     for (size_t i = 0; i < Item::v_size; ++i) {
         double param;

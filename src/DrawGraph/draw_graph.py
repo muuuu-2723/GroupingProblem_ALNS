@@ -28,7 +28,7 @@ ax1.set_xlim(0, x[-1])
 exist_file("search_" + data_file)
 search = np.loadtxt("search_" + data_file)
 search_labels = ["GroupPenalty", "ItemPenalty", "WeightPenalty", "Relation", "ValueAve", "ValueSum", "Decrease", "Shift", "Swap", "Graph", "ValueDiv"]
-cmap = plt.get_cmap("tab10")
+cmap = plt.get_cmap("tab20")
 #ax2 = fig1.add_subplot(122)
 ax2 = ax1.twinx()
 
@@ -51,7 +51,7 @@ ax3.set_xlim(0, x[-1])
 
 exist_file("destroy_" + data_file)
 destroy = np.loadtxt("destroy_" + data_file)
-destroy_labels = ["Random", "RandomGroup", "Minimum", "MinimumGroup"]
+destroy_labels = ["Random", "RandomGroup", "Minimum", "MinimumGroup", "UpperWeight"]
 ax4 = ax3.twinx()
 
 for i in range(1, destroy.shape[1]):

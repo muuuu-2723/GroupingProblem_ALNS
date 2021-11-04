@@ -21,7 +21,7 @@ using std::vector;
  *MinimumGroupDestroyとRandomGroupDestroy以外の破壊法の場合はエラー
  */
 std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
-    assert(typeid(*destroy_ptr) == typeid(RandomGroupDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy));
+    assert(typeid(*destroy_ptr) == typeid(RandomGroupDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy) || typeid(*destroy_ptr) == typeid(UpperWeightGreedyDestroy));
 
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
     std::cout << "vd_test" << std::endl;

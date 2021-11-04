@@ -33,5 +33,6 @@ inline double Destroy::get_weight() const {
 #include "RandomGroupDestroy\RandomGroupDestroy.hpp"
 #include "MinimumDestroy\MinimumDestroy.hpp"
 #include "MinimumGroupDestroy\MinimumGroupDestroy.hpp"
+#include "UpperWeightGreedyDestroy\UpperWeightGreedyDestroy.hpp"
 
 #endif

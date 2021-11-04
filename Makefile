@@ -3,7 +3,7 @@ CFLAGS = -O3 -std=c++17 -finput-charset=CP932 -fexec-charset=CP932
 SRCDIR = src
 BINDIR = bin
 INCLUDE= -I./$(SRCDIR)/include
-SUBDIRS = Debug Destroy/RandomDestroy Destroy/RandomGroupDestroy Destroy/MinimumDestroy Destroy/MinimumGroupDestroy Group Input Item MyRandom Search/DecreaseGroup Search/GroupPenaltyGreedy Search/ItemPenaltyGreedy Search/NeighborhoodGraph Search/RelationGreedy Search/ShiftNeighborhood Search/SwapNeighborhood Search/ValueAverageGreedy Search/ValueDiversityGreedy Search/ValueSumGreedy Search/WeightPenaltyGreedy Solution Weight
+SUBDIRS = Debug Destroy/RandomDestroy Destroy/RandomGroupDestroy Destroy/MinimumDestroy Destroy/MinimumGroupDestroy Destroy\UpperWeightGreedyDestroy Group Input Item MyRandom Search/DecreaseGroup Search/GroupPenaltyGreedy Search/ItemPenaltyGreedy Search/NeighborhoodGraph Search/RelationGreedy Search/ShiftNeighborhood Search/SwapNeighborhood Search/ValueAverageGreedy Search/ValueDiversityGreedy Search/ValueSumGreedy Search/WeightPenaltyGreedy Solution Weight
 OBJDIR = obj
 SRCS  = $(SRCDIR)/Main.cpp
 RM = cmd.exe /C del
