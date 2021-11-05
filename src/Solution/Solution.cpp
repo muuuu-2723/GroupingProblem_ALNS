@@ -591,7 +591,7 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
 bool Solution::shift_check(const Item& item, int group_id) {
     auto diff = evaluation_shift(item, group_id);
     double increace = calc_diff_eval(diff);
-    if (increace > 0 && std::abs(increace) > 1e-10) {
+    if (increace >= 0 && std::abs(increace) > 1e-10) {
         move_processing({MoveItem(item, item_group_ids[item.id], group_id)}, diff);
         return true;
     }
@@ -605,7 +605,7 @@ bool Solution::shift_check(const Item& item, int group_id) {
 bool Solution::swap_check(const Item& item1, const Item& item2) {
     auto diff = evaluation_swap(item1, item2);
     double increace = calc_diff_eval(diff);
-    if (increace > 0 && std::abs(increace) > 1e-10) {
+    if (increace >= 0 && std::abs(increace) > 1e-10) {
         int g1_id = item_group_ids[item1.id], g2_id = item_group_ids[item2.id];
         move_processing({MoveItem(item1, g1_id, g2_id), MoveItem(item2, g2_id, g1_id)}, diff);
         return true;

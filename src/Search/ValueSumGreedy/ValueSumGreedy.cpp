@@ -50,6 +50,7 @@ std::unique_ptr<Solution> ValueSumGreedy::operator()(const Solution& current_sol
 
         if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {
             best = std::move(neighborhood);
+            is_move = (target_ids.size() > 0);
         }
     }
     //std::cout << *best << std::endl;

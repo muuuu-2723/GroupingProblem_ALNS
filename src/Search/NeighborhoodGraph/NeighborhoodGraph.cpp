@@ -130,6 +130,7 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
  */
 std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));
+    is_move = false;
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
     size_t valid_group_size = neighborhood_solution->get_valid_groups().size();
@@ -236,6 +237,7 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
         if (!is_duplicated) {
             std::cout << move_items.size() << std::endl;
             neighborhood_solution->move(move_items);
+            is_move = true;
             break;
         }
     }

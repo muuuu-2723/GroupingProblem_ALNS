@@ -21,6 +21,7 @@ using std::vector;
  */
 std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));
+    is_move = false;
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
     std::cout << "swa_test" << std::endl;
@@ -44,7 +45,7 @@ std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_s
         }
     }
     if (max_diff != 0) {
-        neighborhood_solution->swap_check(items[max_item1_id], items[max_item2_id]);
+        is_move = neighborhood_solution->swap_check(items[max_item1_id], items[max_item2_id]);
     }
     return std::move(neighborhood_solution);
 }

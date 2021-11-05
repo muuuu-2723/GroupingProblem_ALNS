@@ -39,6 +39,7 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         (*destroy_ptr)(*neighborhood);
 
         const Group& dummy_group = neighborhood->get_dummy_group();
+        bool is_destroy = (dummy_group.get_member_num() > 0);
         vector<MoveItem> move_items;
         move_items.reserve(dummy_group.get_member_num());
         //すでに割り当てたアイテムを削除していくためコピーをとる
@@ -59,18 +60,18 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         for (auto [type, cnt] : priority_type) {
             for (auto m_itr = member_list.begin(); m_itr != member_list.end();) {
                 const Item& item = items[*m_itr];
-                bool is_move = false;
+                bool is_assignment = false;
                 auto [group_begin, group_end] = neighborhood->get_groups_range();
                 for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
                     auto& lower = g_itr->get_lower();
                     if (item.weight[type] != 0 && g_itr->get_sum_weight()[type] < lower[type]) {
                         neighborhood->move({MoveItem(item, neighborhood->get_group_id(item), g_itr->get_id())});
                         m_itr = member_list.erase(m_itr);
-                        is_move = true;
+                        is_assignment = true;
                         break;
                     }
                 }
-                if (!is_move) ++m_itr;
+                if (!is_assignment) ++m_itr;
             }
         }
         //残りのアイテムを上限を超えないグループに割り当てる
@@ -101,6 +102,7 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         neighborhood->move(move_items);
         if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {
             best = std::move(neighborhood);
+            is_move = is_destroy;
         }
     }
     //std::cout << *best << std::endl;

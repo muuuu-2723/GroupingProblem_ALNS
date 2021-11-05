@@ -73,6 +73,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
 
             if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {
                 best = std::move(neighborhood);
+                is_move = (move_items.size() > 0);
             }
         }
     }
@@ -136,6 +137,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
             
             if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {
                 best = std::move(neighborhood);
+                is_move = (move_items.size() > 0);
             }
         }
     }

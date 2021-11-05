@@ -45,6 +45,7 @@ std::unique_ptr<Solution> GroupPenaltyGreedy::operator()(const Solution& current
 
         if (!best || best->get_eval_value() < neighborhood->get_eval_value()) {
             best = std::move(neighborhood);
+            is_move = (move_items.size() > 0);
         }
     }
     //std::cout << *best << std::endl;

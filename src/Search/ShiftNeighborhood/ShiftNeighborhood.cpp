@@ -21,6 +21,7 @@ using std::vector;
  */
 std::unique_ptr<Solution> ShiftNeighborhood::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     assert(typeid(*destroy_ptr) == typeid(Destroy));
+    is_move = false;
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
     std::cout << "shi_test" << std::endl;
@@ -47,7 +48,7 @@ std::unique_ptr<Solution> ShiftNeighborhood::operator()(const Solution& current_
     //std::cout << max_diff << " " << max_group_id << " " << max_item_id << std::endl;
 
     if (max_diff != 0) {
-        neighborhood_solution->shift_check(items[max_item_id], max_group_id);
+        is_move = neighborhood_solution->shift_check(items[max_item_id], max_group_id);
     }
 
     return std::move(neighborhood_solution);
