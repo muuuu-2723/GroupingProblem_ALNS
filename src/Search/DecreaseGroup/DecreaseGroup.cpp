@@ -22,7 +22,7 @@ std::unique_ptr<Solution> DecreaseGroup::operator()(const Solution& current_solu
         move_items.reserve(dummy_group.get_member_num());
         vector<vector<const Item*>> add_members(Group::N);
         for (auto&& id : dummy_group.get_member_list()) {
-            int assign_group_id;
+            int assign_group_id = 0;
             int min_penalty = INT_MAX;
             for (auto&& group : neighborhood->get_valid_groups()) {
                 vector<const Item*> tmp = add_members[group->get_id()];
