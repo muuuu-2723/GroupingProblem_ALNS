@@ -56,6 +56,16 @@ Solution::Solution(const Input& input) {
     if (group_num_param == 0) eval_flags.reset(EvalIdx::GROUP_NUM);
     std::cout << eval_flags << std::endl;
 
+    Group::weight_aves.reserve(Item::w_size);
+    for (size_t i = 0; i < Item::w_size; ++i) {
+        double weight_sum = 0;
+        int cnt = 0;
+        for (auto&& item : input.get_items()) {
+            weight_sum += item.weight[i];
+            if (item.weight[i] != 0) ++cnt;
+        }
+        Group::weight_aves.push_back(weight_sum / cnt);
+    }
     groups.clear();
     valid_groups.clear();
     groups.reserve(Group::N + 1);
@@ -74,7 +84,6 @@ Solution::Solution(const Input& input) {
 
     //指定グループがあるアイテムを指定グループに
     //それ以外のアイテムはダミーグループに
-    int cnt = 0;
     for (auto&& item : input.get_items()) {
         if (item.predefined_group != -1) {
             groups[item.predefined_group].add_member(item);
@@ -216,7 +225,8 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
     double diff_penalty = 0;
     if (eval_flags.test(EvalIdx::WEIGHT_PENA)) {
         for (size_t i = 0; i < Group::N; ++i) {
-            diff_penalty += groups[i].diff_weight_penalty(in[i], out[i]);
+            double tmp = groups[i].diff_weight_penalty(in[i], out[i]);
+            diff_penalty += tmp;
         }
     }
     //std::cerr << "eval_diff" << std::endl;

@@ -37,6 +37,7 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
         (*destroy_ptr)(*neighborhood);
+        //std::cout << "des_finish" << std::endl;
 
         const Group& dummy_group = neighborhood->get_dummy_group();
         bool is_destroy = (dummy_group.get_member_num() > 0);
@@ -44,6 +45,7 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         move_items.reserve(dummy_group.get_member_num());
         //すでに割り当てたアイテムを削除していくためコピーをとる
         auto member_list = dummy_group.get_member_list();
+        //std::cout << "num:" << dummy_group.get_member_num() << std::endl;
 
         //typeを関係あるアイテム(weight[type]!=0)が少ない順にする
         vector<std::pair<int, int>> priority_type(Item::w_size);
@@ -81,16 +83,18 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
         MyRandom::shuffle(shuffle_group_ids);
         vector<vector<const Item*>> add_members(Group::N);
         for (const auto& id : member_list) {
+            //std::cout << "id:" << id << std::endl;
             int min_group_id = -1;
-            int min_penalty = INT_MAX;
-            for (auto&& id : shuffle_group_ids) {
-                auto g_itr = group_begin + id;
+            double min_penalty = DBL_MAX;
+            for (auto&& g_id : shuffle_group_ids) {
+                auto g_itr = group_begin + g_id;
                 vector<const Item*> tmp = add_members[g_itr->get_id()];
                 tmp.push_back(&items[id]);
-                int diff_penalty = 0;
+                double diff_penalty = 0;
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
                     diff_penalty += g_itr->diff_weight_penalty(tmp, {}) - g_itr->diff_weight_penalty(add_members[g_itr->get_id()], {});
                 }
+                //std::cout << "group:" << g_id << ", diff_pena:" << diff_penalty << std::endl;
                 if (diff_penalty < min_penalty) {
                     min_penalty = diff_penalty;
                     min_group_id = g_itr->get_id();

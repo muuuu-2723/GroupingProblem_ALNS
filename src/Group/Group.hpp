@@ -20,6 +20,7 @@ private:
 
 public:
     static int N;                                                                                                       //グループ数
+    static std::vector<double> weight_aves;
     Group(int group_id, const std::vector<double>& upper, const std::vector<double>& lower);                            //コンストラクタ
     Group(int group_id);
     Group(Item& leader, std::vector<Item>& member, int group_id);                                                       //メンバー指定のコンストラクタ

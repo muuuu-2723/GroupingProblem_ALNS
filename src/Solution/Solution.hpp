@@ -48,7 +48,7 @@ private:
     std::bitset<8> eval_flags;                                                                  //各評価値を計算する必要があるかを管理するフラグ
 
     void move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double, int>& diff);     //移動処理
-    void set_eval_value(int relation, int penalty, double ave_balance, double sum_balance);                                         //評価値の元となるrelation, penalty, ave_balance, sum_balamceの設定
+    void set_eval_value(double penalty, double relation, double ave_balance, double sum_balance);                                         //評価値の元となるrelation, penalty, ave_balance, sum_balamceの設定
     std::vector<std::vector<int>> item_times;
     std::vector<std::vector<int>> group_times;
 
@@ -128,11 +128,11 @@ inline Solution& Solution::operator=(const Solution& s) {
 }
 
 /*評価値の元となるrelation, penalty, ave_balance, sum_balamceの設定*/
-inline void Solution::set_eval_value(int penalty, int relation, double ave_balance, double sum_balance) {
-    this->penalty = penalty;
-    this->relation = relation;
-    this->ave_balance = ave_balance;
-    this->sum_balance = sum_balance;
+inline void Solution::set_eval_value(double penalty, double relation, double ave_balance, double sum_balance) {
+    this->penalty = std::abs(penalty) < 1e-10 ? 0 : penalty;
+    this->relation = std::abs(relation) < 1e-10 ? 0 : relation;
+    this->ave_balance = std::abs(ave_balance) < 1e-10 ? 0 : ave_balance;
+    this->sum_balance = std::abs(sum_balance) < 1e-10 ? 0 : sum_balance;
 }
 
 /*評価値を取得*/

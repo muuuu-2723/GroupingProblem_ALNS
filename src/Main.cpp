@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <Windows.h>
 #include <iomanip>
+#include <sstream>
 
 using std::vector;
 
@@ -251,7 +252,6 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
             if (is_debug) {
                 debug_ptr->output();
             }
-
             if (cnt % (M / 100) == 0) {
                 random_destroy->add_destroy_num(-1);
                 minimum_destroy->add_destroy_num(-1);

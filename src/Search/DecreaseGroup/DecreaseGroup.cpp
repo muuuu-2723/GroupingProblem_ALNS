@@ -23,11 +23,11 @@ std::unique_ptr<Solution> DecreaseGroup::operator()(const Solution& current_solu
         vector<vector<const Item*>> add_members(Group::N);
         for (auto&& id : dummy_group.get_member_list()) {
             int assign_group_id = 0;
-            int min_penalty = INT_MAX;
+            double min_penalty = DBL_MAX;
             for (auto&& group : neighborhood->get_valid_groups()) {
                 vector<const Item*> tmp = add_members[group->get_id()];
                 tmp.push_back(&items[id]);
-                int diff_penalty = 0;
+                double diff_penalty = 0;
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
                     diff_penalty += group->diff_weight_penalty(tmp, {}) - group->diff_weight_penalty(add_members[group->get_id()], {});
                 }

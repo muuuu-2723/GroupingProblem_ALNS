@@ -14,6 +14,7 @@ using std::cerr;
 using std::endl;
 
 int Group::N = 0;
+vector<double> Group::weight_aves;
 
 /*コンストラクタ*/
 Group::Group(int group_id, const std::vector<double>& upper, const std::vector<double>& lower) {
@@ -123,14 +124,14 @@ double Group::diff_weight_penalty(const vector<const Item*>& add, const vector<c
         }
 
         if (next_weight < lower_weight[i]) {
-            penalty += lower_weight[i] - next_weight;
+            penalty += (lower_weight[i] - next_weight) / weight_aves[i];
         }
         else if (next_weight > upper_weight[i]) {
-            penalty += next_weight - upper_weight[i];
+            penalty += (next_weight - upper_weight[i]) / weight_aves[i];
         }
     }
-    
-    return penalty - calc_weight_penalty();
+    double result = penalty - calc_weight_penalty();
+    return ((std::abs(result) < 1e-10) ? 0 : result);
 }
 
 /*このグループのweight_penaltyを計算*/
@@ -138,14 +139,14 @@ double Group::calc_weight_penalty() const {
     double penalty = 0;
     for (size_t i = 0; i < Item::w_size; ++i) {
         if (sum_weight[i] < lower_weight[i]) {
-            penalty += lower_weight[i] - sum_weight[i];
+            penalty += (lower_weight[i] - sum_weight[i]) / weight_aves[i];
         }
         else if (sum_weight[i] > upper_weight[i]) {
-            penalty += sum_weight[i] - upper_weight[i];
+            penalty += (sum_weight[i] - upper_weight[i]) / weight_aves[i];
         }
     }
 
-    return penalty;
+    return ((std::abs(penalty) < 1e-10) ? 0 : penalty);
 }
 
 /*あるアイテムとこのグループのitem_penalty*/
