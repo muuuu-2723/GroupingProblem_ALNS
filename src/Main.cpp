@@ -22,7 +22,6 @@
 #include <filesystem>
 #include <Windows.h>
 #include <iomanip>
-#include <sstream>
 
 using std::vector;
 
@@ -92,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 5000;
+    int M = 10000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -236,10 +235,8 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
             std::cout << *now << std::endl;
 
             searches[search_idx]->update_weight(score);
-            //search_weights[search_idx] = search_weights[search_idx] * lambda + score * (1 - lambda);
             if (destroy_idx < destroy_weights.size()) {
                 destructions[destroy_idx]->update_weight(score);
-                //destroy_weights[destroy_idx] = destroy_weights[destroy_idx] * lambda + score * (1 - lambda);
             }
             search_itr = searches.begin();
             std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { std::cerr << (*search_itr)->get_weight() << " "; return (*search_itr++)->get_weight(); });

@@ -31,7 +31,7 @@ std::unique_ptr<Solution> RelationGreedy::operator()(const Solution& current_sol
 
         //破壊されたアイテムを関係値が高いグループに割り当てる
         for (const auto& id : target_ids) {
-            int assign_group_id;
+            int assign_group_id = -1;
             double max_value = -DBL_MAX;
             auto [group_begin, group_end] = neighborhood->get_groups_range();
             for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
@@ -41,7 +41,7 @@ std::unique_ptr<Solution> RelationGreedy::operator()(const Solution& current_sol
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::ITEM_R)) {
                     auto& item_relations = neighborhood->get_each_group_item_relation(items[id], g_itr->get_id());
                     value += std::accumulate(item_relations.begin(), item_relations.end(), 0.0);
-                    value /= group_member_num;
+                    if (group_member_num != 0) value /= group_member_num;
                 }
 
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::GROUP_R)) {
