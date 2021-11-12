@@ -34,7 +34,7 @@ private:
     
 public:
     Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const std::unique_ptr<Solution>& solution,
-          const Solution& best, const int& x, const std::string& datafile, int debug_num, int max_x, double max_eval, const Input& input);
+          const Solution& best, const int& x, const std::string& problem_file, int debug_num, int max_x, double max_eval, const Input& input);
     ~Debug();
     void output();
 };

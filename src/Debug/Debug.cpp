@@ -14,13 +14,14 @@ using std::vector;
 using std::string;
 
 Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const std::unique_ptr<Solution>& solution,
-             const Solution& best, const int& x, const std::string& datafile, int debug_num, int max_x, double max_eval, const Input& input)
+             const Solution& best, const int& x, const std::string& problem_file, int debug_num, int max_x, double max_eval, const Input& input)
              : search_random(search_random), destroy_random(destroy_random), solution(solution), best(best), x(x), debug_num(debug_num) {
     
     auto output_dir = Input::get_exe_path().parent_path();
-    eval_out.open(output_dir / ("eval_" + datafile));
-    search_out.open(output_dir / ("search_" + datafile));
-    destroy_out.open(output_dir / ("destroy_" + datafile));
+    auto data_file = std::filesystem::path(problem_file).replace_extension(".dat");
+    eval_out.open(output_dir / ("eval_" + data_file.string()));
+    search_out.open(output_dir / ("search_" + data_file.string()));
+    destroy_out.open(output_dir / ("destroy_" + data_file.string()));
 
     if (input.get_opt() == Input::Opt::MAX) {
         param = 1;
@@ -35,7 +36,7 @@ Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistributi
             std::cerr << "graph output is error" << std::endl;
         }
         else {
-            std::string fig_file = "fig_" + std::filesystem::path(datafile).stem().string() + ".pdf";
+            std::string fig_file = "fig_" + std::filesystem::path(problem_file).stem().string() + ".pdf";
             auto current_path = std::filesystem::current_path();
             fig_file_path = output_dir.lexically_relative(current_path).append(fig_file).generic_string();
         }

@@ -370,6 +370,7 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
     if (std::abs(diff_relation) < 1e-10) diff_relation = 0;
     if (std::abs(diff_ave_balance) < 1e-10) diff_ave_balance = 0;
     if (std::abs(diff_sum_balance) < 1e-10) diff_sum_balance = 0;
+    if (std::abs(diff_group_cost) < 1e-10) diff_group_cost = 0;
     
     return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance, diff_group_cost};
 }
@@ -475,6 +476,7 @@ auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<do
     if (std::abs(diff_relation) < 1e-10) diff_relation = 0;
     if (std::abs(diff_ave_balance) < 1e-10) diff_ave_balance = 0;
     if (std::abs(diff_sum_balance) < 1e-10) diff_sum_balance = 0;
+    if (std::abs(diff_group_cost) < 1e-10) diff_group_cost = 0;
     
     return {diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance, diff_group_cost};
 }
