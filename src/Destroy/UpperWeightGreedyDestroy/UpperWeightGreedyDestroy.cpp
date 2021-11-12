@@ -24,7 +24,7 @@ void UpperWeightGreedyDestroy::operator()(Solution& solution) {
 
     vector<MoveItem> move_items;
     size_t actual_destroy_num = destroy_num;
-    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_NUM)) {
+    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_COST)) {
         actual_destroy_num = std::min(destroy_num, (int)solution.get_valid_groups().size());
     }
     for (size_t i = 0; i < actual_destroy_num; ++i) {

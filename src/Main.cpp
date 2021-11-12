@@ -30,14 +30,13 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
 int main(int argc, char* argv[]) {
     bool is_debug = false;
     int debug_num = -1;
-    std::filesystem::path data_file("r_g_random_data.dat");
-    std::filesystem::path problem_file("r_g_random_problem.dat");
+    std::filesystem::path problem_file("r_g_random101_10.json");
 
     std::unique_ptr<Input> input;
 
     try {
-        std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-ip InputProblemFile] [-id InputDataFile]");
-        if (argc > 6) {
+        std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-ip InputProblemFile]");
+        if (argc > 4) {
             throw argument_error;
         }
         for (int i = 1; i < argc; ++i) {
@@ -50,18 +49,12 @@ int main(int argc, char* argv[]) {
                 }
                 problem_file = argv[i];
             }
-            else if (std::strcmp(argv[i], "-id") == 0) {
-                if (++i == argc) {
-                    throw argument_error;
-                }
-                data_file = argv[i];
-            }
             else {
                 throw argument_error;
             }
         }
 
-        input = std::make_unique<Input>(problem_file, data_file);
+        input = std::make_unique<Input>(problem_file);
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
@@ -77,12 +70,12 @@ int main(int argc, char* argv[]) {
         } while (debug_num < 0 || debug_num > 3);
     }
 
-    solve(*input, data_file, is_debug, debug_num);
+    solve(*input, problem_file, is_debug, debug_num);
 
     return 0;
 }
 
-void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num) {
+void solve(const Input& input, const std::filesystem::path& problem_file, bool is_debug, int debug_num) {
     double relation_ave = 0;
     double penalty_ave = 0;
     double ave_balance_ave = 0;
@@ -100,6 +93,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
 
         auto start = std::chrono::high_resolution_clock::now();
         auto now = std::make_unique<Solution>(input);
+        std::cout << "testes" << std::endl;
         now->evaluation_all(input.get_items());
         std::cerr << *now;
         Solution best(*now);
@@ -155,7 +149,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
         std::unique_ptr<Debug> debug_ptr;
         if (is_debug) {
             double max_eval = 350000;
-            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, data_file.filename().string(), debug_num, M, max_eval, input);
+            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, problem_file.filename().string(), debug_num, M, max_eval, input);
         }
 
         while (cnt < M) {
@@ -252,7 +246,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
             if (cnt % (M / 100) == 0) {
                 random_destroy->add_destroy_num(-1);
                 minimum_destroy->add_destroy_num(-1);
-                if (now->get_eval_flags().test(Solution::EvalIdx::GROUP_NUM)) {
+                if (now->get_eval_flags().test(Solution::EvalIdx::GROUP_COST)) {
                     random_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
                     minimum_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
                     upper_weight_greedy_destroy->set_destroy_num(now->get_valid_groups().size() / 3);

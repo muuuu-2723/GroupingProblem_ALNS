@@ -20,16 +20,15 @@ private:
     std::vector<double> value_sum_params;
     std::vector<std::vector<double>> weight_upper;
     std::vector<std::vector<double>> weight_lower;
-    double group_num_param;
+    std::vector<double> group_cost;
     double constant;
     std::vector<Item> items;
     size_t item_penalty_num;
     size_t group_penalty_num;
-    void read_problem_file(const std::filesystem::path& problem_file_path, const std::filesystem::path& data_file_path);
-    void read_data_file(const std::filesystem::path& file_path);
+    void read_problem_file(const std::filesystem::path& problem_file_path);
 public:
     static std::filesystem::path get_exe_path();
-    Input(const std::filesystem::path& problem_file_path, const std::filesystem::path& data_file_path);
+    Input(const std::filesystem::path& problem_file_path);
     const Opt& get_opt() const;
     const std::vector<double>& get_item_relation_params() const;
     const std::vector<double>& get_group_relation_params() const;
@@ -37,7 +36,7 @@ public:
     const std::vector<double>& get_value_sum_params() const;
     const std::vector<double>& get_weight_upper(size_t g_idx) const;
     const std::vector<double>& get_weight_lower(size_t g_idx) const;
-    double get_group_num_param() const;
+    const std::vector<double>& get_group_cost() const;
     double get_constant() const;
     const std::vector<Item>& get_items() const;
     size_t get_item_penalty_num() const;
@@ -72,8 +71,8 @@ inline const std::vector<double>& Input::get_weight_lower(size_t g_idx) const {
     return weight_lower[g_idx];
 }
 
-inline double Input::get_group_num_param() const {
-    return group_num_param;
+inline const std::vector<double>& Input::get_group_cost() const {
+    return group_cost;
 }
 
 inline double Input::get_constant() const {

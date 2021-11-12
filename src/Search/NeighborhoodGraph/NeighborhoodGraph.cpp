@@ -236,6 +236,7 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
         if (neighborhood_solution->move_check(move_items)) break;*/
         if (!is_duplicated) {
             std::cout << move_items.size() << std::endl;
+            std::cout << sp.first << std::endl;
             neighborhood_solution->move(move_items);
             is_move = true;
             break;

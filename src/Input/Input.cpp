@@ -1,6 +1,7 @@
 #include "Input.hpp"
 #include <Item.hpp>
 #include <Group.hpp>
+#include <json.hpp>
 #include <fstream>
 #include <filesystem>
 #include <Windows.h>
@@ -9,8 +10,9 @@
 #include <cmath>
 
 using std::vector;
+using json = nlohmann::json;
 
-Input::Input(const std::filesystem::path& problem_file, const std::filesystem::path& data_file) {
+Input::Input(const std::filesystem::path& problem_file) {
     std::filesystem::path problem_file_path = problem_file;
     if (!std::filesystem::exists(problem_file)) {
         auto dir = get_exe_path().parent_path();
@@ -35,56 +37,27 @@ Input::Input(const std::filesystem::path& problem_file, const std::filesystem::p
         );
     }
 
-    std::filesystem::path data_file_path = data_file;
-    if (!std::filesystem::exists(data_file)) {
-        auto dir = get_exe_path().parent_path();
-        while (!std::filesystem::exists(dir / "Data")) {
-            if (dir.root_path() == dir) {
-                throw std::filesystem::filesystem_error(
-                    "Data directory doesn't found",
-                    std::make_error_code(std::errc::no_such_file_or_directory)
-                );
-            }
-            dir = dir.parent_path();
-        }
-        dir.append("Data");
-        data_file_path = dir.append(data_file.filename().string());
-    }
-    
-    if (!std::filesystem::exists(data_file_path)) {
-        throw std::filesystem::filesystem_error(
-            "data file doesn't found",
-            data_file_path,
-            std::make_error_code(std::errc::no_such_file_or_directory)
-        );
-    }
-
-    read_problem_file(problem_file_path, data_file_path);
+    read_problem_file(problem_file_path);
 }
 
-void Input::read_problem_file(const std::filesystem::path& problem_file_path, const std::filesystem::path& data_file_path) {
+void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
     std::ifstream ifs;
     ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     ifs.open(problem_file_path);
+    json j;
+    ifs >> j;
+    ifs.close();
 
-    ifs >> Item::N;
-    int group_num;
-    ifs >> group_num;
-    if (group_num <= 0) {
-        Group::N = Item::N;
+    Item::N = j["nums"]["itemNum"].get<int>();
+
+    if (j["nums"].find("groupNum") != j["nums"].end()) {
+        Group::N = j["nums"]["groupNum"].get<int>();
     }
     else {
-        Group::N = group_num;
+        Group::N = Item::N;
     }
-    ifs >> Item::item_r_size;
-    ifs >> Item::group_r_size;
-    ifs >> Item::v_size;
-    ifs >> Item::w_size;
 
-    read_data_file(data_file_path);
-
-    std::string opt_str;
-    ifs >> opt_str;
+    std::string opt_str = j["Opt"].get<std::string>();
     if (opt_str == "minimize") {
         opt = Opt::MIN;
     }
@@ -96,82 +69,117 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path, co
         throw std::runtime_error("minimize maximize error");
     }
 
-    auto input_params = [](std::ifstream& ifs, vector<double>& params) {
-        for (auto&& param : params) {
-            ifs >> param;
+    vector<std::string> item_r_name;
+    if (j["params"].find("eachItemRelation") != j["params"].end()) {
+        auto& eir = j["params"]["eachItemRelation"];
+        Item::item_r_size = std::distance(eir.begin(), eir.end());
+        item_r_name.reserve(Item::item_r_size);
+        item_relation_params.reserve(Item::item_r_size);
+
+        for (auto itr = eir.begin(), end = eir.end(); itr != end; ++itr) {
+            item_r_name.push_back(itr.key());
+            item_relation_params.push_back(itr.value().get<double>());
         }
-    };
-
-    item_relation_params.resize(Item::item_r_size);
-    input_params(ifs, item_relation_params);
-
-    group_relation_params.resize(Item::group_r_size);
-    input_params(ifs, group_relation_params);
-
-    value_ave_params.resize(Item::v_size);
-    input_params(ifs, value_ave_params);
-
-    value_sum_params.resize(Item::v_size);
-    input_params(ifs, value_sum_params);
-
-    weight_upper.resize(Group::N, vector<double>(Item::w_size));
-    for (size_t i = 0; i < Group::N; ++i) {
-        input_params(ifs, weight_upper[i]);
+    }
+    else {
+        Item::item_r_size = 0;
     }
 
-    weight_lower.resize(Group::N, vector<double>(Item::w_size));
-    for (size_t i = 0; i < Group::N; ++i) {
-        input_params(ifs, weight_lower[i]);
+    vector<std::string> group_r_name;
+    if (j["params"].find("itemGroupRelation") != j["params"].end()) {
+        auto& igr = j["params"]["itemGroupRelation"];
+        Item::group_r_size = std::distance(igr.begin(), igr.end());
+        group_r_name.reserve(Item::group_r_size);
+        group_relation_params.reserve(Item::group_r_size);
+
+        for (auto itr = igr.begin(), end = igr.end(); itr != end; ++itr) {
+            group_r_name.push_back(itr.key());
+            group_relation_params.push_back(itr.value().get<double>());
+        }
+    }
+    else {
+        Item::group_r_size = 0;
     }
 
-    for (size_t i = 0; i < Item::v_size; ++i) {
-        double param;
-        ifs >> param;
-        item_relation_params.push_back(param);
+    vector<std::string> value_name;
+    if (j["params"].find("value") != j["params"].end()) {
+        auto& v = j["params"]["value"];
+        Item::v_size = std::distance(v.begin(), v.end());
+        value_name.reserve(Item::v_size);
+        value_ave_params.reserve(Item::v_size);
+        value_sum_params.reserve(Item::v_size);
+        //Item::item_r_size += Item::v_size;
+
+        for (auto itr = v.begin(), end = v.end(); itr != end; ++itr) {
+            value_name.push_back(itr.key());
+            value_ave_params.push_back(itr.value()["ave"].get<double>());
+            value_sum_params.push_back(itr.value()["sum"].get<double>());
+            item_relation_params.push_back(itr.value()["distance"].get<double>());
+        }
     }
 
-    ifs >> group_num_param;
-    ifs >> constant;
-
-    ifs >> item_penalty_num;
-    for (size_t i = 0; i < item_penalty_num; ++i) {
-        int id1, id2;
-        ifs >> id1 >> id2;
-        items[id1].item_penalty[id2] = 1;
-        items[id2].item_penalty[id1] = 1;
+    if (j["params"].find("constant") != j["params"].end()) {
+        constant = j["params"]["constant"].get<double>();
+    }
+    else {
+        constant = 0;
     }
 
-    ifs >> group_penalty_num;
-    for (size_t i = 0; i < group_penalty_num; ++i) {
-        int item_id, group_id;
-        ifs >> item_id >> group_id;
-        items[item_id].group_penalty[group_id] = 1;
+    if (j["params"].find("groupCost") != j["params"].end()) {
+        group_cost.resize(Group::N);
+        if (j["params"]["groupCost"]["equalCost"].get<bool>()) {
+            double cost = j["params"]["groupCost"]["cost"].get<double>();
+            for (auto&& gc : group_cost) {
+                gc = cost;
+            }
+        }
+        else {
+            for (size_t i = 0; i < Group::N; ++i) {
+                group_cost[i] = j["params"]["groupCost"]["cost"][i].get<double>();
+            }
+        }
     }
 
-    size_t num;
-    ifs >> num;
-    for (size_t i = 0; i < num; ++i) {
-        int item_id, group_id;
-        ifs >> item_id >> group_id;
-        items[item_id].predefined_group = group_id;
+    vector<std::string> weight_name;
+    if (j["constraint"].find("weight") != j["constraint"].end()) {
+        auto& weight = j["constraint"]["weight"];
+        Item::w_size = std::distance(weight.begin(), weight.end());
+        weight_name.reserve(Item::w_size);
+        weight_upper.resize(Group::N, vector<double>(Item::w_size));
+        weight_lower.resize(Group::N, vector<double>(Item::w_size));
+
+        for (auto itr = weight.begin(), end = weight.end(); itr != end; ++itr) {
+            weight_name.push_back(itr.key());
+            if (itr.value()["equalSize"].get<bool>()) {
+                double upper = itr.value()["upper"].get<double>();
+                double lower = itr.value()["lower"].get<double>();
+                for (size_t i = 0; i < Group::N; ++i) {
+                    weight_upper[i][std::distance(weight.begin(), itr)] = upper;
+                    weight_lower[i][std::distance(weight.begin(), itr)] = lower;
+                }
+            }
+            else {
+                for (size_t i = 0; i < Group::N; ++i) {
+                    weight_upper[i][std::distance(weight.begin(), itr)] = itr.value()["upper"][i].get<double>();
+                    weight_lower[i][std::distance(weight.begin(), itr)] = itr.value()["lower"][i].get<double>();
+                }
+            }
+        }
     }
-
-    ifs.close();
-}
-
-void Input::read_data_file(const std::filesystem::path& file_path) {
-    std::ifstream ifs;
-    ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    ifs.open(file_path);
+    else {
+        weight_upper.resize(Group::N, vector<double>());
+        weight_lower.resize(Group::N, vector<double>());
+    }
 
     items.reserve(Item::N);
+    auto& item_json = j["data"]["item"];
     for (size_t i = 0; i < Item::N; ++i) {
         Item item;
         item.id = i;
         item.predefined_group = -1;
         item.weight.resize(Item::w_size);
-        for (auto&& w : item.weight) {
-            ifs >> w;
+        for (size_t j = 0; j < Item::w_size; ++j) {
+            item.weight[j] = item_json[i]["weight"][weight_name[j]].get<double>();
         }
 
         if (Item::v_size == 0) {
@@ -179,8 +187,8 @@ void Input::read_data_file(const std::filesystem::path& file_path) {
         }
         else {
             item.values.resize(Item::v_size);
-            for (auto&& v : item.values) {
-                ifs >> v;
+            for (size_t j = 0; j < Item::v_size; ++j) {
+                item.values[j] = item_json[i]["value"][value_name[j]].get<double>();
             }
         }
 
@@ -193,17 +201,19 @@ void Input::read_data_file(const std::filesystem::path& file_path) {
     }
 
     for (size_t i = 0; i < Item::item_r_size; ++i) {
-        for (auto&& item : items) {
-            for (auto&& item_r : item.item_relations) {
-                ifs >> item_r[i];
+        auto& item_relations = j["data"]["eachItemRelation"][item_r_name[i]];
+        for (size_t j = 0; j < Item::N; ++j) {
+            for (size_t k = 0; k < Item::N; ++k) {
+                items[j].item_relations[k][i] = item_relations[j][k].get<double>();
             }
         }
     }
 
     for (size_t i = 0; i < Item::group_r_size; ++i) {
-        for (auto&& item : items) {
-            for (auto&& group_r : item.group_relations) {
-                ifs >> group_r[i];
+        auto& group_relations = j["data"]["itemGroupRelation"][group_r_name[i]];
+        for (size_t j = 0; j < Item::N; ++j) {
+            for (size_t k = 0; k < Item::N; ++k) {
+                items[j].group_relations[k][i] = group_relations[j][k].get<double>();
             }
         }
     }
@@ -216,7 +226,30 @@ void Input::read_data_file(const std::filesystem::path& file_path) {
         }
     }
 
-    ifs.close();
+    if (j["constraint"].find("banItem") != j["constraint"].end()) {
+        for (auto&& ban_pair : j["constraint"]["banItem"]) {
+            size_t id1 = ban_pair["id1"].get<size_t>();
+            size_t id2 = ban_pair["id2"].get<size_t>();
+            items[id1].item_penalty[id2] = 1;
+            items[id2].item_penalty[id1] = 1;
+        }
+    }
+
+    if (j["constraint"].find("banGroup") != j["constraint"].end()) {
+        for (auto&& ban_ids : j["constraint"]["banGroup"]) {
+            size_t item = ban_ids["item"].get<size_t>();
+            size_t group = ban_ids["group"].get<size_t>();
+            items[item].group_penalty[group] = 1;
+        }
+    }
+
+    if (j["constraint"].find("specifyGroup") != j["constraint"].end()) {
+        for (auto&& sg : j["constraint"]["specifyGroup"]) {
+            size_t item = sg["item"].get<size_t>();
+            size_t group = sg["group"].get<size_t>();
+            items[item].predefined_group = group;
+        }
+    }
 }
 
 std::filesystem::path Input::get_exe_path() {

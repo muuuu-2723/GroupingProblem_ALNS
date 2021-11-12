@@ -28,7 +28,7 @@ void RandomGroupDestroy::operator()(Solution& solution) {
     vector<MoveItem> move_items;
     move_items.reserve(Item::N);
     size_t actual_destroy_num = destroy_num;
-    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_NUM)) {
+    if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_COST)) {
         actual_destroy_num = std::min(destroy_num, (int)target_group_ids.size());
     }
     for (int i = 0; i < actual_destroy_num; ++i) {

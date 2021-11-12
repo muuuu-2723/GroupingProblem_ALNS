@@ -1,0 +1,117 @@
+{
+    "nums" : {
+        "itemNum" : 0,
+        "groupNum" : 0
+    },
+    "Opt" : "minimize",
+    "params" : {
+        "eachItemRelation" : {
+            "EIR1" : 0,
+            "EIR2" : 0
+        },
+        "itemGroupRelation" : {
+            "IGR1" : 0,
+            "IGR2" : 0
+        },
+        "value" : {
+            "value1" : {
+                "ave" : 0,
+                "distance" : 0,
+                "sum" : 0
+            },
+            "value2" : {
+                "ave" : 0,
+                "distance" : 0,
+                "sum" : 0
+            }
+        },
+        "constant" : 0,
+        "groupCost" : {
+            "$comment" : [
+                "equalCost = true  -> costは実数で指定",
+                "equalCost = false -> costはサイズがグループ数の実数配列で指定"
+            ],
+            "equalCost" : false,
+            "cost" : []
+        }
+    },
+    "constraint" : {
+        "weight" : {
+            "weight1" : {
+                "equalSize" : true,
+                "upper" : 0,
+                "lower" : 0
+            },
+            "weight2" : {
+                "equalSize" : false,
+                "$comment" : "upperとlowerをグループ数だけ指定",
+                "upper" : [],
+                "lower" : []
+            }
+        },
+        "banItem" : [
+            {
+                "id1" : 0,
+                "id2" : 0
+            },
+            {
+                "id1" : 0,
+                "id2" : 0
+            }
+        ],
+        "banGroup" : [
+            {
+                "item" : 0,
+                "group" : 0
+            },
+            {
+                "item" : 0,
+                "group" : 0
+            }
+        ],
+        "specifyGroup" : [
+            {
+                "item" : 0,
+                "group" : 0
+            },
+            {
+                "item" : 0,
+                "group" : 0
+            }
+        ]
+    },
+    "data" : {
+        "item" : [
+            {
+                "value" : {
+                    "value1" : 0,
+                    "value2" : 0
+                },
+                "weight" : {
+                    "weight1" : 0,
+                    "weight2" : 0
+                }
+            },
+            {
+                "value" : {
+                    "value1" : 0,
+                    "value2" : 0
+                },
+                "weight" : {
+                    "weight1" : 0,
+                    "weight2" : 0
+                }
+            }
+        ],
+        "eachItemRelation" : {
+            "$comment" : "アイテム数×アイテム数の二次元配列で指定",
+            "EIR1" : [[]],
+            "EIR2" : [[]]
+        },
+        "itemGroupRelation" : {
+            "$comment" : "アイテム数×グループ数の二次元配列で指定",
+            "IGR1" : [[]],
+            "IGR2" : [[]]
+        }
+    }
+}
