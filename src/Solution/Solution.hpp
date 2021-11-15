@@ -13,7 +13,7 @@
 #include <list>
 #include <bitset>
 
-using AA = int;
+using AA = double;
 
 /*ƒAƒCƒeƒ€‚ÌˆÚ“®î•ñ*/
 struct MoveItem {
