@@ -32,7 +32,7 @@ Solution::Solution(const Input& input) {
     value_ave_params = input.get_value_ave_params();
     value_sum_params = input.get_value_sum_params();
     //group_cost = input.get_group_cost();
-    group_cost = vector<AA>(input.get_group_cost().begin(), input.get_group_cost().end());
+    group_cost = vector<double>(input.get_group_cost().begin(), input.get_group_cost().end());
     constant = input.get_constant();
 
     //最小化の場合はパラメータの符号を反転
@@ -206,7 +206,7 @@ double Solution::evaluation_all(const vector<Item>& items) {
 }
 
 /*評価値の変化量を計算*/
-auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple<double, double, double, double, AA> {
+auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple<double, double, double, double, double> {
     //std::cerr << "eval_diff" << std::endl;
     vector<vector<const Item*>> in(Group::N);
     vector<vector<const Item*>> out(Group::N);
@@ -216,7 +216,7 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
     }
     //std::cerr << "eval_diff" << std::endl;
     //グループ数の増減を計算
-    AA diff_group_cost = 0;
+    double diff_group_cost = 0;
     int diff_group_num = 0;
     if (eval_flags.test(EvalIdx::GROUP_COST)) {
         for (size_t i = 0; i < Group::N; ++i) {
@@ -378,14 +378,14 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
 }
 
 /*shift移動時の評価値の変化量を計算*/
-auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<double, double, double, double, AA> {
+auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<double, double, double, double, double> {
     //std::cerr << "eval_shi" << std::endl;
     const Group& now_group = groups[item_group_ids[item.id]];
     const Group& next_group = groups[group_id];
     //std::cerr << "g_num" << std::endl;
     //グループ数の増減を計算
     int diff_group_num = 0;
-    AA diff_group_cost = 0;
+    double diff_group_cost = 0;
     if (eval_flags.test(EvalIdx::GROUP_COST)) {
         if (now_group.get_member_num() == 1) {
             --diff_group_num;
@@ -484,7 +484,7 @@ auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<do
 }
 
 /*swap移動時の評価値の変化量を計算*/
-auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tuple<double, double, double, double, AA> {
+auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tuple<double, double, double, double, double> {
     const Group& g1 = groups[item_group_ids[item1.id]];
     const Group& g2 = groups[item_group_ids[item2.id]];
 
@@ -567,7 +567,7 @@ auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tup
 }
 
 /*移動処理*/
-void Solution::move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double, AA>& diff) {
+void Solution::move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double, double>& diff) {
     auto [diff_penalty, diff_relation, diff_ave_balance, diff_sum_balance, diff_group_cost] = diff;
     set_eval_value(penalty + diff_penalty, relation + diff_relation, ave_balance + diff_ave_balance, sum_balance + diff_sum_balance, sum_group_cost + diff_group_cost);
 

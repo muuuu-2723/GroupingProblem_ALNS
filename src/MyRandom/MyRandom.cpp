@@ -5,4 +5,4 @@ namespace {
 }
 
 /*static•Ï”‚Ì‰Šú‰»*/
-std::mt19937_64 MyRandom::mt(10);
+std::mt19937_64 MyRandom::mt(rnd());
