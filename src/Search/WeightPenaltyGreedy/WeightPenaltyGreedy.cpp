@@ -24,7 +24,7 @@ using std::vector;
  */
 std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                 //¶¬‚µ‚½‰ğ‚Åˆê”Ô—Ç‚¢•]‰¿’l‚Ì‰ğ
-    size_t N = 20;
+    size_t N = 10;
 
     //ƒ‰ƒ“ƒ_ƒ€”j‰ó‚Å‚È‚¢ê‡, ŒJ‚è•Ô‚·•K—v‚ª‚È‚¢‚½‚ßN = 1‚É‚·‚é
     if (typeid(*destroy_ptr) == typeid(MinimumDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy)) {

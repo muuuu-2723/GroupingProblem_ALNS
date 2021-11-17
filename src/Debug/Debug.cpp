@@ -22,6 +22,8 @@ Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistributi
     eval_out.open(output_dir / ("eval_" + data_file.string()));
     search_out.open(output_dir / ("search_" + data_file.string()));
     destroy_out.open(output_dir / ("destroy_" + data_file.string()));
+    item_times_path = output_dir / ("item_times_" + data_file.stem().string() + ".csv");
+    group_times_path = output_dir / ("group_times_" + data_file.stem().string() + ".csv");
 
     if (input.get_opt() == Input::Opt::MAX) {
         param = 1;
@@ -79,6 +81,22 @@ Debug::Debug(const DiscreteDistribution& search_random, const DiscreteDistributi
 }
 
 Debug::~Debug() {
+    std::ofstream item_times_out(item_times_path);
+    for (auto&& vec : solution->get_item_times()) {
+        for (auto&& count : vec) {
+            item_times_out << count << ",";
+        }
+        item_times_out << std::endl;
+    }
+    item_times_out.close();
+    std::ofstream group_times_out(group_times_path);
+    for (auto&& vec : solution->get_group_times()) {
+        for (auto&& count : vec) {
+            group_times_out << count << ",";
+        }
+        group_times_out << std::endl;
+    }
+    group_times_out.close();
     eval_out.close();
     search_out.close();
     destroy_out.close();

@@ -25,7 +25,7 @@ public:
 inline void RandomDestroy::add_destroy_num(int add_num) {
     if (destroy_num + add_num < items.size() * 0.4 && destroy_num + add_num > 2) {
         destroy_num += add_num;
-        std::cerr << "random:" << destroy_num << std::endl;
+        //std::cerr << "random:" << destroy_num << std::endl;
     }
 }
 
@@ -33,7 +33,7 @@ inline void RandomDestroy::add_destroy_num(int add_num) {
 inline void RandomDestroy::set_destroy_num(int set_num) {
     if (set_num < items.size() * 0.4 && set_num > 2) {
         destroy_num = set_num;
-        std::cerr << "random:" << destroy_num << std::endl;
+        //std::cerr << "random:" << destroy_num << std::endl;
     }
 }
 

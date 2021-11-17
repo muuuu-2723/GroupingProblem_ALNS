@@ -19,7 +19,7 @@ std::unique_ptr<Solution> RelationGreedy::operator()(const Solution& current_sol
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
     std::cout << "rg_test" << std::endl;
     //std::cout << current_solution << std::endl;
-    for (size_t i = 0; i < /*40*/5; ++i) {
+    for (size_t i = 0; i < /*5*/10; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
         (*destroy_ptr)(*neighborhood);
@@ -28,13 +28,17 @@ std::unique_ptr<Solution> RelationGreedy::operator()(const Solution& current_sol
         const auto& member_list = neighborhood->get_dummy_group().get_member_list();
         vector<int> target_ids(member_list.begin(), member_list.end());
         MyRandom::shuffle(target_ids);
+        auto [group_begin, group_end] = neighborhood->get_groups_range();
+        vector<size_t> shuffle_group_ids(std::distance(group_begin, group_end));
+        std::iota(shuffle_group_ids.begin(), shuffle_group_ids.end(), 0);
+        MyRandom::shuffle(shuffle_group_ids);
 
         //破壊されたアイテムを関係値が高いグループに割り当てる
         for (const auto& id : target_ids) {
             int assign_group_id = -1;
             double max_value = -DBL_MAX;
-            auto [group_begin, group_end] = neighborhood->get_groups_range();
-            for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
+            for (auto&& g_id : shuffle_group_ids) {
+                auto g_itr = group_begin + g_id;
                 int group_member_num = g_itr->get_member_num();
                 //item_relationはアイテム数を多くすれば大きくなるため平均値で評価
                 double value = 0;

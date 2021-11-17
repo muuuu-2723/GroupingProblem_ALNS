@@ -25,6 +25,8 @@ private:
     std::ofstream search_out;
     std::ofstream destroy_out;
     std::string fig_file_path;
+    std::filesystem::path item_times_path;
+    std::filesystem::path group_times_path;
     std::vector<std::string> color_map;
     std::vector<double> prev_p;
     double prev_eval;

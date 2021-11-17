@@ -13,7 +13,7 @@ std::unique_ptr<Solution> DecreaseGroup::operator()(const Solution& current_solu
     std::unique_ptr<Solution> best;
     std::cout << "dg_test" << std::endl;
     //std::cout << current_solution << std::endl;
-    for (size_t i = 0; i < 40; ++i) {
+    for (size_t i = 0; i < /*40*/10; ++i) {
         auto neighborhood = std::make_unique<Solution>(current_solution);
         (*destroy_ptr)(*neighborhood);
 

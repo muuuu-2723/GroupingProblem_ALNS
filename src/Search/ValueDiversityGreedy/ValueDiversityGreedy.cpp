@@ -27,7 +27,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
     std::cout << "vd_test" << std::endl;
     //std::cout << current_solution << std::endl;
     if (Item::v_size < 2) {                                                             //valueの種類が0 or 1種類の時
-        for (size_t i = 0; i < 30; ++i) {
+        for (size_t i = 0; i < /*30*/10; ++i) {
             //現在の解をコピーし, それを破壊
             auto neighborhood = std::make_unique<Solution>(current_solution);
             (*destroy_ptr)(*neighborhood);
@@ -81,7 +81,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
         vector<int> value_type(Item::v_size);
         std::iota(value_type.begin(), value_type.end(), 0);
 
-        for (size_t i = 0; i < 30; ++i) {
+        for (size_t i = 0; i < /*30*/10; ++i) {
             //ランダムに2種類を選ぶ
             MyRandom::shuffle(value_type);
 

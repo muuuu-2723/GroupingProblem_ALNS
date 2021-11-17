@@ -212,7 +212,7 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
     for (size_t i = 0; i < Item::group_r_size; ++i) {
         auto& group_relations = j["data"]["itemGroupRelation"][group_r_name[i]];
         for (size_t j = 0; j < Item::N; ++j) {
-            for (size_t k = 0; k < Item::N; ++k) {
+            for (size_t k = 0; k < Group::N; ++k) {
                 items[j].group_relations[k][i] = group_relations[j][k].get<double>();
             }
         }

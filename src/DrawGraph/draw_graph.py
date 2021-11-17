@@ -21,13 +21,15 @@ os.chdir('..\\..\\bin')
 exist_file("eval_" + os.path.splitext(os.path.basename(data_file))[0] + ".dat")
 x, now_eval, best_eval = np.loadtxt("eval_" + os.path.splitext(os.path.basename(data_file))[0] + ".dat", unpack=True)
 
-eval_max = best_eval[-1]
-
 fig1 = plt.figure(figsize=(16, 12))
 ax1 = fig1.add_subplot(111)
 ax1.plot(x, now_eval, color="lightcyan", label="now_eval")
 ax1.plot(x, best_eval, color="red", label="best_eval")
-ax1.set_ylim(eval_max - np.abs(eval_max) * 00.1, eval_max + 50)
+if best_eval[1] < best_eval[-1]:
+    ax1.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.1, best_eval[-1] + 50)
+else:
+    ax1.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.5, best_eval[1] + 50)
+
 ax1.set_xlim(0, x[-1])
 
 exist_file("search_" + os.path.splitext(os.path.basename(data_file))[0] + ".dat")
@@ -51,7 +53,10 @@ fig2 = plt.figure(figsize=(16, 12))
 ax3 = fig2.add_subplot(111)
 ax3.plot(x, now_eval, color="lightcyan", label="now_eval")
 ax3.plot(x, best_eval, color="red", label="best_eval")
-ax3.set_ylim(eval_max - np.abs(eval_max) * 00.1, eval_max + 50)
+if best_eval[1] < best_eval[-1]:
+    ax3.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.1, best_eval[-1] + 50)
+else:
+    ax3.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.5, best_eval[1] + 50)
 ax3.set_xlim(0, x[-1])
 
 exist_file("destroy_" + os.path.splitext(os.path.basename(data_file))[0] + ".dat")

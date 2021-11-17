@@ -133,24 +133,31 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
     is_move = false;
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
-    size_t valid_group_size = neighborhood_solution->get_valid_groups().size();
-    std::cerr << "nei_test" << std::endl;
+    size_t search_group_size;
+    if (neighborhood_solution->get_eval_flags().test(Solution::EvalIdx::GROUP_COST)) {
+        search_group_size = neighborhood_solution->get_valid_groups().size();
+        if (search_group_size != Group::N) search_group_size += 1;
+    }
+    else {
+        search_group_size = Group::N;
+    }
+    //std::cerr << "nei_test" << std::endl;
     set_edge(*neighborhood_solution);
-    vector<vector<vector<double>>> dp(vertices.size(), vector<vector<double>>(vertices.size(), vector<double>(valid_group_size - 1, DBL_MAX)));
+    vector<vector<vector<double>>> dp(vertices.size(), vector<vector<double>>(vertices.size(), vector<double>(search_group_size - 1, DBL_MAX)));
     using TablePos = std::tuple<int, int, int>;
-    vector<vector<vector<TablePos>>> prev(vertices.size(), vector<vector<TablePos>>(vertices.size(), vector<TablePos>(valid_group_size - 1, {-1, -1, -1})));
+    vector<vector<vector<TablePos>>> prev(vertices.size(), vector<vector<TablePos>>(vertices.size(), vector<TablePos>(search_group_size - 1, {-1, -1, -1})));
     
     //íTçıÇÃå¯ó¶âªÇÃÇΩÇﬂÇÃÉâÉÄÉ_ä÷êî
     auto lambda = [](const double& a) { return a < 0 ? a : DBL_MAX; };
     
     //DPÇ≈ïâï¬òHÇíTçı. ïâï¬òHÇÃí∑Ç≥ÇÕÉOÉãÅ[Évêîà»â∫ÇÃÇ‡ÇÃÇ™íTçıÇÃëŒè€
-    if (valid_group_size > 1) {
+    if (search_group_size > 1) {
         for (const auto& v1 : vertices) {
             for (const auto& e : graph[v1.id]) {
                 dp[v1.id][e.target][0] = lambda(e.weight);
             }
 
-            for (size_t l = 1, size = valid_group_size - 1; l < size; ++l) {
+            for (size_t l = 1, size = search_group_size - 1; l < size; ++l) {
                 for (const auto& v2 : vertices) {
                     for (const auto& e : graph[v2.id]) {
                         if (dp[v1.id][v2.id][l - 1] != DBL_MAX && lambda(dp[v1.id][v2.id][l - 1] + e.weight) < dp[v1.id][e.target][l]) {
@@ -168,7 +175,7 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
     vector<std::pair<double, TablePos>> start_pos;
     for (const auto& v : vertices) {
         for (const auto& e : graph[v.id]) {
-            for (size_t l = 0, size = valid_group_size - 1; l < size; ++l) {
+            for (size_t l = 0, size = search_group_size - 1; l < size; ++l) {
                 if (dp[e.target][v.id][l] + e.weight < 0) {
                     start_pos.push_back(std::make_pair(dp[e.target][v.id][l] + e.weight, std::make_tuple(e.target, v.id, l)));
                 }

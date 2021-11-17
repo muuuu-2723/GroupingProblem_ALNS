@@ -17,7 +17,7 @@ std::unique_ptr<Solution> ValueAverageGreedy::operator()(const Solution& current
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
     std::cout << "va_test" << std::endl;
     //std::cout << current_solution << std::endl;
-    for (size_t i = 0; i < 40; ++i) {
+    for (size_t i = 0; i < /*40*/10; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
         (*destroy_ptr)(*neighborhood);

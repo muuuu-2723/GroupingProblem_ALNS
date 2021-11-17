@@ -25,18 +25,19 @@
 
 using std::vector;
 
-void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num);
+void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num, const std::string& add_output_name);
 
 int main(int argc, char* argv[]) {
     bool is_debug = false;
     int debug_num = -1;
     std::filesystem::path problem_file("r_g_random101_10.json");
+    std::string add_output_name;
 
     std::unique_ptr<Input> input;
 
     try {
         std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-ip InputProblemFile]");
-        if (argc > 4) {
+        if (argc > 6) {
             throw argument_error;
         }
         for (int i = 1; i < argc; ++i) {
@@ -48,6 +49,12 @@ int main(int argc, char* argv[]) {
                     throw argument_error;
                 }
                 problem_file = argv[i];
+            }
+            else if (std::strcmp(argv[i], "-o") == 0) {
+                if (++i == argc) {
+                    throw argument_error;
+                }
+                add_output_name = argv[i];
             }
             else {
                 throw argument_error;
@@ -70,12 +77,12 @@ int main(int argc, char* argv[]) {
         } while (debug_num < 0 || debug_num > 3);
     }
 
-    solve(*input, problem_file, is_debug, debug_num);
+    solve(*input, problem_file, is_debug, debug_num, add_output_name);
 
     return 0;
 }
 
-void solve(const Input& input, const std::filesystem::path& problem_file, bool is_debug, int debug_num) {
+void solve(const Input& input, const std::filesystem::path& problem_file, bool is_debug, int debug_num, const std::string& add_output_name) {
     double relation_ave = 0;
     double penalty_ave = 0;
     double ave_balance_ave = 0;
@@ -84,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 10000;
+    int M = 5000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -149,7 +156,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         std::unique_ptr<Debug> debug_ptr;
         if (is_debug) {
             double max_eval = 350000;
-            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, problem_file.filename().string(), debug_num, M, max_eval, input);
+            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, problem_file.filename().stem().string() + add_output_name, debug_num, M, max_eval, input);
         }
 
         while (cnt < M) {
@@ -225,7 +232,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 score_cnt_destroy[destroy_idx][3]++;
             }
 
-            std::cerr << score << std::endl;
+            //std::cerr << score << std::endl;
             std::cout << *now << std::endl;
 
             searches[search_idx]->update_weight(score);
@@ -233,8 +240,8 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 destructions[destroy_idx]->update_weight(score);
             }
             search_itr = searches.begin();
-            std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { std::cerr << (*search_itr)->get_weight() << " "; return (*search_itr++)->get_weight(); });
-            std::cerr << std::endl;
+            std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { /*std::cerr << (*search_itr)->get_weight() << " ";*/ return (*search_itr++)->get_weight(); });
+            //std::cerr << std::endl;
             search_random.set_weight(search_weights);
             destroy_itr = destructions.begin();
             std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
@@ -244,6 +251,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 debug_ptr->output();
             }
             if (cnt % (M / 100) == 0) {
+                std::cerr << "cnt = " << cnt << std::endl;
                 random_destroy->add_destroy_num(-1);
                 minimum_destroy->add_destroy_num(-1);
                 if (now->get_eval_flags().test(Solution::EvalIdx::GROUP_COST)) {
@@ -258,7 +266,6 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }
 
             ++cnt;
-            std::cerr << "cnt = " << cnt << std::endl;
             //if (cnt > M / 3 && cnt > best_change_cnt * 2) break;
         }
 

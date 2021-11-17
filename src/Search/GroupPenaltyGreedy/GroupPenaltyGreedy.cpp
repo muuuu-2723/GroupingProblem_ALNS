@@ -2,9 +2,11 @@
 #include <Solution.hpp>
 #include <Destroy.hpp>
 #include <Item.hpp>
+#include <MyRandom.hpp>
 #include <vector>
 #include <memory>
 #include <climits>
+#include <numeric>
 
 using std::vector;
 
@@ -16,7 +18,7 @@ std::unique_ptr<Solution> GroupPenaltyGreedy::operator()(const Solution& current
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
     std::cout << "gp_test" << std::endl;
     //std::cout << current_solution << std::endl;
-    for (size_t i = 0; i < 40; ++i) {
+    for (size_t i = 0; i < /*40*/10; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
         (*destroy_ptr)(*neighborhood);
@@ -25,11 +27,15 @@ std::unique_ptr<Solution> GroupPenaltyGreedy::operator()(const Solution& current
         auto& dummy_group = neighborhood->get_dummy_group();
         vector<MoveItem> move_items;
         move_items.reserve(dummy_group.get_member_num());
+        auto [group_begin, group_end] = neighborhood->get_groups_range();
+        vector<size_t> shuffle_group_ids(std::distance(group_begin, group_end));
+        std::iota(shuffle_group_ids.begin(), shuffle_group_ids.end(), 0);
+        MyRandom::shuffle(shuffle_group_ids);
         for (auto&& id : dummy_group.get_member_list()) {
             int assign_group_id;
             int min_penalty = INT_MAX;
-            auto [group_begin, group_end] = neighborhood->get_groups_range();
-            for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
+            for (auto&& g_id : shuffle_group_ids) {
+                auto g_itr = group_begin + g_id;
                 int penalty = 0;
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::GROUP_PENA)) {
                     penalty += items[id].group_penalty[g_itr->get_id()];

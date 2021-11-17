@@ -1,0 +1,626 @@
+{
+    "Opt": "minimize",
+    "constraint": {
+        "weight": {
+            "weight": {
+                "equalSize": true,
+                "lower": 0,
+                "upper": 1000
+            }
+        }
+    },
+    "data": {
+        "item": [
+            {
+                "weight": {
+                    "weight": 497.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 497.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 495.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 485.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 480.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 478.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 474.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 473.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 472.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 470.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 466.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 450.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 446.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 445.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 445.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 444.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 439.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 434.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 430.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 420.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 419.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 414.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 412.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 410.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 407.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 405.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 400.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 397.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 395.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 376.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 372.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 370.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 366.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 366.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 366.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 366.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 366.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 363.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 363.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 362.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 361.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 357.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 357.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 356.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 356.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 355.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 352.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 351.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 350.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 350.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 350.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 347.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 336.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 333.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 329.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 325.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 320.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 315.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 314.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 313.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 307.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 303.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 302.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 301.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 299.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 298.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 298.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 298.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 295.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 294.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 292.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 290.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 288.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 287.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 283.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 282.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 282.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 276.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 275.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 275.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 274.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 273.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 273.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 272.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 272.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 271.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 271.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 269.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 269.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 268.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 267.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 267.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 266.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 263.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 263.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 262.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 262.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 261.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 260.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 259.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 259.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 259.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 258.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 256.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 255.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 254.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 254.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 254.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 253.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 253.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 253.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 253.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 252.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 252.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 252.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 252.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 251.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 251.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 250.0
+                }
+            },
+            {
+                "weight": {
+                    "weight": 250.0
+                }
+            }
+        ]
+    },
+    "nums": {
+        "itemNum": 120
+    },
+    "params": {
+        "constant": -40000.0,
+        "groupCost": {
+            "cost": 1000,
+            "equalCost": true
+        }
+    }
+}
