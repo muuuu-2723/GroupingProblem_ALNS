@@ -30,7 +30,7 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
     if (typeid(*destroy_ptr) == typeid(MinimumDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy)) {
         N = 1;
     }
-    std::cout << "wp_test" << std::endl;
+    //std::cout << "wp_test" << std::endl;
     //std::cout << current_solution << std::endl;
 
     for (size_t i = 0; i < N; ++i) {

@@ -24,7 +24,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
     assert(typeid(*destroy_ptr) == typeid(RandomGroupDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy) || typeid(*destroy_ptr) == typeid(UpperWeightGreedyDestroy));
 
     std::unique_ptr<Solution> best;                                                     //¶¬‚µ‚½‰ğ‚Åˆê”Ô—Ç‚¢•]‰¿’l‚Ì‰ğ
-    std::cout << "vd_test" << std::endl;
+    //std::cout << "vd_test" << std::endl;
     //std::cout << current_solution << std::endl;
     if (Item::v_size < 2) {                                                             //value‚Ìí—Ş‚ª0 or 1í—Ş‚Ì
         for (size_t i = 0; i < /*30*/10; ++i) {

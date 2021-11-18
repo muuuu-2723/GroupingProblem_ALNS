@@ -15,7 +15,7 @@ using std::vector;
  */
 std::unique_ptr<Solution> ValueSumGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
-    std::cout << "vs_test" << std::endl;
+    //std::cout << "vs_test" << std::endl;
     //std::cout << current_solution << std::endl;
     for (size_t i = 0; i < /*40*/10; ++i) {
         //現在の解をコピーし, それを破壊

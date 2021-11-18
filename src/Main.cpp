@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <Windows.h>
 #include <iomanip>
+#include <sstream>
 
 using std::vector;
 
@@ -90,7 +91,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double group_num_ave = 0;
     double eval_ave = 0;
     double time_ave = 0;
-    int N = 1;
+    int N = 100;
     int M = 5000;
 
     for (int i = 0; i < N; i++) {
@@ -100,7 +101,6 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
 
         auto start = std::chrono::high_resolution_clock::now();
         auto now = std::make_unique<Solution>(input);
-        std::cout << "testes" << std::endl;
         now->evaluation_all(input.get_items());
         std::cerr << *now;
         Solution best(*now);
@@ -156,7 +156,9 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         std::unique_ptr<Debug> debug_ptr;
         if (is_debug) {
             double max_eval = 350000;
-            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, problem_file.filename().stem().string() + add_output_name, debug_num, M, max_eval, input);
+            std::stringstream ss;
+            ss << "_" << i;
+            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, problem_file.filename().stem().string() + add_output_name + ss.str(), debug_num, M, max_eval, input);
         }
 
         while (cnt < M) {
@@ -171,14 +173,14 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 } while (destroy_idx != 1 && destroy_idx != 3 && destroy_idx != 4);
             }
 
-            std::cout << search_idx << " " << destroy_idx << "idx" << std::endl;
-            auto sstart = std::chrono::high_resolution_clock::now();
+            //std::cout << search_idx << " " << destroy_idx << "idx" << std::endl;
+            //auto sstart = std::chrono::high_resolution_clock::now();
             auto next_solution = (*searches[search_idx])(*now, destructions[destroy_idx]);
             //std::cerr << *next_solution << std::endl;
-            auto send = std::chrono::high_resolution_clock::now();
+            /*auto send = std::chrono::high_resolution_clock::now();
             double stime = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(send - sstart).count() / 1000.0);
             search_time[search_idx] += stime;
-            ++counter_search[search_idx];
+            ++counter_search[search_idx];*/
             double prev_now_eval, prev_best_eval;
 
             if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005 && random_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
@@ -233,7 +235,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }
 
             //std::cerr << score << std::endl;
-            std::cout << *now << std::endl;
+            //std::cout << *now << std::endl;
 
             searches[search_idx]->update_weight(score);
             if (destroy_idx < destroy_weights.size()) {
@@ -269,7 +271,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             //if (cnt > M / 3 && cnt > best_change_cnt * 2) break;
         }
 
-        for (int j = 0; j < searches.size(); ++j) {
+        /*for (int j = 0; j < searches.size(); ++j) {
             std::cerr << typeid(*searches[j]).name() << ":" << search_weights[j] << std::endl;
             std::cerr << typeid(*searches[j]).name() << ":" << search_time[j] / counter_search[j] << "[ms]" << std::endl;
             for (auto&& s_cnt : score_cnt_search[j]) std::cerr << (double)s_cnt / counter_search[j] * 100 << " ";
@@ -281,7 +283,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             auto sum = std::accumulate(score_cnt_destroy[j].begin(), score_cnt_destroy[j].end(), 0);
             for (auto&& d_cnt : score_cnt_destroy[j]) std::cerr << (double)d_cnt / sum * 100 << " ";
             std::cerr << std::endl;
-        }
+        }*/
 
         auto end = std::chrono::high_resolution_clock::now();
         double time = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0);
@@ -293,12 +295,12 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         /*std::cout << "eval = " << now.get_eval_value() << std::endl;
         std::cout << "penalty = " << now.get_debug_penalty() << std::endl;
         std::cout << "deviation = " << std::sqrt(now.get_debug_dispersion()) << std::endl;*/
-        std::cerr << "relation:" << best.get_relation() << std::endl;
+        /*std::cerr << "relation:" << best.get_relation() << std::endl;
         std::cerr << "penalty:" << best.get_penalty() << std::endl;
         std::cerr << "ave_balance:" << best.get_ave_balance() << std::endl;
         std::cerr << "sum_balance:" << best.get_sum_balance() << std::endl;
         std::cerr << "group_num:" << best.get_valid_groups().size() << std::endl;
-        std::cerr << "eval:" << best.get_eval_value() << std::endl;
+        std::cerr << "eval:" << best.get_eval_value() << std::endl;*/
         best.evaluation_all(input.get_items());
         relation_ave += best.get_relation();
         penalty_ave += best.get_penalty();
@@ -306,7 +308,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         sum_balance_ave += best.get_sum_balance();
         group_num_ave += best.get_valid_groups().size();
         eval_ave += best.get_eval_value();
-        for (auto&& vec : now->get_item_times()) {
+        /*for (auto&& vec : now->get_item_times()) {
             for (auto&& count : vec) {
                 std::cout << std::setw((int)std::log10(M) + 2) << count;
             }
@@ -318,7 +320,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 std::cout << std::setw((int)std::log10(M) + 2) << count;
             }
             std::cout << std::endl;
-        }
+        }*/
         /*for (const auto& group : now.get_groups()) {
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 2; j++) {

@@ -17,7 +17,7 @@ using std::vector;
  */
 std::unique_ptr<Solution> RelationGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
-    std::cout << "rg_test" << std::endl;
+    //std::cout << "rg_test" << std::endl;
     //std::cout << current_solution << std::endl;
     for (size_t i = 0; i < /*5*/10; ++i) {
         //現在の解をコピーし, それを破壊

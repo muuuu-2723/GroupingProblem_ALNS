@@ -24,7 +24,7 @@ std::unique_ptr<Solution> ShiftNeighborhood::operator()(const Solution& current_
     is_move = false;
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);
-    std::cout << "shi_test" << std::endl;
+    //std::cout << "shi_test" << std::endl;
     double max_diff = 0;
     int max_group_id;
     size_t max_item_id;
