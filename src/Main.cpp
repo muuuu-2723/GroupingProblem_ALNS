@@ -91,8 +91,8 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double group_num_ave = 0;
     double eval_ave = 0;
     double time_ave = 0;
-    int N = 100;
-    int M = 5000;
+    int N = 1;
+    int M = 100;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -173,14 +173,14 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 } while (destroy_idx != 1 && destroy_idx != 3 && destroy_idx != 4);
             }
 
-            //std::cout << search_idx << " " << destroy_idx << "idx" << std::endl;
-            //auto sstart = std::chrono::high_resolution_clock::now();
+            std::cerr << search_idx << " " << destroy_idx << "idx" << std::endl;
+            auto sstart = std::chrono::high_resolution_clock::now();
             auto next_solution = (*searches[search_idx])(*now, destructions[destroy_idx]);
             //std::cerr << *next_solution << std::endl;
-            /*auto send = std::chrono::high_resolution_clock::now();
+            auto send = std::chrono::high_resolution_clock::now();
             double stime = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(send - sstart).count() / 1000.0);
             search_time[search_idx] += stime;
-            ++counter_search[search_idx];*/
+            ++counter_search[search_idx];
             double prev_now_eval, prev_best_eval;
 
             if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005 && random_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
@@ -235,7 +235,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }
 
             //std::cerr << score << std::endl;
-            //std::cout << *now << std::endl;
+            std::cout << *now << std::endl;
 
             searches[search_idx]->update_weight(score);
             if (destroy_idx < destroy_weights.size()) {
@@ -271,7 +271,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             //if (cnt > M / 3 && cnt > best_change_cnt * 2) break;
         }
 
-        /*for (int j = 0; j < searches.size(); ++j) {
+        for (int j = 0; j < searches.size(); ++j) {
             std::cerr << typeid(*searches[j]).name() << ":" << search_weights[j] << std::endl;
             std::cerr << typeid(*searches[j]).name() << ":" << search_time[j] / counter_search[j] << "[ms]" << std::endl;
             for (auto&& s_cnt : score_cnt_search[j]) std::cerr << (double)s_cnt / counter_search[j] * 100 << " ";
@@ -283,7 +283,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             auto sum = std::accumulate(score_cnt_destroy[j].begin(), score_cnt_destroy[j].end(), 0);
             for (auto&& d_cnt : score_cnt_destroy[j]) std::cerr << (double)d_cnt / sum * 100 << " ";
             std::cerr << std::endl;
-        }*/
+        }
 
         auto end = std::chrono::high_resolution_clock::now();
         double time = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0);

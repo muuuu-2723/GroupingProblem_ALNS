@@ -686,10 +686,10 @@ std::ostream& operator<<(std::ostream& out, const Solution& s) {
     }*/
     out << "•]‰¿’l:";
     if (s.opt == Input::Opt::MAX) {
-        out << s.get_eval_value();
+        out << std::fixed << std::setprecision(2) << s.get_eval_value();
     }
     else {
-        out << -s.get_eval_value();
+        out << std::fixed << std::setprecision(2) << -s.get_eval_value();
     }
     out << std::endl;
     return out;
