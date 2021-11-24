@@ -43,15 +43,12 @@ std::unique_ptr<Solution> RelationGreedy::operator()(const Solution& current_sol
                 //item_relationはアイテム数を多くすれば大きくなるため平均値で評価
                 double value = 0;
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::ITEM_R)) {
-                    auto& item_relations = neighborhood->get_each_group_item_relation(items[id], g_itr->get_id());
-                    value += std::accumulate(item_relations.begin(), item_relations.end(), 0.0);
+                    value += neighborhood->get_each_group_item_relation(items[id], g_itr->get_id());
                     if (group_member_num != 0) value /= group_member_num;
                 }
 
                 if (neighborhood->get_eval_flags().test(Solution::EvalIdx::GROUP_R)) {
-                    for (size_t i = 0; i < Item::group_r_size; ++i) {
-                        value += items[id].group_relations[g_itr->get_id()][i] * neighborhood->get_group_relation_params()[i];
-                    }
+                    value += items[id].group_relations[g_itr->get_id()];
                 }
 
                 if (value > max_value) {

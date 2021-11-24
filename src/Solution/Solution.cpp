@@ -27,31 +27,19 @@ Solution::Solution(const Input& input) {
     //パラメータ設定
     penalty_param = 100000;
     opt = input.get_opt();
-    item_relation_params = input.get_item_relation_params();
-    group_relation_params = input.get_group_relation_params();
     value_ave_params = input.get_value_ave_params();
     value_sum_params = input.get_value_sum_params();
     //group_cost = input.get_group_cost();
     group_cost = vector<double>(input.get_group_cost().begin(), input.get_group_cost().end());
     constant = input.get_constant();
 
-    //最小化の場合はパラメータの符号を反転
-    if (opt == Input::Opt::MIN) {
-        std::for_each(item_relation_params.begin(), item_relation_params.end(), [](auto& p) { p *= -1; });
-        std::for_each(group_relation_params.begin(), group_relation_params.end(), [](auto& p) { p *= -1; });
-        std::for_each(value_ave_params.begin(), value_ave_params.end(), [](auto& p) { p *= -1; });
-        std::for_each(value_sum_params.begin(), value_sum_params.end(), [](auto& p) { p *= -1; });
-        std::for_each(group_cost.begin(), group_cost.end(), [](auto& p) { p *= -1; });
-        constant *= -1;
-    }
-
     //eval_flagsの設定
     eval_flags.set();
     if (Item::w_size == 0) eval_flags.reset(EvalIdx::WEIGHT_PENA);
     if (input.get_item_penalty_num() == 0) eval_flags.reset(EvalIdx::ITEM_PENA);
     if (input.get_group_penalty_num() == 0) eval_flags.reset(EvalIdx::GROUP_PENA);
-    if (item_relation_params.size() == 0) eval_flags.reset(EvalIdx::ITEM_R);
-    if (group_relation_params.size() == 0) eval_flags.reset(EvalIdx::GROUP_R);
+    if (input.get_item_relation_params_size() == 0) eval_flags.reset(EvalIdx::ITEM_R);
+    if (input.get_group_relation_params_size() == 0) eval_flags.reset(EvalIdx::GROUP_R);
     if (value_ave_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_AVE);
     if (value_sum_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_SUM);
     if (group_cost.size() == 0) eval_flags.reset(EvalIdx::GROUP_COST);
@@ -77,7 +65,7 @@ Solution::Solution(const Input& input) {
         }
     }
     groups.push_back(Group(Group::N));
-    each_group_item_relation.assign(Item::N, vector<std::optional<vector<double>>>(Group::N + 1, std::nullopt));
+    each_group_item_relation.assign(Item::N, vector<std::optional<double>>(Group::N + 1, std::nullopt));
     each_group_item_penalty.assign(Item::N, vector<std::optional<int>>(Group::N + 1, std::nullopt));
     item_group_ids.resize(Item::N);
     aves.assign(Item::v_size, 0);
@@ -119,7 +107,7 @@ Solution::Solution(const Input& input) {
 
 Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_group_ids), relation(s.relation), penalty(s.penalty), ave_balance(s.ave_balance),
                                         sum_balance(s.sum_balance),sum_group_cost(s.sum_group_cost) , each_group_item_relation(s.each_group_item_relation), each_group_item_penalty(s.each_group_item_penalty),
-                                        aves(s.aves), sum_values(s.sum_values), opt(s.opt), item_relation_params(s.item_relation_params), group_relation_params(s.group_relation_params),
+                                        aves(s.aves), sum_values(s.sum_values), opt(s.opt),
                                         value_ave_params(s.value_ave_params), value_sum_params(s.value_sum_params), penalty_param(s.penalty_param), group_cost(s.group_cost),
                                         constant(s.constant), eval_flags(s.eval_flags), item_times(s.item_times), group_times(s.group_times) {
 
@@ -131,12 +119,12 @@ Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_
 }
 
 /*each_group_item_relationの値を取得, なければ計算して取得*/
-const vector<double>& Solution::get_each_group_item_relation(const Item& item, int group_id) {
+double Solution::get_each_group_item_relation(const Item& item, int group_id) {
     if (group_id >= Group::N) {
-        each_group_item_relation[item.id][group_id] = vector<double>(Item::item_r_size + Item::v_size, 0);
+        each_group_item_relation[item.id][group_id] = 0;
     }
     else if (!each_group_item_relation[item.id][group_id]) {
-        each_group_item_relation[item.id][group_id] = groups[group_id].item_relation(item, item_relation_params);
+        each_group_item_relation[item.id][group_id] = groups[group_id].item_relation(item);
     }
     return each_group_item_relation[item.id][group_id].value();
 }
@@ -168,14 +156,10 @@ double Solution::evaluation_all(const vector<Item>& items) {
 
         //関係値の計算
         if (eval_flags.test(EvalIdx::ITEM_R)) {
-            for (const auto& r : g_itr->sum_item_relation(items, item_relation_params)) {
-                relation += r;
-            }
+            relation += g_itr->sum_item_relation(items);
         }
         if (eval_flags.test(EvalIdx::GROUP_R)) {
-            for (const auto& r : g_itr->sum_group_relation(items, group_relation_params)) {
-                relation += r;
-            }
+            relation += g_itr->sum_group_relation(items);
         }
 
         //valueの平滑化用
@@ -284,39 +268,35 @@ auto Solution::evaluation_diff(const vector<MoveItem>& move_items) -> std::tuple
     //関係値の差分を計算
     double diff_relation = 0;
     if (eval_flags.test(EvalIdx::ITEM_R)) {
-        for (size_t i = 0; i < Item::item_r_size + Item::v_size; ++i) {
-            for (const auto& mi : move_items) {
-                diff_relation -= get_each_group_item_relation(mi.item, mi.source)[i];
-                diff_relation += get_each_group_item_relation(mi.item, mi.destination)[i];
-                if (mi.destination == Group::N) continue;
-                for (const auto& out_item : out[mi.destination]) {
-                    diff_relation -= mi.item.item_relations[out_item->id][i] * item_relation_params[i];
+        for (const auto& mi : move_items) {
+            diff_relation -= get_each_group_item_relation(mi.item, mi.source);
+            diff_relation += get_each_group_item_relation(mi.item, mi.destination);
+            if (mi.destination == Group::N) continue;
+            for (const auto& out_item : out[mi.destination]) {
+                diff_relation -= mi.item.item_relations[out_item->id];
+            }
+        }
+        for (size_t i = 0; i < Group::N; ++i) {
+            for (auto itr1 = out[i].begin(), end = out[i].end(); itr1 != end; ++itr1) {
+                for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
+                    diff_relation += (*itr1)->item_relations[(*itr2)->id];
                 }
             }
-            for (size_t j = 0; j < Group::N; ++j) {
-                for (auto itr1 = out[j].begin(), end = out[j].end(); itr1 != end; ++itr1) {
-                    for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
-                        diff_relation += (*itr1)->item_relations[(*itr2)->id][i] * item_relation_params[i];
-                    }
-                }
-                for (auto itr1 = in[j].begin(), end = in[j].end(); itr1 != end; ++itr1) {
-                    for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
-                        diff_relation += (*itr1)->item_relations[(*itr2)->id][i] * item_relation_params[i];
-                    }
+            for (auto itr1 = in[i].begin(), end = in[i].end(); itr1 != end; ++itr1) {
+                for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
+                    diff_relation += (*itr1)->item_relations[(*itr2)->id];
                 }
             }
         }
     }
     //std::cerr << "eval_diff" << std::endl;
     if (eval_flags.test(EvalIdx::GROUP_R)) {
-        for (size_t i = 0; i < Item::group_r_size; ++i) {
-            for (size_t j = 0; j < Group::N; ++j) {
-                for (const auto& in_item : in[j]) {
-                    diff_relation += in_item->group_relations[j][i] * group_relation_params[i];
-                }
-                for (const auto& out_item : out[j]) {
-                    diff_relation -= out_item->group_relations[j][i] * group_relation_params[i];
-                }
+        for (size_t i = 0; i < Group::N; ++i) {
+            for (const auto& in_item : in[i]) {
+                diff_relation += in_item->group_relations[i];
+            }
+            for (const auto& out_item : out[i]) {
+                diff_relation -= out_item->group_relations[i];
             }
         }
     }
@@ -419,17 +399,13 @@ auto Solution::evaluation_shift(const Item& item, int group_id) -> std::tuple<do
     double diff_relation = 0;
     //std::cerr << "i_r" << std::endl;
     if (eval_flags.test(EvalIdx::ITEM_R)) {
-        for (size_t i = 0; i < Item::item_r_size + Item::v_size; ++i) {
-            diff_relation -= get_each_group_item_relation(item, now_group.get_id())[i];
-            diff_relation += get_each_group_item_relation(item, next_group.get_id())[i];
-        }
+        diff_relation -= get_each_group_item_relation(item, now_group.get_id());
+        diff_relation += get_each_group_item_relation(item, next_group.get_id());
     }
     //std::cerr << "g_r" << std::endl;
     if (eval_flags.test(EvalIdx::GROUP_R)) {
-        for (size_t i = 0; i < Item::group_r_size; ++i) {
-            diff_relation -= item.group_relations[now_group.get_id()][i] * group_relation_params[i];
-            diff_relation += item.group_relations[next_group.get_id()][i] * group_relation_params[i];
-        }
+        diff_relation -= item.group_relations[now_group.get_id()];
+        diff_relation += item.group_relations[next_group.get_id()];
     }
 
     //ave_balanceとsum_balanceの差分を計算
@@ -513,23 +489,19 @@ auto Solution::evaluation_swap(const Item& item1, const Item& item2) -> std::tup
     //関係値の差分を計算
     double diff_relation = 0;
     if (eval_flags.test(EvalIdx::ITEM_R)) {
-        for (size_t i = 0; i < Item::item_r_size + Item::v_size; ++i) {
-            diff_relation += get_each_group_item_relation(item1, g2.get_id())[i];
-            diff_relation += get_each_group_item_relation(item2, g1.get_id())[i];
-            diff_relation -= get_each_group_item_relation(item1, g1.get_id())[i];
-            diff_relation -= get_each_group_item_relation(item2, g2.get_id())[i];
+        diff_relation += get_each_group_item_relation(item1, g2.get_id());
+        diff_relation += get_each_group_item_relation(item2, g1.get_id());
+        diff_relation -= get_each_group_item_relation(item1, g1.get_id());
+        diff_relation -= get_each_group_item_relation(item2, g2.get_id());
 
-            diff_relation -= item1.item_relations[item2.id][i] * item_relation_params[i] * 2;
-        }
+        diff_relation -= item1.item_relations[item2.id] * 2;
     }
 
     if (eval_flags.test(EvalIdx::GROUP_R)) {
-        for (size_t i = 0; i < Item::group_r_size; ++i) {
-            diff_relation += item1.group_relations[g2.get_id()][i] * group_relation_params[i];
-            diff_relation += item2.group_relations[g1.get_id()][i] * group_relation_params[i];
-            diff_relation -= item1.group_relations[g1.get_id()][i] * group_relation_params[i];
-            diff_relation -= item2.group_relations[g2.get_id()][i] * group_relation_params[i];
-        }
+        diff_relation += item1.group_relations[g2.get_id()];
+        diff_relation += item2.group_relations[g1.get_id()];
+        diff_relation -= item1.group_relations[g1.get_id()];
+        diff_relation -= item2.group_relations[g2.get_id()];
     }
 
     //ave_balanceとsum_balanceの差分を計算
@@ -576,14 +548,10 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const st
     for (const auto& mi : move_items) {
         for (int i = 0; i < Item::N; ++i) {
             if (each_group_item_relation[i][mi.source] && mi.source < Group::N) {
-                for (size_t j = 0; j < Item::item_r_size + Item::v_size; ++j) {
-                    each_group_item_relation[i][mi.source].value()[j] -= mi.item.item_relations[i][j] * item_relation_params[j];
-                }
+                each_group_item_relation[i][mi.source].value() -= mi.item.item_relations[i];
             }
             if (each_group_item_relation[i][mi.destination] && mi.destination < Group::N) {
-                for (size_t j = 0; j < Item::item_r_size + Item::v_size; ++j) {
-                    each_group_item_relation[i][mi.destination].value()[j] += mi.item.item_relations[i][j] * item_relation_params[j];
-                }
+                each_group_item_relation[i][mi.destination].value() += mi.item.item_relations[i];
             }
             if (each_group_item_penalty[i][mi.source] && mi.source < Group::N) {
                 each_group_item_penalty[i][mi.source].value() -= mi.item.item_penalty[i];

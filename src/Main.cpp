@@ -92,7 +92,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double eval_ave = 0;
     double time_ave = 0;
     int N = 1;
-    int M = 100;
+    int M = 5000;
 
     for (int i = 0; i < N; i++) {
         vector<double> search_p, destroy_p;
@@ -173,7 +173,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 } while (destroy_idx != 1 && destroy_idx != 3 && destroy_idx != 4);
             }
 
-            std::cerr << search_idx << " " << destroy_idx << "idx" << std::endl;
+            std::cout << search_idx << " " << destroy_idx << "idx" << std::endl;
             auto sstart = std::chrono::high_resolution_clock::now();
             auto next_solution = (*searches[search_idx])(*now, destructions[destroy_idx]);
             //std::cerr << *next_solution << std::endl;

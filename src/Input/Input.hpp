@@ -30,8 +30,6 @@ public:
     static std::filesystem::path get_exe_path();
     Input(const std::filesystem::path& problem_file_path);
     const Opt& get_opt() const;
-    const std::vector<double>& get_item_relation_params() const;
-    const std::vector<double>& get_group_relation_params() const;
     const std::vector<double>& get_value_ave_params() const;
     const std::vector<double>& get_value_sum_params() const;
     const std::vector<double>& get_weight_upper(size_t g_idx) const;
@@ -41,18 +39,12 @@ public:
     const std::vector<Item>& get_items() const;
     size_t get_item_penalty_num() const;
     size_t get_group_penalty_num() const;
+    size_t get_item_relation_params_size() const;
+    size_t get_group_relation_params_size() const;
 };
 
 inline const Input::Opt& Input::get_opt() const {
     return opt;
-}
-
-inline const std::vector<double>& Input::get_item_relation_params() const {
-    return item_relation_params;
-}
-
-inline const std::vector<double>& Input::get_group_relation_params() const {
-    return group_relation_params;
 }
 
 inline const std::vector<double>& Input::get_value_ave_params() const {
@@ -89,6 +81,14 @@ inline size_t Input::get_item_penalty_num() const {
 
 inline size_t Input::get_group_penalty_num() const {
     return group_penalty_num;
+}
+
+inline size_t Input::get_item_relation_params_size() const {
+    return item_relation_params.size();
+}
+
+inline size_t Input::get_group_relation_params_size() const {
+    return group_relation_params.size();
 }
 
 #endif

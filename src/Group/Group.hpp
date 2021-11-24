@@ -26,9 +26,9 @@ public:
     Group(Item& leader, std::vector<Item>& member, int group_id);                                                       //メンバー指定のコンストラクタ
     void erase_member(const Item& item);                                                                                //所属するアイテムの削除
     void add_member(const Item& item);                                                                                  //新たにアイテムを追加する
-    std::vector<double> item_relation(const Item& item, const std::vector<double>& params) const;                       //あるアイテムとこのグループのitem_relation
-    std::vector<double> sum_item_relation(const std::vector<Item>& items, const std::vector<double>& params) const;     //このグループのitem_relationの合計
-    std::vector<double> sum_group_relation(const std::vector<Item>& items, const std::vector<double>& params) const;    //このグループのgroup_relationの合計
+    double item_relation(const Item& item) const;                                                                       //あるアイテムとこのグループのitem_relation
+    double sum_item_relation(const std::vector<Item>& items) const;                                                     //このグループのitem_relationの合計
+    double sum_group_relation(const std::vector<Item>& items) const;                                                    //このグループのgroup_relationの合計
     double diff_weight_penalty(const std::vector<const Item*>& add, const std::vector<const Item*>& erase) const;       //weight_penaltyの変化量
     double calc_weight_penalty() const;                                                                                 //このグループのweight_penaltyを計算
     int calc_item_penalty(const Item& item) const;                                                                      //あるアイテムとこのグループのitem_penalty

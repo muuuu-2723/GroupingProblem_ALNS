@@ -69,12 +69,13 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         throw std::runtime_error("minimize maximize error");
     }
 
+    size_t item_r_size;
     vector<std::string> item_r_name;
     if (j["params"].find("eachItemRelation") != j["params"].end()) {
         auto& eir = j["params"]["eachItemRelation"];
-        Item::item_r_size = std::distance(eir.begin(), eir.end());
-        item_r_name.reserve(Item::item_r_size);
-        item_relation_params.reserve(Item::item_r_size);
+        item_r_size = std::distance(eir.begin(), eir.end());
+        item_r_name.reserve(item_r_size);
+        item_relation_params.reserve(item_r_size);
 
         for (auto itr = eir.begin(), end = eir.end(); itr != end; ++itr) {
             item_r_name.push_back(itr.key());
@@ -82,15 +83,16 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         }
     }
     else {
-        Item::item_r_size = 0;
+        item_r_size = 0;
     }
 
+    size_t group_r_size;
     vector<std::string> group_r_name;
     if (j["params"].find("itemGroupRelation") != j["params"].end()) {
         auto& igr = j["params"]["itemGroupRelation"];
-        Item::group_r_size = std::distance(igr.begin(), igr.end());
-        group_r_name.reserve(Item::group_r_size);
-        group_relation_params.reserve(Item::group_r_size);
+        group_r_size = std::distance(igr.begin(), igr.end());
+        group_r_name.reserve(group_r_size);
+        group_relation_params.reserve(group_r_size);
 
         for (auto itr = igr.begin(), end = igr.end(); itr != end; ++itr) {
             group_r_name.push_back(itr.key());
@@ -98,7 +100,7 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         }
     }
     else {
-        Item::group_r_size = 0;
+        group_r_size = 0;
     }
 
     vector<std::string> value_name;
@@ -171,6 +173,15 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         weight_lower.resize(Group::N, vector<double>());
     }
 
+    if (opt == Opt::MIN) {
+        std::for_each(item_relation_params.begin(), item_relation_params.end(), [](auto& p) { p *= -1; });
+        std::for_each(group_relation_params.begin(), group_relation_params.end(), [](auto& p) { p *= -1; });
+        std::for_each(value_ave_params.begin(), value_ave_params.end(), [](auto& p) { p *= -1; });
+        std::for_each(value_sum_params.begin(), value_sum_params.end(), [](auto& p) { p *= -1; });
+        std::for_each(group_cost.begin(), group_cost.end(), [](auto& p) { p *= -1; });
+        constant *= -1;
+    }
+
     items.reserve(Item::N);
     auto& item_json = j["data"]["item"];
     for (size_t i = 0; i < Item::N; ++i) {
@@ -192,36 +203,36 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
             }
         }
 
-        item.item_relations.assign(Item::N, vector<double>(Item::item_r_size + Item::v_size, 0));
-        item.group_relations.assign(Group::N, vector<double>(Item::group_r_size, 0));
+        item.item_relations.assign(Item::N, 0);
+        item.group_relations.assign(Group::N, 0);
         item.item_penalty.assign(Item::N, 0);
         item.group_penalty.assign(Group::N, 0);
 
         items.push_back(item);
     }
 
-    for (size_t i = 0; i < Item::item_r_size; ++i) {
+    for (size_t i = 0; i < item_r_size; ++i) {
         auto& item_relations = j["data"]["eachItemRelation"][item_r_name[i]];
         for (size_t j = 0; j < Item::N; ++j) {
             for (size_t k = 0; k < Item::N; ++k) {
-                items[j].item_relations[k][i] = item_relations[j][k].get<double>();
+                items[j].item_relations[k] += item_relations[j][k].get<double>() * item_relation_params[i];
             }
         }
     }
 
-    for (size_t i = 0; i < Item::group_r_size; ++i) {
+    for (size_t i = 0; i < group_r_size; ++i) {
         auto& group_relations = j["data"]["itemGroupRelation"][group_r_name[i]];
         for (size_t j = 0; j < Item::N; ++j) {
             for (size_t k = 0; k < Group::N; ++k) {
-                items[j].group_relations[k][i] = group_relations[j][k].get<double>();
+                items[j].group_relations[k] += group_relations[j][k].get<double>() * group_relation_params[i];
             }
         }
     }
 
-    for (size_t i = Item::item_r_size; i < Item::item_r_size + Item::v_size; ++i) {
+    for (size_t i = item_r_size; i < item_r_size + Item::v_size; ++i) {
         for (auto&& item : items) {
             for (size_t j = 0; j < Item::N; ++j) {
-                item.item_relations[j][i] = std::abs(item.values[i - Item::item_r_size] - items[j].values[i - Item::item_r_size]);
+                item.item_relations[j] = std::abs(item.values[i - item_r_size] - items[j].values[i - item_r_size]) * item_relation_params[i];
             }
         }
     }
