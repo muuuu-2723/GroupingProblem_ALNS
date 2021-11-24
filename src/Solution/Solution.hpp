@@ -23,17 +23,42 @@ struct MoveItem {
     MoveItem(const Item& item, int source, int destination) : item(item), source(source), destination(destination) {}
 };
 
+struct EvalVals {
+    double relation;
+    double penalty;
+    double ave_balance;
+    double sum_balance;
+    double group_cost;
+    int group_num;
+
+    EvalVals() : relation(0), penalty(0), ave_balance(0), sum_balance(0), group_cost(0), group_num(0) {}
+
+    double get_value(double penalty_param, double constant) const {
+        return relation - penalty * penalty_param + ave_balance / group_num + sum_balance / group_num + group_cost + constant;
+    }
+
+    EvalVals& operator+=(const EvalVals& ev) {
+        this->relation += ev.relation;
+        this->penalty += ev.penalty;
+        this->ave_balance += ev.ave_balance;
+        this->sum_balance += ev.sum_balance;
+        this->group_cost += ev.group_cost;
+        this->relation = std::abs(this->relation) < 1e-10 ? 0 : this->relation;
+        this->penalty = std::abs(this->penalty) < 1e-10 ? 0 : this->penalty;
+        this->ave_balance = std::abs(this->ave_balance) < 1e-10 ? 0 : this->ave_balance;
+        this->sum_balance = std::abs(this->sum_balance) < 1e-10 ? 0 : this->sum_balance;
+        this->group_num += ev.group_num;
+        return *this;
+    }
+};
+
 /*グループ分けを管理する解*/
 class Solution {
 private:
     std::vector<Group> groups;                                                                  //グループの集合
     std::list<const Group*> valid_groups;                                                       //現在使われているグループの参照集合
     std::vector<int> item_group_ids;                                                            //それぞれのアイテムが所属するグループid
-    double relation;                                                                            //このグループ分けの関係値
-    double penalty;                                                                             //このグループ分けのペナルティ
-    double ave_balance;                                                                         //各グループのvalueの平均値のばらつき
-    double sum_balance;                                                                         //各グループのvalueの合計のばらつき
-    double sum_group_cost;
+    EvalVals eval;
     std::vector<std::vector<std::optional<double>>> each_group_item_relation;                   //それぞれのグループに対するitem_relation each_group_item_relation[アイテム][グループ].value()
     std::vector<std::vector<std::optional<int>>> each_group_item_penalty;                       //それぞれのグループに対するitem_penalty each_group_item_penalty[アイテム][グループ]
     std::vector<double> aves;                                                                   //valueのアイテム単位での平均
@@ -46,8 +71,7 @@ private:
     double constant;                                                                            //目的関数の定数
     std::bitset<8> eval_flags;                                                                  //各評価値を計算する必要があるかを管理するフラグ
 
-    void move_processing(const std::vector<MoveItem>& move_items, const std::tuple<double, double, double, double, double>& diff);     //移動処理
-    void set_eval_value(double penalty, double relation, double ave_balance, double sum_balance, double sum_group_cost);               //評価値の元となるrelation, penalty, ave_balance, sum_balamceの設定
+    void move_processing(const std::vector<MoveItem>& move_items, const EvalVals& diff);     //移動処理
     std::vector<std::vector<int>> item_times;
     std::vector<std::vector<int>> group_times;
 
@@ -61,7 +85,7 @@ public:
     Solution& operator=(const Solution& s);
     Solution& operator=(Solution&& s) = delete;
     double get_eval_value() const;                                                                                                  //評価値を取得
-    double calc_diff_eval(const std::tuple<double, double, double, double, double>& diff) const;                                    //変化量に対する評価値を計算
+    double calc_diff_eval(const EvalVals& diff) const;                                    //変化量に対する評価値を計算
     const std::vector<double>& get_ave() const;                                                                                     //valueのアイテム単位での平均を取得
     const std::vector<double>& get_sum_values() const;                                                                              //valueの合計を取得
     double get_each_group_item_relation(const Item& item, int group_id);                                                            //each_group_item_relationの値を取得, なければ計算して取得
@@ -72,9 +96,9 @@ public:
     const std::vector<Group>& get_groups() const;                                                                                   //ダミーグループを含むすべてのグループを取得
     const Group& get_dummy_group() const;                                                                                           //ダミーグループを取得
     double evaluation_all(const std::vector<Item>& items);                                                                          //現在の解(グループ分け)を評価
-    auto evaluation_diff(const std::vector<MoveItem>& move_items) -> std::tuple<double, double, double, double, double>;            //評価値の変化量を計算
-    auto evaluation_shift(const Item& item, int group_id) -> std::tuple<double, double, double, double, double>;                    //shift移動時の評価値の変化量を計算
-    auto evaluation_swap(const Item& item1, const Item& item2) -> std::tuple<double, double, double, double, double>;               //swap移動時の評価値の変化量を計算
+    EvalVals evaluation_diff(const std::vector<MoveItem>& move_items);            //評価値の変化量を計算
+    EvalVals evaluation_shift(const Item& item, int group_id);                    //shift移動時の評価値の変化量を計算
+    EvalVals evaluation_swap(const Item& item1, const Item& item2);               //swap移動時の評価値の変化量を計算
     bool shift_check(const Item& item, int group_id);                                                                               //shift移動するかどうかを調査し, 必要に応じて移動する
     bool swap_check(const Item& item1, const Item& item2);                                                                          //swap移動するかどうかを調査し, 必要に応じて移動する
     bool move_check(const std::vector<MoveItem>& move_items);                                                                       //move_itemsに基づいて移動するかどうかを調査し, 必要に応じて移動する
@@ -99,11 +123,7 @@ inline Solution& Solution::operator=(const Solution& s) {
     std::cout << "コピー代入演算子" << std::endl;
     groups = s.groups;
     item_group_ids = s.item_group_ids;
-    relation = s.relation;
-    penalty = s.penalty;
-    ave_balance = s.ave_balance;
-    sum_balance = s.sum_balance;
-    sum_group_cost = s.sum_group_cost;
+    eval = s.eval;
     each_group_item_relation = s.each_group_item_relation;
     each_group_item_penalty = s.each_group_item_penalty;
     aves = s.aves;
@@ -126,23 +146,16 @@ inline Solution& Solution::operator=(const Solution& s) {
     return *this;
 }
 
-/*評価値の元となるrelation, penalty, ave_balance, sum_balamceの設定*/
-inline void Solution::set_eval_value(double penalty, double relation, double ave_balance, double sum_balance, double sum_group_cost) {
-    this->penalty = std::abs(penalty) < 1e-10 ? 0 : penalty;
-    this->relation = std::abs(relation) < 1e-10 ? 0 : relation;
-    this->ave_balance = std::abs(ave_balance) < 1e-10 ? 0 : ave_balance;
-    this->sum_balance = std::abs(sum_balance) < 1e-10 ? 0 : sum_balance;
-    this->sum_group_cost = std::abs(sum_group_cost) < 1e-10 ? 0 : sum_group_cost;
-}
+EvalVals operator+(const EvalVals& ev1, const EvalVals& ev2);
 
 /*評価値を取得*/
 inline double Solution::get_eval_value() const {
-    return relation - penalty * penalty_param + ave_balance + sum_balance + sum_group_cost + constant;
+    return eval.get_value(penalty_param, constant);
 }
 
 /*変化量に対する評価値を計算*/
-inline double Solution::calc_diff_eval(const std::tuple<double, double, double, double, double>& diff) const {
-    return -std::get<0>(diff) * penalty_param + std::get<1>(diff) + std::get<2>(diff) + std::get<3>(diff) + std::get<4>(diff);
+inline double Solution::calc_diff_eval(const EvalVals& diff) const {
+    return (eval + diff).get_value(penalty_param, constant) - eval.get_value(penalty_param, constant);
 }
 
 /*valueのアイテム単位での平均を取得*/
@@ -182,26 +195,26 @@ inline const Group& Solution::get_dummy_group() const {
 
 /*関係値を取得*/
 inline double Solution::get_relation() const {
-    return relation;
+    return eval.relation;
 }
 
 /*ペナルティを取得*/
 inline double Solution::get_penalty() const {
-    return penalty;
+    return eval.penalty;
 }
 
 /*各グループのvalueの平均値のばらつきを取得*/
 inline double Solution::get_ave_balance() const {
-    return ave_balance;
+    return eval.ave_balance;
 }
 
 /*各グループのvalueの合計のばらつきを取得*/
 inline double Solution::get_sum_balance() const {
-    return sum_balance;
+    return eval.sum_balance;
 }
 
 inline double Solution::get_sum_group_cost() const {
-    return sum_group_cost;
+    return eval.group_cost;
 }
 
 /*eval_flagsを取得*/
