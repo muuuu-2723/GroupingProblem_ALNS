@@ -37,6 +37,8 @@ NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weig
 /*各頂点間に有効辺を必要に応じて設定*/
 void NeighborhoodGraph::set_edge(Solution& solution) {
     graph.assign(vertices.size(), vector<Edge>());
+    vector<Edge*> edge_ptr;
+    edge_ptr.reserve(vertices.size() * vertices.size());
 
     //sからtへの有効辺を設定
     for (const auto& s : vertices) {
@@ -70,6 +72,7 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
 
                         //辺をグラフに追加
                         graph[s.id].push_back(Edge(t.id, -weight));
+                        edge_ptr.push_back(&graph[s.id][graph[s.id].size() - 1]);
                     }
                 }
                 else if (t.item.id >= Item::N) {                                            //tがダミーアイテムの場合
@@ -92,6 +95,7 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
 
                         //辺をグラフに追加
                         graph[s.id].push_back(Edge(t.id, -weight));
+                        edge_ptr.push_back(&graph[s.id][graph[s.id].size() - 1]);
                     }
                 }
                 else {                                                                      //sとtがダミーアイテムでない場合
@@ -115,10 +119,19 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
 
                         //辺をグラフに追加
                         graph[s.id].push_back(Edge(t.id, -weight));
+                        edge_ptr.push_back(&graph[s.id][graph[s.id].size() - 1]);
                     }
                 }
             }
         }
+    }
+
+    size_t center = edge_ptr.size() * 0.02;
+    std::nth_element(edge_ptr.begin(), edge_ptr.begin() + center, edge_ptr.end(), [](const auto& a, const auto& b) { return a->weight < b->weight; });
+    double median = edge_ptr[center]->weight;
+    for (auto&& out_edges : graph) {
+        auto itr = std::remove_if(out_edges.begin(), out_edges.end(), [&](const auto& e) { return e.weight > median; });
+        out_edges.erase(itr, out_edges.end());
     }
 }
 
@@ -143,6 +156,13 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
     }
     //std::cerr << "nei_test" << std::endl;
     set_edge(*neighborhood_solution);
+    /*vector<Edge*> edges;
+    for (auto&& v : graph) {
+        for (auto&& e : v) {
+            edges.push_back(&e);
+        }
+    }
+    std::sort(edges.begin(), edges.end(), [](auto& a, auto& b) { return a->weight < b->weight; });*/
     vector<vector<vector<double>>> dp(vertices.size(), vector<vector<double>>(vertices.size(), vector<double>(search_group_size - 1, DBL_MAX)));
     using TablePos = std::tuple<int, int, int>;
     vector<vector<vector<TablePos>>> prev(vertices.size(), vector<vector<TablePos>>(vertices.size(), vector<TablePos>(search_group_size - 1, {-1, -1, -1})));
@@ -188,6 +208,8 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
         return a.first < b.first;
     });
 
+    /*std::cout << edges.size() << std::endl;
+    std::cout << "rank:";*/
     //負閉路を構築し, 同じグループを2回以上通っていないか調査
     for (const auto& sp : start_pos) {
         //負閉路構築
@@ -210,6 +232,9 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
 
         //同じグループを2回以上通っていないか調査
         for (auto ritr = cycle.rbegin(), rend = --cycle.rend(); ritr != rend; ++ritr) {
+            /*auto& e = *std::find_if(graph[*ritr].begin(), graph[*ritr].end(), [&](auto& ee) { return ee.target == *(ritr + 1); });
+            int rank = std::distance(edges.begin(), std::find(edges.begin(), edges.end(), &e)) + 1;
+            std::cout << rank << ":" << e.weight << " ";*/
             const Item& item = vertices[*ritr].item;
             int now_group_id;
             if (item.id < Item::N) {
@@ -249,5 +274,6 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
             break;
         }
     }
+    //std::cout << std::endl;
     return std::move(neighborhood_solution);
 }
