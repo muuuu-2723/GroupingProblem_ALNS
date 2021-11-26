@@ -26,7 +26,8 @@ class NeighborhoodGraph : public Search {
     };
 
 private:
-    std::vector<Vertex> vertices;                       //頂点集合
+    std::vector<std::shared_ptr<Vertex>> vertices;      //頂点集合
+    std::vector<std::shared_ptr<Vertex>> target_vertices;
     std::vector<std::vector<Edge>> graph;               //グラフの隣接リスト
     std::vector<Item> dummy_items;                      //環状の移動のみでなくパス状の移動を考えるためのダミーアイテムの集合
     void set_edge(Solution& solution);                  //各頂点間に有効辺を必要に応じて設定

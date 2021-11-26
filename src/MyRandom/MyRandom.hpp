@@ -15,6 +15,11 @@ public:
     static void shuffle(RanContainer& container) {
         std::shuffle(container.begin(), container.end(), mt);
     }
+    /*ƒTƒ“ƒvƒ‹‚ğ’Šo*/
+    template<class InputContainer, class OutputContainer>
+    static void sample(InputContainer& input, OutputContainer& output, size_t size) {
+        std::sample(input.begin(), input.end(), std::back_inserter(output), size, mt);
+    }
 };
 
 

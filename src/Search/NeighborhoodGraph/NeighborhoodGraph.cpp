@@ -4,6 +4,7 @@
 #include <Item.hpp>
 #include <Group.hpp>
 #include <Destroy.hpp>
+#include <MyRandom.hpp>
 #include <vector>
 #include <cmath>
 #include <cfloat>
@@ -21,7 +22,7 @@ NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weig
     int idx = 0;
     for (auto&& item : items) {
         if (item.predefined_group == -1) {
-            vertices.push_back(Vertex(idx++, item));
+            vertices.push_back(std::make_shared<Vertex>(idx++, item));
         }
     }
     dummy_items.reserve(Group::N);
@@ -30,72 +31,74 @@ NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weig
         Item item;
         item.id = Item::N + i;
         dummy_items.push_back(item);
-        vertices.push_back(Vertex(idx++, dummy_items[i]));
+        vertices.push_back(std::make_shared<Vertex>(idx++, dummy_items[i]));
     }
+    target_vertices.reserve(vertices.size() / 2);
 }
 
 /*各頂点間に有効辺を必要に応じて設定*/
 void NeighborhoodGraph::set_edge(Solution& solution) {
     graph.assign(vertices.size(), vector<Edge>());
-    vector<Edge*> edge_ptr;
-    edge_ptr.reserve(vertices.size() * vertices.size());
+    /*vector<Edge*> edge_ptr;
+    edge_ptr.reserve(vertices.size() * vertices.size());*/
+    MyRandom::sample(vertices, target_vertices, vertices.size() / 2);
 
     //sからtへの有効辺を設定
-    for (const auto& s : vertices) {
-        for (const auto& t : vertices) {
+    for (const auto& s : target_vertices) {
+        for (const auto& t : target_vertices) {
             //ダミーアイテム同士には辺を張らない
-            if (s.item.id >= Item::N && t.item.id >= Item::N) continue;
+            if (s->item.id >= Item::N && t->item.id >= Item::N) continue;
 
-            int s_group_id = s.item.id < Item::N ? solution.get_group_id(s.item) : s.item.id - Item::N;
-            int t_group_id = t.item.id < Item::N ? solution.get_group_id(t.item) : t.item.id - Item::N;
+            int s_group_id = s->item.id < Item::N ? solution.get_group_id(s->item) : s->item.id - Item::N;
+            int t_group_id = t->item.id < Item::N ? solution.get_group_id(t->item) : t->item.id - Item::N;
 
             //同じグループのアイテム間には辺を張らない
             if (s_group_id != t_group_id) {
                 const Group& t_group = solution.get_groups()[t_group_id];
-                if (s.item.id >= Item::N) {                                                 //sがダミーアイテムの場合
+                if (s->item.id >= Item::N) {                                                 //sがダミーアイテムの場合
                     //tを現在のグループから削除したときのペナルティを計算
                     double penalty = 0;
                     if (solution.get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
-                        penalty += t_group.diff_weight_penalty({}, {&t.item});
+                        penalty += t_group.diff_weight_penalty({}, {&t->item});
                     }
                     if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_PENA)) {
-                        penalty -= t.item.group_penalty[t_group_id];
+                        penalty -= t->item.group_penalty[t_group_id];
                     }
                     if (solution.get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
-                        penalty -= solution.get_each_group_item_penalty(t.item, t_group_id);
+                        penalty -= solution.get_each_group_item_penalty(t->item, t_group_id);
                     }
 
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
                         //評価値の変化量を計算
-                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(t.item, t_group_id, Group::N)}));
+                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(t->item, t_group_id, Group::N)}));
 
                         //辺をグラフに追加
-                        graph[s.id].push_back(Edge(t.id, -weight));
-                        edge_ptr.push_back(&graph[s.id][graph[s.id].size() - 1]);
+                        graph[s->id].push_back(Edge(t->id, -weight));
+                        //edge_ptr.push_back(&graph[s->id][graph[s->id].size() - 1]);
                     }
                 }
-                else if (t.item.id >= Item::N) {                                            //tがダミーアイテムの場合
+                else if (t->item.id >= Item::N) {                                            //tがダミーアイテムの場合
                     //sをt_groupに追加したときのペナルティを計算
                     double penalty = 0;
                     if (solution.get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
-                        penalty += t_group.diff_weight_penalty({&s.item}, {});
+                        penalty += t_group.diff_weight_penalty({&s->item}, {});
                     }
                     if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_PENA)) {
-                        penalty += s.item.group_penalty[t_group_id];
+                        penalty += s->item.group_penalty[t_group_id];
                     }
                     if (solution.get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
-                        penalty += solution.get_each_group_item_penalty(s.item, t_group_id);
+                        penalty += solution.get_each_group_item_penalty(s->item, t_group_id);
                     }
 
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
                         //評価値の変化量を計算
-                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(s.item, Group::N, t_group_id)}));
+                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(s->item, Group::N, t_group_id)}));
 
                         //辺をグラフに追加
-                        graph[s.id].push_back(Edge(t.id, -weight));
-                        edge_ptr.push_back(&graph[s.id][graph[s.id].size() - 1]);
+                        graph[s->id].push_back(Edge(t->id, -weight));
+                        //edge_ptr.push_back(&graph[s->id][graph[s->id].size() - 1]);
                     }
                 }
                 else {                                                                      //sとtがダミーアイテムでない場合
@@ -103,36 +106,36 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
                     //tを現在のグループから削除し, sをそのグループに追加したときのペナルティを計算
                     double penalty = 0;
                     if (solution.get_eval_flags().test(Solution::EvalIdx::WEIGHT_PENA)) {
-                        penalty += t_group.diff_weight_penalty({&s.item}, {&t.item});
+                        penalty += t_group.diff_weight_penalty({&s->item}, {&t->item});
                     }
                     if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_PENA)) {
-                        penalty += s.item.group_penalty[t_group_id] - t.item.group_penalty[t_group_id];
+                        penalty += s->item.group_penalty[t_group_id] - t->item.group_penalty[t_group_id];
                     }
                     if (solution.get_eval_flags().test(Solution::EvalIdx::ITEM_PENA)) {
-                        penalty += solution.get_each_group_item_penalty(s.item, t_group_id) - solution.get_each_group_item_penalty(t.item, t_group_id) - s.item.item_penalty[t.item.id];
+                        penalty += solution.get_each_group_item_penalty(s->item, t_group_id) - solution.get_each_group_item_penalty(t->item, t_group_id) - s->item.item_penalty[t->item.id];
                     }
                     
                     //ペナルティが増加しない場合に辺を張る
                     if (penalty <= 0 || std::abs(penalty) < 1e-10) {
                         //評価値の変化量を計算
-                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(s.item, Group::N, t_group_id), MoveItem(t.item, t_group_id, Group::N)}));
+                        double weight = solution.calc_diff_eval(solution.evaluation_diff({MoveItem(s->item, Group::N, t_group_id), MoveItem(t->item, t_group_id, Group::N)}));
 
                         //辺をグラフに追加
-                        graph[s.id].push_back(Edge(t.id, -weight));
-                        edge_ptr.push_back(&graph[s.id][graph[s.id].size() - 1]);
+                        graph[s->id].push_back(Edge(t->id, -weight));
+                        //edge_ptr.push_back(&graph[s->id][graph[s->id].size() - 1]);
                     }
                 }
             }
         }
     }
 
-    size_t center = edge_ptr.size() * 0.02;
+    /*size_t center = edge_ptr.size() * 0.02;
     std::nth_element(edge_ptr.begin(), edge_ptr.begin() + center, edge_ptr.end(), [](const auto& a, const auto& b) { return a->weight < b->weight; });
     double median = edge_ptr[center]->weight;
     for (auto&& out_edges : graph) {
         auto itr = std::remove_if(out_edges.begin(), out_edges.end(), [&](const auto& e) { return e.weight > median; });
         out_edges.erase(itr, out_edges.end());
-    }
+    }*/
 }
 
 /*
@@ -169,20 +172,20 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
     
     //探索の効率化のためのラムダ関数
     auto lambda = [](const double& a) { return a < 0 ? a : DBL_MAX; };
-    
+
     //DPで負閉路を探索. 負閉路の長さはグループ数以下のものが探索の対象
     if (search_group_size > 1) {
-        for (const auto& v1 : vertices) {
-            for (const auto& e : graph[v1.id]) {
-                dp[v1.id][e.target][0] = lambda(e.weight);
+        for (const auto& v1 : target_vertices) {
+            for (const auto& e : graph[v1->id]) {
+                dp[v1->id][e.target][0] = lambda(e.weight);
             }
 
             for (size_t l = 1, size = search_group_size - 1; l < size; ++l) {
-                for (const auto& v2 : vertices) {
-                    for (const auto& e : graph[v2.id]) {
-                        if (dp[v1.id][v2.id][l - 1] != DBL_MAX && lambda(dp[v1.id][v2.id][l - 1] + e.weight) < dp[v1.id][e.target][l]) {
-                            dp[v1.id][e.target][l] = lambda(dp[v1.id][v2.id][l - 1] + e.weight);
-                            prev[v1.id][e.target][l] = {v1.id, v2.id, l - 1};
+                for (const auto& v2 : target_vertices) {
+                    for (const auto& e : graph[v2->id]) {
+                        if (dp[v1->id][v2->id][l - 1] != DBL_MAX && lambda(dp[v1->id][v2->id][l - 1] + e.weight) < dp[v1->id][e.target][l]) {
+                            dp[v1->id][e.target][l] = lambda(dp[v1->id][v2->id][l - 1] + e.weight);
+                            prev[v1->id][e.target][l] = {v1->id, v2->id, l - 1};
                         }
                     }
                 }
@@ -193,11 +196,11 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
 
     //DPテーブルから負閉路毎に重みの合計と始点を抽出
     vector<std::pair<double, TablePos>> start_pos;
-    for (const auto& v : vertices) {
-        for (const auto& e : graph[v.id]) {
+    for (const auto& v : target_vertices) {
+        for (const auto& e : graph[v->id]) {
             for (size_t l = 0, size = search_group_size - 1; l < size; ++l) {
-                if (dp[e.target][v.id][l] + e.weight < 0) {
-                    start_pos.push_back(std::make_pair(dp[e.target][v.id][l] + e.weight, std::make_tuple(e.target, v.id, l)));
+                if (dp[e.target][v->id][l] + e.weight < 0) {
+                    start_pos.push_back(std::make_pair(dp[e.target][v->id][l] + e.weight, std::make_tuple(e.target, v->id, l)));
                 }
             }
         }
@@ -235,11 +238,11 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
             /*auto& e = *std::find_if(graph[*ritr].begin(), graph[*ritr].end(), [&](auto& ee) { return ee.target == *(ritr + 1); });
             int rank = std::distance(edges.begin(), std::find(edges.begin(), edges.end(), &e)) + 1;
             std::cout << rank << ":" << e.weight << " ";*/
-            const Item& item = vertices[*ritr].item;
+            const Item& item = vertices[*ritr]->item;
             int now_group_id;
             if (item.id < Item::N) {
                 now_group_id = neighborhood_solution->get_group_id(item);
-                const Item& next_item = vertices[*std::next(ritr)].item;
+                const Item& next_item = vertices[*std::next(ritr)]->item;
                 int next_group_id;
                 if (next_item.id < Item::N) {
                     next_group_id = neighborhood_solution->get_group_id(next_item);
@@ -275,5 +278,6 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
         }
     }
     //std::cout << std::endl;
+    target_vertices.clear();
     return std::move(neighborhood_solution);
 }
