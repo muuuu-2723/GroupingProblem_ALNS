@@ -15,7 +15,7 @@ private:
 public:
     /*コンストラクタ*/
     MinimumDestroy(const std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {}
-    void operator()(Solution& solution) override;                                               //破壊法を実行
+    std::vector<const Item*> operator()(Solution& solution) const override;                           //破壊法を実行
     void add_destroy_num(int add_num);                                                          //除去するアイテム数をadd_num分増加
     void set_destroy_num(int set_num);                                                          //除去するアイテム数を設定
     int get_destroy_num() const;                                                                //除去するアイテム数を取得

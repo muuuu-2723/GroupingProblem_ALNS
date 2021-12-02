@@ -41,7 +41,11 @@ void NeighborhoodGraph::set_edge(Solution& solution) {
     graph.assign(vertices.size(), vector<Edge>());
     /*vector<Edge*> edge_ptr;
     edge_ptr.reserve(vertices.size() * vertices.size());*/
-    MyRandom::sample(vertices, target_vertices, vertices.size() / 2);
+    size_t vertices_size = vertices.size();
+    if (vertices_size > 500) {
+        vertices_size = vertices_size / 2 < 500 ? 500 : vertices_size / 2;
+    }
+    MyRandom::sample(vertices, target_vertices, vertices_size);
 
     //s‚©‚çt‚Ö‚Ì—LŒø•Ó‚ðÝ’è
     for (const auto& s : target_vertices) {
@@ -184,9 +188,19 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
                 for (const auto& v2 : target_vertices) {
                     for (const auto& e : graph[v2->id]) {
                         if (dp[v1->id][v2->id][l - 1] != DBL_MAX && lambda(dp[v1->id][v2->id][l - 1] + e.weight) < dp[v1->id][e.target][l]) {
+                        //if (dp[v1->id][v2->id][l - 1] != DBL_MAX) {
+                            //if (lambda(dp[v1->id][v2->id][l - 1] + e.weight) < dp[v1->id][e.target][l]) {
+                            //if (dp[v1->id][v2->id][l - 1] + e.weight < 0) {
+                                //if (dp[v1->id][v2->id][l - 1] + e.weight < dp[v1->id][e.target][l]) {
                             dp[v1->id][e.target][l] = lambda(dp[v1->id][v2->id][l - 1] + e.weight);
                             prev[v1->id][e.target][l] = {v1->id, v2->id, l - 1};
-                        }
+                                //}
+                            //}
+                            /*if (lambda(dp[v1->id][v2->id][l - 1] + e.weight) < dp[v1->id][e.target][l]) {
+                                dp[v1->id][e.target][l] = lambda(dp[v1->id][v2->id][l - 1] + e.weight);
+                                prev[v1->id][e.target][l] = {v1->id, v2->id, l - 1};
+                            }*/
+                        }    
                     }
                 }
             }

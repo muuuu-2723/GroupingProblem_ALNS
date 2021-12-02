@@ -15,10 +15,10 @@ private:
 public:
     /*コンストラクタ*/
     RandomGroupDestroy(const std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {}
-    void operator()(Solution& solution) override;                       //破壊法を実行
-    void add_destroy_num(int add_num);                                  //破壊するグループ数をadd_num分増加
-    void set_destroy_num(int set_num);                                  //破壊するグループ数を設定
-    int get_destroy_num() const;                                        //破壊するグループ数を取得
+    std::vector<const Item*> operator()(Solution& solution) const override;     //破壊法を実行
+    void add_destroy_num(int add_num);                                          //破壊するグループ数をadd_num分増加
+    void set_destroy_num(int set_num);                                          //破壊するグループ数を設定
+    int get_destroy_num() const;                                                //破壊するグループ数を取得
 };
 
 /*破壊するグループ数をadd_num分増加*/

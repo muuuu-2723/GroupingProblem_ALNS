@@ -10,10 +10,10 @@ using std::vector;
 
 /*コンストラクタ*/
 RandomDestroy::RandomDestroy(const std::vector<Item>& items, int destroy_num, double init_weight, int param) : Destroy(items, init_weight, param), destroy_num(destroy_num) {
-    target_item_ids.reserve(Item::N);
+    target_items.reserve(Item::N);
     for (auto&& item : items) {
         if (item.predefined_group == -1) {
-            target_item_ids.push_back(item.id);
+            target_items.push_back(&item);
         }
     }
 }
@@ -24,17 +24,21 @@ RandomDestroy::RandomDestroy(const std::vector<Item>& items, int destroy_num, do
  *現在のグループから除去する
  *除去されたアイテムはgroup_id = Group::Nのダミーグループに割り当てる
  */
-void RandomDestroy::operator()(Solution& solution) {
+vector<const Item*> RandomDestroy::operator()(Solution& solution) const {
     //std::cout << solution << std::endl;
-    MyRandom::shuffle(target_item_ids);
+    vector<const Item*> move_items;
+    move_items.reserve(destroy_num);
+    MyRandom::sample(target_items, move_items, destroy_num);
+    return move_items;
+    /*MyRandom::shuffle(target_item_ids);
     vector<MoveItem> move_items;
     move_items.reserve(destroy_num);
-    //std::cerr << "random" << std::endl;
+
     for (size_t i = 0; i < destroy_num; ++i) {
         const Item& item = items[target_item_ids[i]];
         move_items.push_back(MoveItem(item, solution.get_group_id(item), Group::N));
     }
-    //std::cerr << "random" << std::endl;
-    solution.move(move_items);
+    
+    solution.move(move_items);*/
     //std::cout << solution << std::endl;
 }

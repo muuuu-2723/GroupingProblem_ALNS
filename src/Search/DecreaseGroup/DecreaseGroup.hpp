@@ -9,8 +9,10 @@ class Destroy;
 
 class DecreaseGroup : public Search {
 public:
-    using Search::Search;
+    DecreaseGroup(const std::vector<Item>& items, double init_weight, int param, const Solution& solution);
     std::unique_ptr<Solution> operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;
 };
+
+
 
 #endif

@@ -36,7 +36,13 @@ std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& curren
     for (size_t i = 0; i < N; ++i) {
         //Œ»Ý‚Ì‰ð‚ðƒRƒs[‚µ, ‚»‚ê‚ð”j‰ó
         auto neighborhood = std::make_unique<Solution>(current_solution);
-        (*destroy_ptr)(*neighborhood);
+        auto destroy_items = (*destroy_ptr)(*neighborhood);
+        vector<MoveItem> destroy_move;
+        destroy_move.reserve(destroy_items.size());
+        for (auto&& item : destroy_items) {
+            destroy_move.push_back(MoveItem(*item, neighborhood->get_group_id(*item), neighborhood->get_dummy_group().get_id()));
+        }
+        neighborhood->move(destroy_move);
         //std::cout << "des_finish" << std::endl;
 
         const Group& dummy_group = neighborhood->get_dummy_group();

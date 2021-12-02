@@ -9,7 +9,7 @@
 
 using std::vector;
 
-void UpperWeightGreedyDestroy::operator()(Solution& solution) {
+vector<const Item*> UpperWeightGreedyDestroy::operator()(Solution& solution) const {
     vector<std::pair<double, size_t>> group_eval;
     group_eval.reserve(Group::N);
     for (auto&& group : solution.get_valid_groups()) {
@@ -22,11 +22,23 @@ void UpperWeightGreedyDestroy::operator()(Solution& solution) {
 
     std::sort(group_eval.begin(), group_eval.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
 
-    vector<MoveItem> move_items;
     size_t actual_destroy_num = destroy_num;
     if (solution.get_eval_flags().test(Solution::EvalIdx::GROUP_COST)) {
         actual_destroy_num = std::min(destroy_num, (int)solution.get_valid_groups().size());
     }
+
+    vector<const Item*> move_items;
+    move_items.reserve(Item::N);
+    for (size_t i = 0; i < actual_destroy_num; ++i) {
+        auto& g = solution.get_groups()[group_eval[i].second];
+        for (auto&& id : g.get_member_list()) {
+            if (items[id].predefined_group != -1) continue;
+            move_items.push_back(&items[id]);
+        }
+    }
+    return move_items;
+
+    /*vector<MoveItem> move_items;
     for (size_t i = 0; i < actual_destroy_num; ++i) {
         auto& g = solution.get_groups()[group_eval[i].second];
         for (auto&& id : g.get_member_list()) {
@@ -35,5 +47,5 @@ void UpperWeightGreedyDestroy::operator()(Solution& solution) {
         }
     }
 
-    solution.move(move_items);
+    solution.move(move_items);*/
 }

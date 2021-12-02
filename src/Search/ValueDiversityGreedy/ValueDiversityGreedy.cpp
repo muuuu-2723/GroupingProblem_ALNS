@@ -11,8 +11,14 @@
 #include <algorithm>
 #include <numeric>
 #include <unordered_map>
+#include <set>
 
 using std::vector;
+
+ValueDiversityGreedy::ValueDiversityGreedy(const vector<Item>& items, double init_weight, int param) : Search(items, init_weight, param) {
+    value_types.resize(Item::v_size);
+    std::iota(value_types.begin(), value_types.end(), 0);
+}
 
 /*
  *貪欲法で新たな解を生成
@@ -30,17 +36,20 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
         for (size_t i = 0; i < /*30*/10; ++i) {
             //現在の解をコピーし, それを破壊
             auto neighborhood = std::make_unique<Solution>(current_solution);
-            (*destroy_ptr)(*neighborhood);
+            auto destroy_items = (*destroy_ptr)(*neighborhood);
 
-            vector<int> search_group_ids;
-            search_group_ids.reserve(Group::N);
-            auto [current_begin, current_end] = current_solution.get_groups_range();
-            auto [neighborhood_begin, neighborhood_end] = neighborhood->get_groups_range();
+            std::set<int> search_group_ids;
 
-            //破壊されたグループを探索
-            for (auto g_itr1 = current_begin, g_itr2 = neighborhood_begin;
-                 g_itr1 != current_end || g_itr2 != neighborhood_end; ++g_itr1, ++g_itr2) 
-                    if (g_itr1->get_member_num() != g_itr2->get_member_num()) search_group_ids.push_back(g_itr1->get_id());
+            for (auto&& item : destroy_items) {
+                search_group_ids.insert(neighborhood->get_group_id(*item));
+            }
+
+            vector<MoveItem> destroy_move;
+            destroy_move.reserve(destroy_items.size());
+            for (auto&& item : destroy_items) {
+                destroy_move.push_back(MoveItem(*item, neighborhood->get_group_id(*item), neighborhood->get_dummy_group().get_id()));
+            }
+            neighborhood->move(destroy_move);
 
             auto& member_list = neighborhood->get_dummy_group().get_member_list();
             vector<int> value_sort_ids(member_list.begin(), member_list.end());
@@ -63,9 +72,11 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
             //各グループに割り当て
             vector<MoveItem> move_items;
             move_items.reserve(value_sort_ids.size());
-            for (const auto& block : blocks) {
-                for (size_t j = 0, size = block.size(); j < size; ++j) {
-                    move_items.push_back(MoveItem(items[block[j]], neighborhood->get_group_id(items[block[j]]), search_group_ids[j]));
+            for (auto begin = search_group_ids.begin(), itr = begin, end = search_group_ids.end(); itr != end; ++itr) {
+                int j = std::distance(begin, itr);
+                for (const auto& block : blocks) {
+                    if (block.size() <= j) break;
+                    move_items.push_back(MoveItem(items[block[j]], neighborhood->get_group_id(items[block[j]]), *itr));
                 }
             }
 
@@ -87,17 +98,20 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
 
             //現在の解をコピーし, それを破壊
             auto neighborhood = std::make_unique<Solution>(current_solution);
-            (*destroy_ptr)(*neighborhood);
+            auto destroy_items = (*destroy_ptr)(*neighborhood);
 
-            vector<int> search_group_ids;
-            search_group_ids.reserve(Group::N);
-            auto [current_begin, current_end] = current_solution.get_groups_range();
-            auto [neighborhood_begin, neighborhood_end] = neighborhood->get_groups_range();
+            std::set<int> search_group_ids;
 
-            //破壊されたグループを探索
-            for (auto g_itr1 = current_begin, g_itr2 = neighborhood_begin;
-                 g_itr1 != current_end || g_itr2 != neighborhood_end; ++g_itr1, ++g_itr2) 
-                    if (g_itr1->get_member_num() != g_itr2->get_member_num()) search_group_ids.push_back(g_itr1->get_id());
+            for (auto&& item : destroy_items) {
+                search_group_ids.insert(neighborhood->get_group_id(*item));
+            }
+
+            vector<MoveItem> destroy_move;
+            destroy_move.reserve(destroy_items.size());
+            for (auto&& item : destroy_items) {
+                destroy_move.push_back(MoveItem(*item, neighborhood->get_group_id(*item), neighborhood->get_dummy_group().get_id()));
+            }
+            neighborhood->move(destroy_move);
 
             auto& member_list = neighborhood->get_dummy_group().get_member_list();
             vector<vector<int>> value_sort_ids(2, vector<int>(member_list.begin(), member_list.end()));
@@ -122,14 +136,15 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
             move_items.reserve(value_sort_ids.size());
             vector<vector<int>> assignment(blocks[0].size(), vector<int>(blocks[0][0].size(), 0));
             for (auto&& block : blocks[0]) {
+                auto begin = search_group_ids.begin();
                 std::sort(block.begin(), block.end(), [&](const auto& a, const auto& b) {
                     return std::accumulate(assignment[block_id[a]].begin(), assignment[block_id[a]].end(), 0) < std::accumulate(assignment[block_id[b]].begin(), assignment[block_id[b]].end(), 0);
                 });
                 for (auto&& id : block) {
-                    int idx = 0;
-                    while (assignment[block_id[id]][idx] != 0) ++idx;
-                    move_items.push_back(MoveItem(items[id], neighborhood->get_group_id(items[id]), search_group_ids[idx]));
-                    assignment[block_id[id]][idx] = 1;
+                    auto itr = begin;
+                    while (assignment[block_id[id]][std::distance(begin, itr)] != 0) ++itr;
+                    move_items.push_back(MoveItem(items[id], neighborhood->get_group_id(items[id]), *itr));
+                    assignment[block_id[id]][std::distance(begin, itr)] = 1;
                 }
             }
 

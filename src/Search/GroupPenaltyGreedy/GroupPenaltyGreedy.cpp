@@ -21,7 +21,13 @@ std::unique_ptr<Solution> GroupPenaltyGreedy::operator()(const Solution& current
     for (size_t i = 0; i < /*40*/10; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
-        (*destroy_ptr)(*neighborhood);
+        auto destroy_items = (*destroy_ptr)(*neighborhood);
+        vector<MoveItem> destroy_move;
+        destroy_move.reserve(destroy_items.size());
+        for (auto&& item : destroy_items) {
+            destroy_move.push_back(MoveItem(*item, neighborhood->get_group_id(*item), neighborhood->get_dummy_group().get_id()));
+        }
+        neighborhood->move(destroy_move);
 
         //破壊されたアイテム(ダミーグループ)をgroup_penaltyが最も少ないグループに割り当て
         auto& dummy_group = neighborhood->get_dummy_group();
