@@ -16,27 +16,47 @@
 
 using std::vector;
 
+WeightPenaltyGreedy::WeightPenaltyGreedy(const vector<Item>& items, double init_weight, int param, const Solution& solution) : Search(items, init_weight, param, solution) {
+    destructions.emplace_back(std::make_shared<RandomDestroy>(items, init_item_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumDestroy>(items, init_item_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    
+    init_destroy_random();
+
+    for (auto&& d : destructions) {
+        if (typeid(*d) == typeid(RandomDestroy) || typeid(*d) == typeid(MinimumDestroy)) {
+            item_destroy.emplace_back(d);
+        }
+        else {
+            group_destroy.emplace_back(d);
+        }
+    }
+}
+
 /*
  *貪欲法で新たな解を生成
  *destroy_ptrで解を破壊し, 下限に足りていないグループに優先してアイテムを割り当てる
  *その後, 上限を超えないグループに割り当てていく
  *関係あるアイテム(weight[type]!=0)が少ないtypeのweightを優先する
  */
-std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> WeightPenaltyGreedy::operator()(const Solution& current_solution) {
     std::unique_ptr<Solution> best;                                                 //生成した解で一番良い評価値の解
     size_t N = 10;
+    auto& destroy = select_destroy();
 
     //ランダム破壊でない場合, 繰り返す必要がないためN = 1にする
-    if (typeid(*destroy_ptr) == typeid(MinimumDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy)) {
+    /*if (typeid(destroy) == typeid(MinimumDestroy) || typeid(destroy) == typeid(MinimumGroupDestroy)) {
         N = 1;
-    }
+    }*/
     //std::cout << "wp_test" << std::endl;
     //std::cout << current_solution << std::endl;
 
     for (size_t i = 0; i < N; ++i) {
         //現在の解をコピーし, それを破壊
         auto neighborhood = std::make_unique<Solution>(current_solution);
-        auto destroy_items = (*destroy_ptr)(*neighborhood);
+        auto destroy_items = destroy(*neighborhood);
         vector<MoveItem> destroy_move;
         destroy_move.reserve(destroy_items.size());
         for (auto&& item : destroy_items) {

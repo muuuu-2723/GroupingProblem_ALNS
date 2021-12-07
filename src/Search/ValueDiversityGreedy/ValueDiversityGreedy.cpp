@@ -15,9 +15,20 @@
 
 using std::vector;
 
-ValueDiversityGreedy::ValueDiversityGreedy(const vector<Item>& items, double init_weight, int param) : Search(items, init_weight, param) {
+ValueDiversityGreedy::ValueDiversityGreedy(const vector<Item>& items, double init_weight, int param, const Solution& solution) : Search(items, init_weight, param, solution) {
     value_types.resize(Item::v_size);
     std::iota(value_types.begin(), value_types.end(), 0);
+
+    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    
+    init_destroy_random();
+
+    for (auto&& d : destructions) {
+        group_destroy.emplace_back(d);
+    }
+    item_destroy.emplace_back(std::make_shared<Destroy>(items, 1, 1));
 }
 
 /*
@@ -26,17 +37,16 @@ ValueDiversityGreedy::ValueDiversityGreedy(const vector<Item>& items, double ini
  *2種類のvalueまで対応し, それ以上の種類がある場合はランダムに2種類を選ぶ
  *MinimumGroupDestroyとRandomGroupDestroy以外の破壊法の場合はエラー
  */
-std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
-    assert(typeid(*destroy_ptr) == typeid(RandomGroupDestroy) || typeid(*destroy_ptr) == typeid(MinimumGroupDestroy) || typeid(*destroy_ptr) == typeid(UpperWeightGreedyDestroy));
-
+std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& current_solution) {
     std::unique_ptr<Solution> best;                                                     //生成した解で一番良い評価値の解
     //std::cout << "vd_test" << std::endl;
     //std::cout << current_solution << std::endl;
+    auto& destroy = select_destroy();
     if (Item::v_size < 2) {                                                             //valueの種類が0 or 1種類の時
         for (size_t i = 0; i < /*30*/10; ++i) {
             //現在の解をコピーし, それを破壊
             auto neighborhood = std::make_unique<Solution>(current_solution);
-            auto destroy_items = (*destroy_ptr)(*neighborhood);
+            auto destroy_items = destroy(*neighborhood);
 
             std::set<int> search_group_ids;
 
@@ -98,7 +108,7 @@ std::unique_ptr<Solution> ValueDiversityGreedy::operator()(const Solution& curre
 
             //現在の解をコピーし, それを破壊
             auto neighborhood = std::make_unique<Solution>(current_solution);
-            auto destroy_items = (*destroy_ptr)(*neighborhood);
+            auto destroy_items = destroy(*neighborhood);
 
             std::set<int> search_group_ids;
 

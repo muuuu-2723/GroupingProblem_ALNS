@@ -11,8 +11,20 @@ class Destroy;
 /*swap‹ß–T*/
 class SwapNeighborhood : public Search {
 public:
-    using Search::Search;
-    std::unique_ptr<Solution> operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;   //swap‹ß–T‚ğ’Tõ
+    SwapNeighborhood(const std::vector<Item>& items, double init_weight, int param, const Solution& solution);
+    std::unique_ptr<Solution> operator()(const Solution& current_solution) override;                            //swap‹ß–T‚ğ’Tõ
+    void reset_destroy_num(const Solution& solution) override {}
+    void update_destroy_num(const Solution& solution) override {}
+    void update_weight(double score) override;
+    const Destroy& select_destroy() override;
 };
+
+inline void SwapNeighborhood::update_weight(double score) {
+    weight.update(score);
+}
+
+inline const Destroy& SwapNeighborhood::select_destroy() {
+    return *destructions[0];
+}
 
 #endif

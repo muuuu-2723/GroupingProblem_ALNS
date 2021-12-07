@@ -26,14 +26,29 @@ class NeighborhoodGraph : public Search {
     };
 
 private:
-    std::vector<std::shared_ptr<Vertex>> vertices;      //頂点集合
-    std::vector<std::shared_ptr<Vertex>> target_vertices;
+    std::vector<Vertex> vertices;      //頂点集合
     std::vector<std::vector<Edge>> graph;               //グラフの隣接リスト
     std::vector<Item> dummy_items;                      //環状の移動のみでなくパス状の移動を考えるためのダミーアイテムの集合
     void set_edge(Solution& solution);                  //各頂点間に有効辺を必要に応じて設定
 public:
-    NeighborhoodGraph(const std::vector<Item>& items, double init_weight, int param);                           //コンストラクタ
-    std::unique_ptr<Solution> operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;       //グラフを探索
+    NeighborhoodGraph(const std::vector<Item>& items, double init_weight, int param, const Solution& solution);     //コンストラクタ
+    std::unique_ptr<Solution> operator()(const Solution& current_solution) override;                                //グラフを探索
+    void reset_destroy_num(const Solution& solution) override;
+    void update_destroy_num(const Solution& solution) override;
 };
+
+inline void NeighborhoodGraph::reset_destroy_num(const Solution& solution) {
+    int group_destroy_num = solution.get_valid_groups().size() * 0.4;
+    for (auto&& d : group_destroy) {
+        d->set_destroy_num(group_destroy_num, solution);
+    }
+}
+
+inline void NeighborhoodGraph::update_destroy_num(const Solution& solution) {
+    int group_destroy_num = solution.get_valid_groups().size() * 0.4;
+    for (auto&& d : group_destroy) {
+        d->set_destroy_num(group_destroy_num, solution);
+    }
+}
 
 #endif

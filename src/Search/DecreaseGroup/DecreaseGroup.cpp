@@ -13,10 +13,10 @@
 using std::vector;
 
 DecreaseGroup::DecreaseGroup(const std::vector<Item>& items, double init_weight, int param, const Solution& solution) : Search(items, init_weight, param, solution) {
-    destructions.emplace_back(std::make_shared<RandomDestroy>(items, init_item_destroy_num, 1, 1));
-    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 1, 1));
-    destructions.emplace_back(std::make_shared<MinimumDestroy>(items, init_item_destroy_num, 1, 1));
-    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 1, 1));
+    destructions.emplace_back(std::make_shared<RandomDestroy>(items, init_item_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumDestroy>(items, init_item_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
     destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, init_group_destroy_num, 1, 1, solution));
     
     init_destroy_random();
@@ -31,16 +31,17 @@ DecreaseGroup::DecreaseGroup(const std::vector<Item>& items, double init_weight,
     }
 }
 
-std::unique_ptr<Solution> DecreaseGroup::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
+std::unique_ptr<Solution> DecreaseGroup::operator()(const Solution& current_solution) {
     std::unique_ptr<Solution> best;
     //std::cout << "dg_test" << std::endl;
     //std::cout << current_solution << std::endl;
+    auto& destroy = select_destroy();
     for (size_t i = 0; i < /*40*/10; ++i) {
         auto neighborhood = std::make_unique<Solution>(current_solution);
         auto& dummy_group = neighborhood->get_dummy_group();
 
         //îjâÛÇÃé¿çs
-        auto destroy_items = (*destroy_ptr)(*neighborhood);
+        auto destroy_items = destroy(*neighborhood);
         vector<MoveItem> destroy_move;
         destroy_move.reserve(destroy_items.size());
         for (auto&& item : destroy_items) {

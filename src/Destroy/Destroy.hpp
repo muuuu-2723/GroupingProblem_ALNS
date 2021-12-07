@@ -20,8 +20,8 @@ public:
     virtual std::vector<const Item*> operator()(Solution& solution) const { return std::vector<const Item*>(); }
     virtual void update_weight(double score) final;
     virtual double get_weight() const final;
-    virtual void add_destroy_num(int add_num, const Solution& solution) {}
-    virtual void set_destroy_num(int set_num, const Solution& solution) {}
+    virtual void add_destroy_num(int add_num, const Solution& solution) { destroy_num += add_num; }
+    virtual void set_destroy_num(int set_num, const Solution& solution) { destroy_num = set_num; }
     virtual int get_destroy_num() const final;
 };
 

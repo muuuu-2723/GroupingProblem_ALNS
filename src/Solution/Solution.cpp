@@ -99,10 +99,9 @@ Solution::Solution(const Input& input) {
     //penalty_greedy(items);
     //score_greedy(items);
     //RelationGreedy rg(input.get_items(), 1, 1);
-    WeightPenaltyGreedy wp(input.get_items(), 1, 1);
+    WeightPenaltyGreedy wp(input.get_items(), 1, 1, *this);
     //PenaltyGreedy rg(items, 1);
-    std::shared_ptr<Destroy> des = std::make_shared<Destroy>(input.get_items(), 1, 1);
-    *this = *wp(*this, des);
+    *this = *wp(*this);
 }
 
 Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_group_ids), eval(s.eval), each_group_item_relation(s.each_group_item_relation), each_group_item_penalty(s.each_group_item_penalty),

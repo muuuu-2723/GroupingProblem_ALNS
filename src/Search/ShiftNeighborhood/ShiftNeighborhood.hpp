@@ -12,8 +12,20 @@ class Destroy;
 /*shift‹ß–T*/
 class ShiftNeighborhood : public Search {
 public:
-    using Search::Search;
-    std::unique_ptr<Solution> operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) override;   //shift‹ß–T‚ğ’Tõ
+    ShiftNeighborhood(const std::vector<Item>& items, double init_weight, int param, const Solution& solution);
+    std::unique_ptr<Solution> operator()(const Solution& current_solution) override;   //shift‹ß–T‚ğ’Tõ
+    void reset_destroy_num(const Solution& solution) override {}
+    void update_destroy_num(const Solution& solution) override {}
+    void update_weight(double score) override;
+    const Destroy& select_destroy() override;
 };
+
+inline void ShiftNeighborhood::update_weight(double score) {
+    weight.update(score);
+}
+
+inline const Destroy& ShiftNeighborhood::select_destroy() {
+    return *destructions[0];
+}
 
 #endif

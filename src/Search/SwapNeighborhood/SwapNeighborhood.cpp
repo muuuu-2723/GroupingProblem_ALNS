@@ -13,14 +13,17 @@
 
 using std::vector;
 
+SwapNeighborhood::SwapNeighborhood(const std::vector<Item>& items, double init_weight, int param, const Solution& solution) : Search(items, init_weight, param, solution) {
+    destructions.emplace_back(std::make_shared<Destroy>(items, 1, 1));
+}
+
 /*
  *swap‹ß–T‚ğ’Tõ
  *‰ü‘P‰ğ‚ª‚ ‚ê‚Î‰ü‘P‰ğ‚ğ•Ô‚·
  *‚È‚¯‚ê‚ÎŒ»İ‚Ì‰ğ‚ğ•Ô‚·
  *destroy_ptr‚ªDestroyˆÈŠO‚Ìê‡, ƒGƒ‰[
  */
-std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_solution, std::shared_ptr<Destroy> destroy_ptr) {
-    assert(typeid(*destroy_ptr) == typeid(Destroy));
+std::unique_ptr<Solution> SwapNeighborhood::operator()(const Solution& current_solution) {
     is_move = false;
 
     auto neighborhood_solution = std::make_unique<Solution>(current_solution);

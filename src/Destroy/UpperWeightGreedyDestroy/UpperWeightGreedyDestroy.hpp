@@ -24,7 +24,7 @@ inline void UpperWeightGreedyDestroy::add_destroy_num(int add_num, const Solutio
 
 inline void UpperWeightGreedyDestroy::set_destroy_num(int set_num, const Solution& solution) {
     if (set_num > solution.get_valid_groups().size() * 0.4) {
-        destroy_num = Group::N;
+        destroy_num = solution.get_valid_groups().size() * 0.4;
     }
     else if (set_num < 2) {
         destroy_num = 2;

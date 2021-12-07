@@ -108,35 +108,19 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         std::cout << std::get<2>(t_begin) << std::endl;*/
 
         vector<std::unique_ptr<Search>> searches;
-        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<RelationGreedy>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<ValueAverageGreedy>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1));
-        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2));
-        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4));
-        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1));
-
-        auto random_destroy = std::make_shared<RandomDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
-        auto random_group_destroy = std::make_shared<RandomGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
-        auto minimum_destroy = std::make_shared<MinimumDestroy>(input.get_items(), (1.5 * Item::N) / Group::N, 1, 1);
-        auto minimum_group_destroy = std::make_shared<MinimumGroupDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
-        auto upper_weight_greedy_destroy = std::make_shared<UpperWeightGreedyDestroy>(input.get_items(), now->get_valid_groups().size() / 3, 1, 1);
-        
-
-        vector<std::shared_ptr<Destroy>> destructions;
-        destructions.emplace_back(random_destroy);
-        destructions.emplace_back(random_group_destroy);
-        destructions.emplace_back(minimum_destroy);
-        destructions.emplace_back(minimum_group_destroy);
-        destructions.emplace_back(upper_weight_greedy_destroy);
-        destructions.emplace_back(std::make_shared<Destroy>(input.get_items(), 1, 1));
+        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<RelationGreedy>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<ValueAverageGreedy>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2, *now));
+        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4, *now));
+        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1, *now));
 
         vector<double> search_weights(searches.size(), 1);
-        vector<double> destroy_weights(destructions.size() - 1, 1);
 
         int cnt = 0;
         int best_change_cnt = cnt;
@@ -144,38 +128,25 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         vector<int> counter_search(searches.size(), 0);
         int moving_idx = -1;
         vector<vector<int>> score_cnt_search(searches.size(), vector<int>(4, 0));
-        vector<vector<int>> score_cnt_destroy(destructions.size(), vector<int>(4, 0));
 
         auto search_itr = searches.begin();
         std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { return (*search_itr++)->get_weight(); });
         DiscreteDistribution search_random(search_weights);
-        auto destroy_itr = destructions.begin();
-        std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
-        DiscreteDistribution destroy_random(destroy_weights);
 
         std::unique_ptr<Debug> debug_ptr;
-        if (is_debug) {
+        /*if (is_debug) {
             double max_eval = 350000;
             std::stringstream ss;
             ss << "_" << i;
             debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, problem_file.filename().stem().string() + add_output_name + ss.str(), debug_num, M, max_eval, input);
-        }
+        }*/
 
         while (cnt < M) {
             int search_idx = search_random();
-            int destroy_idx = destructions.size() - 1;
-            if (search_idx < 7) {
-                destroy_idx = destroy_random();
-            }
-            else if (search_idx == 10) {
-                do {
-                    destroy_idx = destroy_random();
-                } while (destroy_idx != 1 && destroy_idx != 3 && destroy_idx != 4);
-            }
 
-            std::cout << search_idx << " " << destroy_idx << "idx" << std::endl;
+            std::cout << "search:" << search_idx << std::endl;
             auto sstart = std::chrono::high_resolution_clock::now();
-            auto next_solution = (*searches[search_idx])(*now, destructions[destroy_idx]);
+            auto next_solution = (*searches[search_idx])(*now);
             //std::cerr << *next_solution << std::endl;
             auto send = std::chrono::high_resolution_clock::now();
             double stime = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(send - sstart).count() / 1000.0);
@@ -183,9 +154,10 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             ++counter_search[search_idx];
             double prev_now_eval, prev_best_eval;
 
-            if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005 && random_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
-                random_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
-                minimum_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
+            if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005) {
+                for (auto&& s : searches) {
+                    s->reset_destroy_num(*next_solution);
+                }
             }
             //std::cout << *next_solution << std::endl;
             double score;
@@ -194,77 +166,51 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 now = std::move(next_solution);
                 best = *now;
                 best_change_cnt = cnt;
-                if (cnt != 0 && random_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
-                    random_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
-                }
-                if (cnt != 0 && minimum_destroy->get_destroy_num() > (0.5 * Item::N) / Group::N) {
-                    minimum_destroy->set_destroy_num((0.5 * Item::N) / Group::N);
-                }
                 /*if (moving_idx != -1) {
                     searches[moving_idx]->update_weight(score);
                     std::cerr << cnt << " " << moving_idx << std::endl;
                     moving_idx = -1;
                 }*/
                 score_cnt_search[search_idx][0]++;
-                score_cnt_destroy[destroy_idx][0]++;
             }
             else if (next_solution->get_eval_value() >= now->get_eval_value()) {
                 if (searches[search_idx]->get_is_move()) {
                     score = 30;
                     now = std::move(next_solution);
                     score_cnt_search[search_idx][1]++;
-                    score_cnt_destroy[destroy_idx][1]++;
                 }
                 else {
                     score = 0.1;
                     score_cnt_search[search_idx][3]++;
-                    score_cnt_destroy[destroy_idx][3]++;
                 }
             }
             else if (/*next_solution->get_eval_value() < now->get_eval_value() &&*/ now->get_penalty() >= next_solution->get_penalty() - 1) {
                 score = 5;
                 now = std::move(next_solution);
-                moving_idx = destroy_idx;
                 score_cnt_search[search_idx][2]++;
-                score_cnt_destroy[destroy_idx][2]++;
             }
             else {
                 score = 0.1;
                 score_cnt_search[search_idx][3]++;
-                score_cnt_destroy[destroy_idx][3]++;
             }
 
             //std::cerr << score << std::endl;
             std::cout << *now << std::endl;
 
             searches[search_idx]->update_weight(score);
-            if (destroy_idx < destroy_weights.size()) {
-                destructions[destroy_idx]->update_weight(score);
-            }
             search_itr = searches.begin();
             std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { /*std::cerr << (*search_itr)->get_weight() << " ";*/ return (*search_itr++)->get_weight(); });
             //std::cerr << std::endl;
             search_random.set_weight(search_weights);
-            destroy_itr = destructions.begin();
-            std::generate(destroy_weights.begin(), destroy_weights.end(), [&destroy_itr]() { return (*destroy_itr++)->get_weight(); });
-            destroy_random.set_weight(destroy_weights);
 
-            if (is_debug) {
+            /*if (is_debug) {
                 debug_ptr->output();
-            }
+            }*/
             if (cnt % (M / 100) == 0) {
                 std::cerr << "cnt = " << cnt << std::endl;
-                random_destroy->add_destroy_num(-1);
-                minimum_destroy->add_destroy_num(-1);
-                if (now->get_eval_flags().test(Solution::EvalIdx::GROUP_COST)) {
-                    random_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
-                    minimum_group_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
-                    upper_weight_greedy_destroy->set_destroy_num(now->get_valid_groups().size() / 3);
+                for (auto&& s : searches) {
+                    s->update_destroy_num(*now);
                 }
-            }
-            if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Item::N / Group::N)) == 0 && cnt != best_change_cnt) {
-                random_destroy->add_destroy_num(Item::N / Group::N);
-                minimum_destroy->add_destroy_num(Item::N / Group::N);
             }
 
             ++cnt;
@@ -275,13 +221,6 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             std::cerr << typeid(*searches[j]).name() << ":" << search_weights[j] << std::endl;
             std::cerr << typeid(*searches[j]).name() << ":" << search_time[j] / counter_search[j] << "[ms]" << std::endl;
             for (auto&& s_cnt : score_cnt_search[j]) std::cerr << (double)s_cnt / counter_search[j] * 100 << " ";
-            std::cerr << std::endl;
-        }
-
-        for (int j = 0; j < destroy_weights.size(); ++j) {
-            std::cerr << typeid(*destructions[j]).name() << ":" << destroy_weights[j] << std::endl;
-            auto sum = std::accumulate(score_cnt_destroy[j].begin(), score_cnt_destroy[j].end(), 0);
-            for (auto&& d_cnt : score_cnt_destroy[j]) std::cerr << (double)d_cnt / sum * 100 << " ";
             std::cerr << std::endl;
         }
 
