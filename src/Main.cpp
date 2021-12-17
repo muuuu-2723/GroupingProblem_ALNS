@@ -134,12 +134,12 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         DiscreteDistribution search_random(search_weights);
 
         std::unique_ptr<Debug> debug_ptr;
-        /*if (is_debug) {
+        if (is_debug) {
             double max_eval = 350000;
             std::stringstream ss;
             ss << "_" << i;
-            debug_ptr = std::make_unique<Debug>(search_random, destroy_random, now, best, cnt, problem_file.filename().stem().string() + add_output_name + ss.str(), debug_num, M, max_eval, input);
-        }*/
+            debug_ptr = std::make_unique<Debug>(search_random, searches, now, best, cnt, problem_file.filename().stem().string() + add_output_name + ss.str(), debug_num, M, max_eval, input);
+        }
 
         while (cnt < M) {
             int search_idx = search_random();
@@ -154,7 +154,8 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             ++counter_search[search_idx];
             double prev_now_eval, prev_best_eval;
 
-            if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.005) {
+            if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.0005) {
+                std::cerr << "reset" << std::endl;
                 for (auto&& s : searches) {
                     s->reset_destroy_num(*next_solution);
                 }
@@ -203,17 +204,18 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             //std::cerr << std::endl;
             search_random.set_weight(search_weights);
 
-            /*if (is_debug) {
+            if (is_debug) {
                 debug_ptr->output();
-            }*/
-            if (cnt % (M / 100) == 0) {
-                std::cerr << "cnt = " << cnt << std::endl;
+            }
+            if (cnt % 100 == 0) {
+                std::cerr << "cnt = " << cnt << std::endl;   
+            }
+            ++cnt;
+            if ((cnt - best_change_cnt) % 200 == 0) {
                 for (auto&& s : searches) {
                     s->update_destroy_num(*now);
                 }
             }
-
-            ++cnt;
             //if (cnt > M / 3 && cnt > best_change_cnt * 2) break;
         }
 

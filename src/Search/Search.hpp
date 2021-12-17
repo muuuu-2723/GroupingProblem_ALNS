@@ -40,7 +40,7 @@ public:
     virtual double get_weight() const final;
     virtual bool get_is_move() const final;
     virtual const Destroy& select_destroy();
-    virtual const DiscreteDistribution& get_destroy_random() const;
+    virtual const std::unique_ptr<DiscreteDistribution>& get_destroy_random() const;
 };
 
 inline void Search::init_destroy_random() {
@@ -61,12 +61,14 @@ inline void Search::reset_destroy_num(const Solution& solution) {
 
 inline void Search::update_destroy_num(const Solution& solution) {
     for (auto&& d : item_destroy) {
-        d->add_destroy_num(1, solution);
+        d->add_destroy_num(items.size() / 20, solution);
     }
+    if (item_destroy.size() > 0) std::cerr << "item:" << item_destroy[0]->get_destroy_num() << ", ";
     int group_destroy_num = (int)(item_destroy[0]->get_destroy_num() / ((double)Item::N / solution.get_valid_groups().size()));
     for (auto&& d : group_destroy) {
         d->set_destroy_num(group_destroy_num, solution);
     }
+    std::cerr << "group:" << group_destroy[0]->get_destroy_num() << std::endl;
 }
 
 /*d‚Ý‚ÌXV*/
@@ -93,8 +95,8 @@ inline const Destroy& Search::select_destroy() {
     return *last_use_destroy;
 }
 
-inline const DiscreteDistribution& Search::get_destroy_random() const {
-    return *destroy_random;
+inline const std::unique_ptr<DiscreteDistribution>& Search::get_destroy_random() const {
+    return destroy_random;
 }
 
 #include "NeighborhoodGraph\NeighborhoodGraph.hpp"

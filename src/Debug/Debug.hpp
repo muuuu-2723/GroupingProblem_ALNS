@@ -11,19 +11,20 @@
 class Solution;
 class DiscreteDistribution;
 class Input;
+class Search;
 
 class Debug {
 private:
     matplotlib g;
     const DiscreteDistribution& search_random;
-    const DiscreteDistribution& destroy_random;
+    const std::vector<std::unique_ptr<Search>>& searches;
     const std::unique_ptr<Solution>& solution;
     const Solution& best;
     const int& x;
     int debug_num;
     std::ofstream eval_out;
     std::ofstream search_out;
-    std::ofstream destroy_out;
+    std::vector<std::ofstream> destroy_outs;
     std::string fig_file_path;
     std::filesystem::path item_times_path;
     std::filesystem::path group_times_path;
@@ -35,7 +36,7 @@ private:
     int param;
     
 public:
-    Debug(const DiscreteDistribution& search_random, const DiscreteDistribution& destroy_random, const std::unique_ptr<Solution>& solution,
+    Debug(const DiscreteDistribution& search_random, const std::vector<std::unique_ptr<Search>>& searches, const std::unique_ptr<Solution>& solution,
           const Solution& best, const int& x, const std::string& problem_file, int debug_num, int max_x, double max_eval, const Input& input);
     ~Debug();
     void output();
