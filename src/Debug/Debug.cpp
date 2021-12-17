@@ -10,7 +10,6 @@
 #include <iostream>
 #include <iomanip>
 #include <typeinfo>
-#include <Windows.h>
 
 using std::vector;
 using std::string;
@@ -19,7 +18,7 @@ Debug::Debug(const DiscreteDistribution& search_random, const vector<std::unique
              const Solution& best, const int& x, const std::string& problem_file, int debug_num, int max_x, double max_eval, const Input& input)
              : search_random(search_random), searches(searches), solution(solution), best(best), x(x), debug_num(debug_num) {
     
-    auto output_dir = Input::get_exe_path().parent_path();
+    auto output_dir = input.get_exe_directory();
     auto data_file = std::filesystem::path(problem_file).stem();
     output_dir /= data_file.string();
     try {

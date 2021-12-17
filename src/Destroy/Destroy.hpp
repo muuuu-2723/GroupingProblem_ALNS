@@ -37,10 +37,10 @@ inline int Destroy::get_destroy_num() const {
     return destroy_num;
 }
 
-#include "RandomDestroy\RandomDestroy.hpp"
-#include "RandomGroupDestroy\RandomGroupDestroy.hpp"
-#include "MinimumDestroy\MinimumDestroy.hpp"
-#include "MinimumGroupDestroy\MinimumGroupDestroy.hpp"
-#include "UpperWeightGreedyDestroy\UpperWeightGreedyDestroy.hpp"
+#include "RandomDestroy/RandomDestroy.hpp"
+#include "RandomGroupDestroy/RandomGroupDestroy.hpp"
+#include "MinimumDestroy/MinimumDestroy.hpp"
+#include "MinimumGroupDestroy/MinimumGroupDestroy.hpp"
+#include "UpperWeightGreedyDestroy/UpperWeightGreedyDestroy.hpp"
 
 #endif

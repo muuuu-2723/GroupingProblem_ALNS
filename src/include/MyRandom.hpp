@@ -1,1 +1,1 @@
-#include "..\MyRandom\MyRandom.hpp"
+#include "../MyRandom/MyRandom.hpp"

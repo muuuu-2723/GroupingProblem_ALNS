@@ -99,16 +99,16 @@ inline const std::unique_ptr<DiscreteDistribution>& Search::get_destroy_random()
     return destroy_random;
 }
 
-#include "NeighborhoodGraph\NeighborhoodGraph.hpp"
-#include "ShiftNeighborhood\ShiftNeighborhood.hpp"
-#include "SwapNeighborhood\SwapNeighborhood.hpp"
-#include "GroupPenaltyGreedy\GroupPenaltyGreedy.hpp"
-#include "ItemPenaltyGreedy\ItemPenaltyGreedy.hpp"
-#include "WeightPenaltyGreedy\WeightPenaltyGreedy.hpp"
-#include "RelationGreedy\RelationGreedy.hpp"
-#include "ValueAverageGreedy\ValueAverageGreedy.hpp"
-#include "ValueDiversityGreedy\ValueDiversityGreedy.hpp"
-#include "ValueSumGreedy\ValueSumGreedy.hpp"
-#include "DecreaseGroup\DecreaseGroup.hpp"
+#include "NeighborhoodGraph/NeighborhoodGraph.hpp"
+#include "ShiftNeighborhood/ShiftNeighborhood.hpp"
+#include "SwapNeighborhood/SwapNeighborhood.hpp"
+#include "GroupPenaltyGreedy/GroupPenaltyGreedy.hpp"
+#include "ItemPenaltyGreedy/ItemPenaltyGreedy.hpp"
+#include "WeightPenaltyGreedy/WeightPenaltyGreedy.hpp"
+#include "RelationGreedy/RelationGreedy.hpp"
+#include "ValueAverageGreedy/ValueAverageGreedy.hpp"
+#include "ValueDiversityGreedy/ValueDiversityGreedy.hpp"
+#include "ValueSumGreedy/ValueSumGreedy.hpp"
+#include "DecreaseGroup/DecreaseGroup.hpp"
 
 #endif

@@ -4,7 +4,6 @@
 #include <json.hpp>
 #include <fstream>
 #include <filesystem>
-#include <Windows.h>
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -12,10 +11,11 @@
 using std::vector;
 using json = nlohmann::json;
 
-Input::Input(const std::filesystem::path& problem_file) {
+Input::Input(const std::filesystem::path& problem_file, const std::filesystem::path& exe_path) {
+    exe_directory = std::filesystem::canonical(exe_path).parent_path();
     std::filesystem::path problem_file_path = problem_file;
     if (!std::filesystem::exists(problem_file)) {
-        auto dir = get_exe_path().parent_path();
+        auto dir = exe_directory;
         while (!std::filesystem::exists(dir / "Data")) {
             if (dir.root_path() == dir) {
                 throw std::filesystem::filesystem_error(
@@ -261,10 +261,4 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
             items[item].predefined_group = group;
         }
     }
-}
-
-std::filesystem::path Input::get_exe_path() {
-    wchar_t path[MAX_PATH] = { 0 };
-    GetModuleFileNameW(NULL, path, MAX_PATH);
-    return path;
 }

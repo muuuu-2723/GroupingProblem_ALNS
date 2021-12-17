@@ -1,1 +1,1 @@
-#include "..\Group\Group.hpp"
+#include "../Group/Group.hpp"

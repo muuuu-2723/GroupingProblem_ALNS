@@ -9,7 +9,11 @@ class matplotlib {
 	public:
 
 	bool open() {
-		p = _popen("python -c \"import code; import os; import sys; sys.stdout = sys.stderr = open(os.devnull, \'w\'); code.InteractiveConsole().interact()\"", "w");
+		#ifdef _WINDOWS
+			p = _popen("python -c \"import code; import os; import sys; sys.stdout = sys.stderr = open(os.devnull, \'w\'); code.InteractiveConsole().interact()\"", "w");
+		#else
+			p = popen("python3 -c \"import code; import os; import sys; sys.stdout = sys.stderr = open(os.devnull, \'w\'); code.InteractiveConsole().interact()\"", "w");
+		#endif
 		if (p == NULL) return false;
 		send_command("import matplotlib.pyplot as plt");
 		send_command("import matplotlib.patches as patches");
@@ -21,7 +25,11 @@ class matplotlib {
 	bool close() {
 		send_command("plt.close()");
 		send_command("quit()");
-		if (_pclose(p) == -1) return false;
+		#ifdef _WINDOWS
+			if (_pclose(p) == -1) return false;
+		#else
+			if (pclose(p) == -1) return false;
+		#endif
 		return true;
 	}
 

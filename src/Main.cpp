@@ -20,7 +20,6 @@
 #include <typeinfo>
 #include <cstring>
 #include <filesystem>
-#include <Windows.h>
 #include <iomanip>
 #include <sstream>
 
@@ -29,6 +28,7 @@ using std::vector;
 void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num, const std::string& add_output_name);
 
 int main(int argc, char* argv[]) {
+    auto cp = std::filesystem::current_path();
     bool is_debug = false;
     int debug_num = -1;
     std::filesystem::path problem_file("r_g_random101_10.json");
@@ -38,7 +38,11 @@ int main(int argc, char* argv[]) {
 
     try {
         std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-ip InputProblemFile]");
-        if (argc > 6) {
+        if (argc > 6 || argc < 1) {
+            throw argument_error;
+        }
+        auto exe_path = cp / argv[0];
+        if (!std::filesystem::exists(exe_path)) {
             throw argument_error;
         }
         for (int i = 1; i < argc; ++i) {
@@ -62,7 +66,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        input = std::make_unique<Input>(problem_file);
+        input = std::make_unique<Input>(problem_file, exe_path);
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

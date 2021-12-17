@@ -25,10 +25,10 @@ private:
     std::vector<Item> items;
     size_t item_penalty_num;
     size_t group_penalty_num;
+    std::filesystem::path exe_directory;
     void read_problem_file(const std::filesystem::path& problem_file_path);
 public:
-    static std::filesystem::path get_exe_path();
-    Input(const std::filesystem::path& problem_file_path);
+    Input(const std::filesystem::path& problem_file_path, const std::filesystem::path& exe_path);
     const Opt& get_opt() const;
     const std::vector<double>& get_value_ave_params() const;
     const std::vector<double>& get_value_sum_params() const;
@@ -41,6 +41,7 @@ public:
     size_t get_group_penalty_num() const;
     size_t get_item_relation_params_size() const;
     size_t get_group_relation_params_size() const;
+    const std::filesystem::path& get_exe_directory() const;
 };
 
 inline const Input::Opt& Input::get_opt() const {
@@ -89,6 +90,10 @@ inline size_t Input::get_item_relation_params_size() const {
 
 inline size_t Input::get_group_relation_params_size() const {
     return group_relation_params.size();
+}
+
+inline const std::filesystem::path& Input::get_exe_directory() const {
+    return exe_directory;
 }
 
 #endif

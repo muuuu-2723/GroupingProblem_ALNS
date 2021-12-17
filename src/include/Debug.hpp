@@ -1,1 +1,1 @@
-#include "..\Debug\Debug.hpp"
+#include "../Debug/Debug.hpp"
