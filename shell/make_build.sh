@@ -2,9 +2,9 @@
 
 for DIR in $1; do
     if [ ! -e $DIR ];then
-        mkdir $DIR
+        mkdir -p $DIR
     fi
 done
 if [ ! -e $2 ];then
-    mkdir $2
+    mkdir -p $2
 fi

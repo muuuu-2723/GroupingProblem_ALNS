@@ -1,9 +1,12 @@
-GCC    = g++.exe
-CFLAGS = -O3 -std=c++17 -finput-charset=CP932 -fexec-charset=CP932
+GCC    = g++
+CFLAGS = -O3 -std=c++17 -finput-charset=CP932
+ifeq ($(OS),Windows_NT)
+CFLAGS += -fexec-charset=CP932
+endif
 SRCDIR = src
 BINDIR = bin
 INCLUDE= -I./$(SRCDIR)/include
-SUBDIRS = Debug Destroy/RandomDestroy Destroy/RandomGroupDestroy Destroy/MinimumDestroy Destroy/MinimumGroupDestroy Destroy\UpperWeightGreedyDestroy Group Input Item MyRandom Search/DecreaseGroup Search/GroupPenaltyGreedy Search/ItemPenaltyGreedy Search/NeighborhoodGraph Search/RelationGreedy Search/ShiftNeighborhood Search/SwapNeighborhood Search/ValueAverageGreedy Search/ValueDiversityGreedy Search/ValueSumGreedy Search/WeightPenaltyGreedy Solution Weight
+SUBDIRS = Debug Destroy/RandomDestroy Destroy/RandomGroupDestroy Destroy/MinimumDestroy Destroy/MinimumGroupDestroy Destroy/UpperWeightGreedyDestroy Group Input Item MyRandom Search/DecreaseGroup Search/GroupPenaltyGreedy Search/ItemPenaltyGreedy Search/NeighborhoodGraph Search/RelationGreedy Search/ShiftNeighborhood Search/SwapNeighborhood Search/ValueAverageGreedy Search/ValueDiversityGreedy Search/ValueSumGreedy Search/WeightPenaltyGreedy Solution Weight
 OBJDIR = obj
 SRCS  = $(SRCDIR)/Main.cpp
 ifeq ($(OS),Windows_NT)
@@ -28,10 +31,11 @@ endif
 
 DEPS   = $(CLNOBJS:.o=.d)
 TILS   = $(SRCS:.cpp=.cpp~)
-TARGET = $(BINDIR)/run.exe
 ifeq ($(OS),Windows_NT)
+TARGET = $(BINDIR)/run.exe
 CLNTARGET = $(subst /,\,$(TARGET))
 else
+TARGET = $(BINDIR)/run.out
 CLNTARGET = $(TARGET)
 endif
 
