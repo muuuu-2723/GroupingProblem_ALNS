@@ -93,6 +93,7 @@ Solution::Solution(const Input& input) {
     
     item_times.resize(Item::N, vector<int>(Item::N, 0));
     group_times.resize(Item::N, vector<int>(Group::N, 0));
+    same_group.assign(input.get_items().size(), vector<bool>(input.get_items().size(), false));
     //relation_greedy(items);
     
 
@@ -107,7 +108,7 @@ Solution::Solution(const Input& input) {
 Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_group_ids), eval(s.eval), each_group_item_relation(s.each_group_item_relation), each_group_item_penalty(s.each_group_item_penalty),
                                         aves(s.aves), sum_values(s.sum_values), opt(s.opt),
                                         value_ave_params(s.value_ave_params), value_sum_params(s.value_sum_params), penalty_param(s.penalty_param), group_cost(s.group_cost),
-                                        constant(s.constant), eval_flags(s.eval_flags), item_times(s.item_times), group_times(s.group_times) {
+                                        constant(s.constant), eval_flags(s.eval_flags), item_times(s.item_times), group_times(s.group_times), same_group(s.same_group) {
 
     //groups = s.groups;
     for (auto&& g_ptr : s.valid_groups) {
@@ -141,6 +142,7 @@ int Solution::get_each_group_item_penalty(const Item& item, int group_id) {
 /*現在の解(グループ分け)を評価*/
 double Solution::evaluation_all(const vector<Item>& items) {
     eval = EvalVals();
+    same_group.assign(items.size(), vector<bool>(items.size(), false));
     auto [group_begin, group_end] = get_groups_range();
     for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
         //ペナルティ計算
@@ -176,6 +178,13 @@ double Solution::evaluation_all(const vector<Item>& items) {
         //グループコストの計算
         if (eval_flags.test(EvalIdx::GROUP_COST)) {
             if (g_itr->get_member_num() != 0) eval.group_cost += group_cost[g_itr->get_id()];
+        }
+
+        auto& member_list = g_itr->get_member_list();
+        for (auto m_itr1 = member_list.begin(), end = member_list.end(); m_itr1 != end; ++m_itr1) {
+            for (auto m_itr2 = std::next(m_itr1); m_itr2 != end; ++m_itr2) {
+                same_group[*m_itr1][*m_itr2] = true;
+            }
         }
     }
     eval.group_num += valid_groups.size();
@@ -555,6 +564,16 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const Ev
         //std::cerr << mi.item.id << " " << mi.source << " " << mi.destination << std::endl;
         assert(item_group_ids[mi.item.id] == mi.source);
         groups[mi.source].erase_member(mi.item);
+        if (mi.source < Group::N) {
+            for (auto id : groups[mi.source].get_member_list()) {
+                same_group[mi.item.id][id] = false;
+            }
+        }
+        if (mi.destination < Group::N) {
+            for (auto id : groups[mi.destination].get_member_list()) {
+                same_group[mi.item.id][id] = true;
+            }
+        }
         groups[mi.destination].add_member(mi.item);
         item_group_ids[mi.item.id] = mi.destination;
     }
@@ -661,4 +680,16 @@ void Solution::counter() {
 
 EvalVals operator+(const EvalVals& ev1, const EvalVals& ev2) {
     return EvalVals(ev1) += ev2;
+}
+
+int distance(const Solution& s1, const Solution& s2) {
+    int result = 0;
+    for (size_t i = 0; i < Item::N; ++i) {
+        for (size_t j = i + 1; j < Item::N; ++j) {
+            if (s1.get_same_group()[i][j] != s2.get_same_group()[i][j]) {
+                ++result;
+            }
+        }
+    }
+    return result;
 }

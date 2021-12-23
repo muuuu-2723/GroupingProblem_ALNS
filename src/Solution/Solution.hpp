@@ -74,6 +74,7 @@ private:
     void move_processing(const std::vector<MoveItem>& move_items, const EvalVals& diff);     //移動処理
     std::vector<std::vector<int>> item_times;
     std::vector<std::vector<int>> group_times;
+    std::vector<std::vector<bool>> same_group;
 
 public:
     enum EvalIdx {
@@ -112,6 +113,7 @@ public:
     double get_sum_group_cost() const;
     const std::vector<double>& get_group_relation_params() const;                                                                   //アイテムとグループ間の関係値のパラメータを取得
     const std::bitset<8>& get_eval_flags() const;                                                                                   //eval_flagsを取得
+    const std::vector<std::vector<bool>>& get_same_group() const;
 
     friend std::ostream& operator<<(std::ostream&, const Solution&);                                                                //解の出力用
     auto get_item_times() const -> const std::vector<std::vector<int>>&;
@@ -137,6 +139,7 @@ inline Solution& Solution::operator=(const Solution& s) {
     eval_flags = s.eval_flags;
     item_times = s.item_times;
     group_times = s.group_times;
+    same_group = s.same_group;
 
     valid_groups.clear();
     for (auto&& g_ptr : s.valid_groups) {
@@ -147,6 +150,8 @@ inline Solution& Solution::operator=(const Solution& s) {
 }
 
 EvalVals operator+(const EvalVals& ev1, const EvalVals& ev2);
+
+int distance(const Solution& s1, const Solution& s2);
 
 /*評価値を取得*/
 inline double Solution::get_eval_value() const {
@@ -220,6 +225,10 @@ inline double Solution::get_sum_group_cost() const {
 /*eval_flagsを取得*/
 inline const std::bitset<8>& Solution::get_eval_flags() const {
     return eval_flags;
+}
+
+inline const std::vector<std::vector<bool>>& Solution::get_same_group() const {
+    return same_group;
 }
 
 inline auto Solution::get_item_times() const -> const std::vector<std::vector<int>>& {

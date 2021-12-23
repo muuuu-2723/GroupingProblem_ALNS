@@ -15,7 +15,7 @@ public:
     ShiftNeighborhood(const std::vector<Item>& items, double init_weight, int param, const Solution& solution);
     std::unique_ptr<Solution> operator()(const Solution& current_solution) override;   //shiftãﬂñTÇíTçı
     void reset_destroy_num(const Solution& solution) override {}
-    void update_destroy_num(const Solution& solution) override {}
+    void update_destroy_num(const Solution& solution, bool intensification) override {}
     void update_weight(double score) override;
     const Destroy& select_destroy() override;
 };

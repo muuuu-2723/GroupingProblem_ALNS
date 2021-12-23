@@ -234,7 +234,7 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
         }
 
         //負閉路を構築し, 同じアイテムが2回以上現れていないか調査
-        /*#pragma omp for schedule(static,1)
+        #pragma omp for schedule(static,1)
         for (const auto& sp : start_pos) {
             bool break_flag;
             #pragma omp critical
@@ -296,9 +296,9 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
                     is_move = neighborhood_solution->move_check(move_items);
                 }
             }
-        }*/
+        }
 
-        #pragma omp for schedule(static,1)
+        /*#pragma omp for schedule(static,1)
         for (size_t i = 0; i < start_pos.size(); ++i) {
             bool break_flag;
             #pragma omp critical
@@ -361,11 +361,11 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
                     id = i;
                 }
             }
-        }
+        }*/
     }
 
     //負閉路を構築し, 同じアイテムが2回以上現れていないか調査
-    for (size_t i = 0; i < start_pos.size(); ++i) {
+    /*for (size_t i = 0; i < start_pos.size(); ++i) {
         //負閉路構築
         vector<int> cycle;
         auto [v1, v2, l] = start_pos[i].second;
@@ -419,7 +419,7 @@ std::unique_ptr<Solution> NeighborhoodGraph::operator()(const Solution& current_
             std::cerr << "id, i:" << id << "," << i << std::endl;
             break;
         }
-    }
+    }*/
     //std::cout << std::endl;
     vertices.clear();
     /*auto p = destroy_random->get_probabilities();

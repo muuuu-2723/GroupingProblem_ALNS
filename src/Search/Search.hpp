@@ -29,13 +29,13 @@ public:
     /*コンストラクタ*/
     Search(const std::vector<Item>& items, double init_weight, int param, const Solution& solution)
      : items(items), weight(init_weight, param), is_move(false) {
-        init_item_destroy_num = (1.5 * Item::N) / Group::N;
-        init_group_destroy_num = solution.get_valid_groups().size() / 3;
+        init_item_destroy_num = (0.5 * Item::N) / Group::N;
+        init_group_destroy_num = solution.get_valid_groups().size() / 5;
     }
     /*新たな解を生成*/
     virtual std::unique_ptr<Solution> operator()(const Solution& current_solution) = 0;
     virtual void reset_destroy_num(const Solution& solution);
-    virtual void update_destroy_num(const Solution& solution);
+    virtual void update_destroy_num(const Solution& solution, bool intensification);
     virtual void update_weight(double score);
     virtual double get_weight() const final;
     virtual bool get_is_move() const final;
@@ -59,9 +59,16 @@ inline void Search::reset_destroy_num(const Solution& solution) {
     }
 }
 
-inline void Search::update_destroy_num(const Solution& solution) {
+inline void Search::update_destroy_num(const Solution& solution, bool intensification) {
+    int add_num;
+    if (intensification) {
+        add_num = -1;
+    }
+    else {
+        add_num = 1;
+    }
     for (auto&& d : item_destroy) {
-        d->add_destroy_num(items.size() / 20, solution);
+        d->add_destroy_num(add_num, solution);
     }
     if (item_destroy.size() > 0) std::cerr << "item:" << item_destroy[0]->get_destroy_num() << ", ";
     int group_destroy_num = (int)(item_destroy[0]->get_destroy_num() / ((double)Item::N / solution.get_valid_groups().size()));

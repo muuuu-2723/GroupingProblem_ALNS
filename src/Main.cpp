@@ -144,6 +144,9 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             ss << "_" << i;
             debug_ptr = std::make_unique<Debug>(search_random, searches, now, best, cnt, problem_file.filename().stem().string() + add_output_name + ss.str(), debug_num, M, max_eval, input);
         }
+        bool intensification = true;
+        int diversification_cnt = 0;
+        Solution searched_solution(*now);
 
         while (cnt < M) {
             int search_idx = search_random();
@@ -158,11 +161,12 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             ++counter_search[search_idx];
             double prev_now_eval, prev_best_eval;
 
-            if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.0005) {
-                //std::cerr << "reset" << std::endl;
-                for (auto&& s : searches) {
+            if (next_solution->get_eval_value() > best.get_eval_value()/* - std::abs(best.get_eval_value()) * 0.0005*/) {
+                /*for (auto&& s : searches) {
                     s->reset_destroy_num(*next_solution);
-                }
+                }*/
+                intensification = true;
+                std::cerr << "集中化1" << std::endl;
             }
             //std::cout << *next_solution << std::endl;
             double score;
@@ -211,15 +215,28 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             if (is_debug) {
                 debug_ptr->output();
             }
-            if (cnt % 100 == 0) {
-                std::cerr << "cnt = " << cnt << std::endl;   
+
+            //解の距離が20より大きくなったら(充分多様化されたら), 集中化に移行する
+            if (!intensification && distance(searched_solution, *now) > 100) {
+                std::cerr << "集中化2" << std::endl;
+                intensification = true;
+                diversification_cnt = cnt;
             }
-            ++cnt;
-            if ((cnt - best_change_cnt) % 200 == 0) {
+
+            //現在の解周辺を充分探索できたら, 多様化に移行する
+            if (intensification && cnt - best_change_cnt > 300 && cnt - diversification_cnt > 300) {
+                std::cerr << "多様化" << std::endl;
+                intensification = false;
+                searched_solution = *now;
+            }
+
+            if (cnt % 100 == 0) {
+                std::cerr << "cnt = " << cnt << std::endl;
                 for (auto&& s : searches) {
-                    s->update_destroy_num(*now);
+                    s->update_destroy_num(*now, intensification);
                 }
             }
+            ++cnt;
             //if (cnt > M / 3 && cnt > best_change_cnt * 2) break;
         }
 
