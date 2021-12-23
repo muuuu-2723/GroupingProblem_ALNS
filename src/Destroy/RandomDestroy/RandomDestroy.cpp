@@ -9,7 +9,8 @@
 using std::vector;
 
 /*コンストラクタ*/
-RandomDestroy::RandomDestroy(const std::vector<Item>& items, int destroy_num, double init_weight, int param, const Solution& solution) : Destroy(items, init_weight, param) {
+RandomDestroy::RandomDestroy(const std::vector<Item>& items, int destroy_num, double init_weight, int param, const Solution& solution, double upper_destroy_ratio) : Destroy(items, init_weight, param) {
+    this->upper_destroy_ratio = upper_destroy_ratio;
     set_destroy_num(destroy_num, solution);
     target_items.reserve(Item::N);
     for (auto&& item : items) {

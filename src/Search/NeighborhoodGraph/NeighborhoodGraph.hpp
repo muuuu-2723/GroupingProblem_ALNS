@@ -20,15 +20,16 @@ class NeighborhoodGraph : public Search {
 
     /*NeighborhoodGraph用の有効辺*/
     struct Edge {
-        int target;                         //有効辺の終点の頂点番号
+        int source;                         //有効辺の始点の頂点番号
         double weight;                      //有効辺の重み
-        Edge(int target, double weight) : target(target), weight(weight) {}
+        Edge(int source, double weight) : source(source), weight(weight) {}
     };
 
 private:
-    std::vector<Vertex> vertices;      //頂点集合
-    std::vector<std::vector<Edge>> graph;               //グラフの隣接リスト
+    std::vector<Vertex> vertices;                       //頂点集合
+    std::vector<std::vector<Edge>> graph;               //グラフの逆隣接リスト
     std::vector<Item> dummy_items;                      //環状の移動のみでなくパス状の移動を考えるためのダミーアイテムの集合
+    double destroy_ratio;
     void set_edge(Solution& solution);                  //各頂点間に有効辺を必要に応じて設定
 public:
     NeighborhoodGraph(const std::vector<Item>& items, double init_weight, int param, const Solution& solution);     //コンストラクタ
@@ -38,14 +39,14 @@ public:
 };
 
 inline void NeighborhoodGraph::reset_destroy_num(const Solution& solution) {
-    int group_destroy_num = solution.get_valid_groups().size() * 0.4;
+    int group_destroy_num = solution.get_valid_groups().size();
     for (auto&& d : group_destroy) {
         d->set_destroy_num(group_destroy_num, solution);
     }
 }
 
 inline void NeighborhoodGraph::update_destroy_num(const Solution& solution) {
-    int group_destroy_num = solution.get_valid_groups().size() * 0.4;
+    int group_destroy_num = solution.get_valid_groups().size();
     for (auto&& d : group_destroy) {
         d->set_destroy_num(group_destroy_num, solution);
     }

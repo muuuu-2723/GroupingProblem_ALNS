@@ -1,5 +1,5 @@
 GCC    = g++
-CFLAGS = -O3 -std=c++17 -finput-charset=CP932
+CFLAGS = -O3 -std=c++17 -finput-charset=CP932 -fopenmp
 ifeq ($(OS),Windows_NT)
 CFLAGS += -fexec-charset=CP932
 endif

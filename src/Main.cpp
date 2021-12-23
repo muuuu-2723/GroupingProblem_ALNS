@@ -120,7 +120,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 1, 1, *now));
         searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1, *now));
         searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/2, *now));
+        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/1, *now));
         searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4, *now));
         searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1, *now));
 
@@ -159,7 +159,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             double prev_now_eval, prev_best_eval;
 
             if (next_solution->get_eval_value() > best.get_eval_value() - std::abs(best.get_eval_value()) * 0.0005) {
-                std::cerr << "reset" << std::endl;
+                //std::cerr << "reset" << std::endl;
                 for (auto&& s : searches) {
                     s->reset_destroy_num(*next_solution);
                 }
