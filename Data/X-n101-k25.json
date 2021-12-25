@@ -5,7 +5,7 @@
             "demand": {
                 "equalSize": true,
                 "lower": 0,
-                "upper": 206
+                "upper": 1030
             }
         }
     },

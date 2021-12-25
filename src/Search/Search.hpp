@@ -4,6 +4,7 @@
 #include <Weight.hpp>
 #include <Destroy.hpp>
 #include <MyRandom.hpp>
+#include <Group.hpp>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -52,7 +53,7 @@ inline void Search::init_destroy_random() {
 
 inline void Search::reset_destroy_num(const Solution& solution) {
     for (auto&& d : item_destroy) {
-        d->set_destroy_num(3, solution);
+        d->set_destroy_num((0.5 * Item::N) / Group::N, solution);
     }
     for (auto&& d : group_destroy) {
         d->set_destroy_num(2, solution);
@@ -65,17 +66,15 @@ inline void Search::update_destroy_num(const Solution& solution, bool intensific
         add_num = -1;
     }
     else {
-        add_num = 1;
+        add_num = Item::N / Group::N;
     }
     for (auto&& d : item_destroy) {
         d->add_destroy_num(add_num, solution);
     }
-    if (item_destroy.size() > 0) std::cerr << "item:" << item_destroy[0]->get_destroy_num() << ", ";
     int group_destroy_num = (int)(item_destroy[0]->get_destroy_num() / ((double)Item::N / solution.get_valid_groups().size()));
     for (auto&& d : group_destroy) {
         d->set_destroy_num(group_destroy_num, solution);
     }
-    std::cerr << "group:" << group_destroy[0]->get_destroy_num() << std::endl;
 }
 
 /*d‚Ý‚ÌXV*/

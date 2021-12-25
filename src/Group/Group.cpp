@@ -178,9 +178,9 @@ std::ostream& operator<<(std::ostream& out, const Group& g) {
     for (const auto& member : g.member_id) {
         out << std::setw((int)std::log10(Item::N) + 2) << member;
     }
-    out << ",\t\t\t\t";
+    /*out << ",\t\t\t\t";
     for (auto&& w : g.sum_weight) {
         out << " " << w;
-    }
+    }*/
     return out;
 }

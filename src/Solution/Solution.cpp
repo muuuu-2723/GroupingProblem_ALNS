@@ -25,11 +25,10 @@ using std::vector;
 /*コンストラクタ*/
 Solution::Solution(const Input& input) {
     //パラメータ設定
-    penalty_param = 100000;
+    penalty_param = 500000;
     opt = input.get_opt();
     value_ave_params = input.get_value_ave_params();
     value_sum_params = input.get_value_sum_params();
-    //group_cost = input.get_group_cost();
     group_cost = vector<double>(input.get_group_cost().begin(), input.get_group_cost().end());
     constant = input.get_constant();
 
@@ -43,7 +42,6 @@ Solution::Solution(const Input& input) {
     if (value_ave_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_AVE);
     if (value_sum_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_SUM);
     if (group_cost.size() == 0) eval_flags.reset(EvalIdx::GROUP_COST);
-    std::cout << eval_flags << std::endl;
 
     Group::weight_aves.reserve(Item::w_size);
     for (size_t i = 0; i < Item::w_size; ++i) {
@@ -94,14 +92,8 @@ Solution::Solution(const Input& input) {
     item_times.resize(Item::N, vector<int>(Item::N, 0));
     group_times.resize(Item::N, vector<int>(Group::N, 0));
     same_group.assign(input.get_items().size(), vector<bool>(input.get_items().size(), false));
-    //relation_greedy(items);
-    
 
-    //penalty_greedy(items);
-    //score_greedy(items);
-    //RelationGreedy rg(input.get_items(), 1, 1);
     WeightPenaltyGreedy wp(input.get_items(), 1, 1, *this);
-    //PenaltyGreedy rg(items, 1);
     *this = *wp(*this);
 }
 
@@ -110,11 +102,9 @@ Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_
                                         value_ave_params(s.value_ave_params), value_sum_params(s.value_sum_params), penalty_param(s.penalty_param), group_cost(s.group_cost),
                                         constant(s.constant), eval_flags(s.eval_flags), item_times(s.item_times), group_times(s.group_times), same_group(s.same_group) {
 
-    //groups = s.groups;
     for (auto&& g_ptr : s.valid_groups) {
         valid_groups.push_back(&groups[g_ptr->get_id()]);
     }
-    //std::cerr << "コピーコンストラクタ" << std::endl;
 }
 
 /*each_group_item_relationの値を取得, なければ計算して取得*/
@@ -194,7 +184,6 @@ double Solution::evaluation_all(const vector<Item>& items) {
 
 /*評価値の変化量を計算*/
 EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
-    //std::cerr << "eval_diff" << std::endl;
     EvalVals diff;
     vector<vector<const Item*>> in(Group::N);
     vector<vector<const Item*>> out(Group::N);
@@ -202,7 +191,7 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
         if (mi.source < Group::N) out[mi.source].push_back(&mi.item);
         if (mi.destination < Group::N) in[mi.destination].push_back(&mi.item);
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     //グループ数の増減を計算
     if (eval_flags.test(EvalIdx::GROUP_COST)) {
         for (size_t i = 0; i < Group::N; ++i) {
@@ -221,7 +210,7 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
             }
         }
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     //ペナルティの差分を計算
     if (eval_flags.test(EvalIdx::WEIGHT_PENA)) {
         for (size_t i = 0; i < Group::N; ++i) {
@@ -229,7 +218,7 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
             diff.penalty += tmp;
         }
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     if (eval_flags.test(EvalIdx::GROUP_PENA)) {
         for (size_t i = 0; i < Group::N; ++i) {
             for (const auto& in_item : in[i]) {
@@ -240,9 +229,9 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
             }
         }
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     if (eval_flags.test(EvalIdx::ITEM_PENA)) {
-        //std::cerr << "eval_diff" << std::endl;
+        
         for (const auto& mi : move_items) {
             diff.penalty -= get_each_group_item_penalty(mi.item, mi.source);
             diff.penalty += get_each_group_item_penalty(mi.item, mi.destination);
@@ -251,7 +240,7 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
                 diff.penalty -= mi.item.item_penalty[out_item->id];
             }
         }
-        //std::cerr << "eval_diff" << std::endl;
+        
         for (size_t i = 0; i < Group::N; ++i) {
             for (auto itr1 = out[i].begin(), end = out[i].end(); itr1 != end; ++itr1) {
                 for (auto itr2 = std::next(itr1); itr2 != end; ++itr2) {
@@ -265,7 +254,7 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
             }
         }
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     //関係値の差分を計算
     if (eval_flags.test(EvalIdx::ITEM_R)) {
         for (const auto& mi : move_items) {
@@ -289,7 +278,7 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
             }
         }
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     if (eval_flags.test(EvalIdx::GROUP_R)) {
         for (size_t i = 0; i < Group::N; ++i) {
             for (const auto& in_item : in[i]) {
@@ -300,15 +289,15 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
             }
         }
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     //ave_balanceとsum_balanceの差分を計算
     std::bitset<8> mask = (1<<EvalIdx::VALUE_AVE) | (1<<EvalIdx::VALUE_SUM);
     std::bitset<8> mask2 = (1<<EvalIdx::VALUE_SUM) | (1<<EvalIdx::GROUP_COST);
-    //std::cerr << "eval_diff" << std::endl;
+    
     if ((eval_flags & mask2) == mask2) {
         diff.sum_balance = -eval.sum_balance;
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     if ((eval_flags & mask).any()) {
         for (size_t i = 0; i < Group::N; ++i) {
             if (in[i].size() == 0 && out[i].size() == 0) {
@@ -345,7 +334,7 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
             }
         }
     }
-    //std::cerr << "eval_diff" << std::endl;
+    
     //計算誤差の対策
     if (std::abs(diff.penalty) < 1e-10) diff.penalty = 0;
     if (std::abs(diff.relation) < 1e-10) diff.relation = 0;
@@ -358,11 +347,11 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
 
 /*shift移動時の評価値の変化量を計算*/
 EvalVals Solution::evaluation_shift(const Item& item, int group_id) {
-    //std::cerr << "eval_shi" << std::endl;
+    
     EvalVals diff;
     const Group& now_group = groups[item_group_ids[item.id]];
     const Group& next_group = groups[group_id];
-    //std::cerr << "g_num" << std::endl;
+    
     //グループ数の増減を計算
     if (eval_flags.test(EvalIdx::GROUP_COST)) {
         if (now_group.get_member_num() == 1) {
@@ -376,29 +365,27 @@ EvalVals Solution::evaluation_shift(const Item& item, int group_id) {
     }
 
     //ペナルティの差分を計算
-    //std::cerr << "w_pena" << std::endl;
     if (eval_flags.test(EvalIdx::WEIGHT_PENA)) {
         diff.penalty += now_group.diff_weight_penalty({}, {&item}) + next_group.diff_weight_penalty({&item}, {});
         //std::cerr << item.id << " " << group_id << " " << diff.penalty << std::endl;
     }
-    //std::cerr << "i_pena" << std::endl;
+    
     if (eval_flags.test(EvalIdx::ITEM_PENA)) {
         diff.penalty -= get_each_group_item_penalty(item, now_group.get_id());
         diff.penalty += get_each_group_item_penalty(item, next_group.get_id());
     }
-    //std::cerr << "g_pena" << std::endl;
+    
     if (eval_flags.test(EvalIdx::GROUP_PENA)) {
         diff.penalty -= item.group_penalty[now_group.get_id()];
         diff.penalty += item.group_penalty[next_group.get_id()];
     }
 
     //関係値の差分を計算
-    //std::cerr << "i_r" << std::endl;
     if (eval_flags.test(EvalIdx::ITEM_R)) {
         diff.relation -= get_each_group_item_relation(item, now_group.get_id());
         diff.relation += get_each_group_item_relation(item, next_group.get_id());
     }
-    //std::cerr << "g_r" << std::endl;
+    
     if (eval_flags.test(EvalIdx::GROUP_R)) {
         diff.relation -= item.group_relations[now_group.get_id()];
         diff.relation += item.group_relations[next_group.get_id()];
@@ -406,7 +393,6 @@ EvalVals Solution::evaluation_shift(const Item& item, int group_id) {
 
     //ave_balanceとsum_balanceの差分を計算
     std::bitset<8> mask = (1<<EvalIdx::VALUE_AVE) | (1<<EvalIdx::VALUE_SUM);
-    //std::cerr << "v_ave" << std::endl;
     if (eval_flags.test(EvalIdx::VALUE_AVE)) {
         for (size_t i = 0; i < Item::v_size; ++i) {
             diff.ave_balance -= std::abs(now_group.value_average(i) - aves[i]) * value_ave_params[i];
@@ -418,7 +404,7 @@ EvalVals Solution::evaluation_shift(const Item& item, int group_id) {
             diff.ave_balance += std::abs(group_ave - aves[i]) * value_ave_params[i];
         }
     }
-    //std::cerr << "v_sum" << std::endl;
+    
     if (eval_flags.test(EvalIdx::VALUE_SUM)) {
         if (diff.group_num != 0) {
             diff.sum_balance = -eval.sum_balance;
@@ -442,7 +428,6 @@ EvalVals Solution::evaluation_shift(const Item& item, int group_id) {
             }
         }
     }
-    //std::cerr << "shi_end" << std::endl;
 
     //計算誤差の対策
     if (std::abs(diff.penalty) < 1e-10) diff.penalty = 0;
@@ -561,7 +546,6 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const Ev
 
     //移動
     for (const auto& mi : move_items) {
-        //std::cerr << mi.item.id << " " << mi.source << " " << mi.destination << std::endl;
         assert(item_group_ids[mi.item.id] == mi.source);
         groups[mi.source].erase_member(mi.item);
         if (mi.source < Group::N) {
@@ -651,9 +635,6 @@ std::ostream& operator<<(std::ostream& out, const Solution& s) {
     for (auto&& group : s.get_valid_groups()) {
         out << *group << std::endl;
     }
-    /*for (auto&& g : s.groups) {
-        out << g << std::endl;
-    }*/
     out << "評価値:";
     if (s.opt == Input::Opt::MAX) {
         out << std::fixed << std::setprecision(2) << s.get_eval_value();
