@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<Input> input;
 
     try {
-        std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-ip InputProblemFile]");
+        std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-d] [-p InputProblemFile]");
         if (argc > 6 || argc < 1) {
             throw argument_error;
         }
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
             if (std::strcmp(argv[i], "-d") == 0) {
                 is_debug = true;
             }
-            else if (std::strcmp(argv[i], "-ip") == 0) {
+            else if (std::strcmp(argv[i], "-p") == 0) {
                 if (++i == argc) {
                     throw argument_error;
                 }
@@ -224,7 +224,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }
 
             //現在の解周辺を充分探索できたら, 多様化に移行する
-            if (intensification && cnt - best_change_cnt > 300 && cnt - diversification_cnt > 300) {
+            if (intensification && cnt - best_change_cnt > 200 && cnt - diversification_cnt > 200) {
                 std::cerr << "多様化" << std::endl;
                 intensification = false;
                 searched_solution = *now;
