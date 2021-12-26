@@ -5,7 +5,7 @@
             "demand": {
                 "equalSize": true,
                 "lower": 0,
-                "upper": 1030
+                "upper": 206
             }
         }
     },
@@ -10926,7 +10926,7 @@
         ]
     },
     "nums": {
-        "groupNum": 5,
+        "groupNum": 25,
         "itemNum": 101
     },
     "params": {
