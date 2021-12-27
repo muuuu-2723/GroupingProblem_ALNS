@@ -32,7 +32,7 @@ vector<const Item*> MinimumDestroy::operator()(Solution& solution) const {
 
     vector<const Item*> move_items;
     move_items.reserve(destroy_num);
-    for (size_t i = 0; i < destroy_num; ++i) {
+    for (size_t i = 0; i < destroy_num && i < item_eval.size(); ++i) {
         move_items.push_back(&items[item_eval[i].second]);
     }
     return move_items;

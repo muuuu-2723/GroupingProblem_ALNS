@@ -9,7 +9,6 @@
 
 #include <iostream>
 #include <vector>
-#include <fstream>
 #include <string>
 #include <numeric>
 #include <algorithm>
@@ -99,10 +98,6 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     int M = 5000;
 
     for (int i = 0; i < N; i++) {
-        vector<double> search_p, destroy_p;
-        vector<std::string> color_map;
-        std::ofstream eval_out, search_out, destroy_out;
-
         auto start = std::chrono::high_resolution_clock::now();
         auto now = std::make_unique<Solution>(input);
         now->evaluation_all(input.get_items());
@@ -188,11 +183,24 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             if (is_debug) {
                 debug_ptr->output();
             }
+            int d = distance(searched_solution, *now);
+            std::cerr << "d = " << d << std::endl;
+            //std::cerr << "size = " << now->debug_same_group() << ", p = " << now->get_penalty() << std::endl;
 
-            if (cnt % (M / 100) == 0) {
-                for (auto&& s : searches) {
-                    s->update_destroy_num(*now, true);
-                }
+            //解の距離が20より大きくなったら(充分多様化されたら), 集中化に移行する
+            if (!intensification && d > 10000) {
+                std::cerr << "集中化2" << std::endl;
+                std::cerr << searched_solution << std::endl;
+                std::cerr << *now << std::endl;
+                intensification = true;
+                diversification_cnt = cnt;
+            }
+
+            //現在の解周辺を充分探索できたら, 多様化に移行する
+            if (intensification && cnt - best_change_cnt > 200 && cnt - diversification_cnt > 200) {
+                std::cerr << "多様化" << std::endl;
+                intensification = false;
+                searched_solution = *now;
             }
             if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Item::N / Group::N)) == 0 && cnt != best_change_cnt) {
                 for (auto&& s : searches) {

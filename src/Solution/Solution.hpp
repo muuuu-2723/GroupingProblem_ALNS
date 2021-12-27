@@ -119,6 +119,7 @@ public:
     auto get_item_times() const -> const std::vector<std::vector<int>>&;
     auto get_group_times() const -> const std::vector<std::vector<int>>&;
     void counter();
+    int debug_same_group() const;
 };
 
 inline Solution& Solution::operator=(const Solution& s) {
@@ -236,6 +237,16 @@ inline auto Solution::get_item_times() const -> const std::vector<std::vector<in
 
 inline auto Solution::get_group_times() const -> const std::vector<std::vector<int>>& {
     return group_times;
+}
+
+inline int Solution::debug_same_group() const {
+    int result = 0;
+    for (size_t i = 0, size = same_group.size(); i < size; ++i) {
+        for (size_t j = i + 1; j < size; ++j) {
+            if (same_group[i][j]) ++result;
+        }
+    }
+    return result;
 }
 
 #endif

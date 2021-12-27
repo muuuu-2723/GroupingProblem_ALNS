@@ -174,6 +174,7 @@ double Solution::evaluation_all(const vector<Item>& items) {
         for (auto m_itr1 = member_list.begin(), end = member_list.end(); m_itr1 != end; ++m_itr1) {
             for (auto m_itr2 = std::next(m_itr1); m_itr2 != end; ++m_itr2) {
                 same_group[*m_itr1][*m_itr2] = true;
+                same_group[*m_itr2][*m_itr1] = true;
             }
         }
     }
@@ -551,16 +552,29 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const Ev
         if (mi.source < Group::N) {
             for (auto id : groups[mi.source].get_member_list()) {
                 same_group[mi.item.id][id] = false;
+                same_group[id][mi.item.id] = false;
             }
         }
         if (mi.destination < Group::N) {
             for (auto id : groups[mi.destination].get_member_list()) {
                 same_group[mi.item.id][id] = true;
+                same_group[id][mi.item.id] = true;
             }
         }
         groups[mi.destination].add_member(mi.item);
         item_group_ids[mi.item.id] = mi.destination;
     }
+    /*same_group.assign(Item::N, vector<bool>(Item::N, false));
+    auto [group_begin, group_end] = get_groups_range();
+    for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
+        auto& member_list = g_itr->get_member_list();
+        for (auto m_itr1 = member_list.begin(), end = member_list.end(); m_itr1 != end; ++m_itr1) {
+            for (auto m_itr2 = std::next(m_itr1); m_itr2 != end; ++m_itr2) {
+                same_group[*m_itr1][*m_itr2] = true;
+                same_group[*m_itr2][*m_itr1] = true;
+            }
+        }
+    }*/
     if (eval_flags.test(EvalIdx::GROUP_COST)) {
         for (auto&& id : add_id) {
             valid_groups.push_back(&groups[id]);
