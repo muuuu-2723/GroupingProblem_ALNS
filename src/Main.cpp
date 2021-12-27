@@ -9,7 +9,6 @@
 
 #include <iostream>
 #include <vector>
-#include <fstream>
 #include <string>
 #include <numeric>
 #include <algorithm>
@@ -99,10 +98,6 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     int M = 5000;
 
     for (int i = 0; i < N; i++) {
-        vector<double> search_p, destroy_p;
-        vector<std::string> color_map;
-        std::ofstream eval_out, search_out, destroy_out;
-
         auto start = std::chrono::high_resolution_clock::now();
         auto now = std::make_unique<Solution>(input);
         now->evaluation_all(input.get_items());
@@ -215,10 +210,15 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             if (is_debug) {
                 debug_ptr->output();
             }
+            int d = distance(searched_solution, *now);
+            std::cerr << "d = " << d << std::endl;
+            //std::cerr << "size = " << now->debug_same_group() << ", p = " << now->get_penalty() << std::endl;
 
             //解の距離が20より大きくなったら(充分多様化されたら), 集中化に移行する
-            if (!intensification && distance(searched_solution, *now) > 100) {
+            if (!intensification && d > 10000) {
                 std::cerr << "集中化2" << std::endl;
+                std::cerr << searched_solution << std::endl;
+                std::cerr << *now << std::endl;
                 intensification = true;
                 diversification_cnt = cnt;
             }
