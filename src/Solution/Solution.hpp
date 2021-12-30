@@ -123,6 +123,7 @@ public:
 };
 
 inline Solution& Solution::operator=(const Solution& s) {
+    std::cout << "コピー代入演算子" << std::endl;
     groups = s.groups;
     item_group_ids = s.item_group_ids;
     eval = s.eval;

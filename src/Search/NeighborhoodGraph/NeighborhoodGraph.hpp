@@ -36,6 +36,7 @@ public:
     std::unique_ptr<Solution> operator()(const Solution& current_solution) override;                                //ƒOƒ‰ƒt‚ð’Tõ
     void reset_destroy_num(const Solution& solution) override;
     void update_destroy_num(const Solution& solution, bool intensification) override;
+    void set_destroy_num(const Solution& solution, int set_num) override;
 };
 
 inline void NeighborhoodGraph::reset_destroy_num(const Solution& solution) {
@@ -46,6 +47,13 @@ inline void NeighborhoodGraph::reset_destroy_num(const Solution& solution) {
 }
 
 inline void NeighborhoodGraph::update_destroy_num(const Solution& solution, bool intensification) {
+    int group_destroy_num = solution.get_valid_groups().size();
+    for (auto&& d : group_destroy) {
+        d->set_destroy_num(group_destroy_num, solution);
+    }
+}
+
+inline void NeighborhoodGraph::set_destroy_num(const Solution& solution, int set_num) {
     int group_destroy_num = solution.get_valid_groups().size();
     for (auto&& d : group_destroy) {
         d->set_destroy_num(group_destroy_num, solution);

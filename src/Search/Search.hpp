@@ -8,9 +8,12 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <fstream>
 
 struct Item;
 class Solution;
+
+extern std::ofstream dis_out;
 
 /*近傍と構築法の基底クラス*/
 class Search {
@@ -30,13 +33,14 @@ public:
     /*コンストラクタ*/
     Search(const std::vector<Item>& items, double init_weight, int param, const Solution& solution)
      : items(items), weight(init_weight, param), is_move(false) {
-        init_item_destroy_num = (0.5 * Item::N) / Group::N;
-        init_group_destroy_num = solution.get_valid_groups().size() / 5;
+        init_item_destroy_num = /*(0.5 * Item::N) / Group::N*/3;
+        init_group_destroy_num = /*solution.get_valid_groups().size() / 5*/2;
     }
     /*新たな解を生成*/
     virtual std::unique_ptr<Solution> operator()(const Solution& current_solution) = 0;
     virtual void reset_destroy_num(const Solution& solution);
     virtual void update_destroy_num(const Solution& solution, bool intensification);
+    virtual void set_destroy_num(const Solution& solution, int set_num);
     virtual void update_weight(double score);
     virtual double get_weight() const final;
     virtual bool get_is_move() const final;
@@ -53,7 +57,7 @@ inline void Search::init_destroy_random() {
 
 inline void Search::reset_destroy_num(const Solution& solution) {
     for (auto&& d : item_destroy) {
-        d->set_destroy_num((0.5 * Item::N) / Group::N, solution);
+        d->set_destroy_num(3, solution);
     }
     for (auto&& d : group_destroy) {
         d->set_destroy_num(2, solution);
@@ -66,12 +70,24 @@ inline void Search::update_destroy_num(const Solution& solution, bool intensific
         add_num = -1;
     }
     else {
-        add_num = Item::N / Group::N;
+        add_num = Item::N;
     }
     for (auto&& d : item_destroy) {
         d->add_destroy_num(add_num, solution);
     }
+    if (item_destroy.size() > 0) dis_out << "item:" << item_destroy[0]->get_destroy_num() << ", ";
     int group_destroy_num = (int)(item_destroy[0]->get_destroy_num() / ((double)Item::N / solution.get_valid_groups().size()));
+    for (auto&& d : group_destroy) {
+        d->set_destroy_num(group_destroy_num, solution);
+    }
+    dis_out << "group:" << group_destroy[0]->get_destroy_num() << std::endl;
+}
+
+inline void Search::set_destroy_num(const Solution& solution, int set_num) {
+    for (auto&& d : item_destroy) {
+        d->set_destroy_num(set_num, solution);
+    }
+    int group_destroy_num = (int)(set_num / ((double)Item::N / solution.get_valid_groups().size()));
     for (auto&& d : group_destroy) {
         d->set_destroy_num(group_destroy_num, solution);
     }

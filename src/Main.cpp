@@ -21,10 +21,12 @@
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
+#include <fstream>
 
 using std::vector;
 
 void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num, const std::string& add_output_name);
+std::ofstream dis_out;
 
 int main(int argc, char* argv[]) {
     auto cp = std::filesystem::current_path();
@@ -83,6 +85,7 @@ int main(int argc, char* argv[]) {
 
     solve(*input, problem_file, is_debug, debug_num, add_output_name);
 
+    dis_out.close();
     return 0;
 }
 
@@ -94,13 +97,15 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double group_num_ave = 0;
     double eval_ave = 0;
     double time_ave = 0;
-    int N = 1;
+    int N = 100;
     int M = 5000;
+    dis_out.open("distance_out3.txt");
 
     for (int i = 0; i < N; i++) {
         auto start = std::chrono::high_resolution_clock::now();
         auto now = std::make_unique<Solution>(input);
         now->evaluation_all(input.get_items());
+        dis_out << *now << std::endl;
         Solution best(*now);
 
         vector<std::unique_ptr<Search>> searches;
@@ -123,6 +128,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         vector<double> search_time(searches.size(), 0);
         vector<int> counter_search(searches.size(), 0);
         int moving_idx = -1;
+        vector<vector<int>> score_cnt_search(searches.size(), vector<int>(4, 0));
 
         auto search_itr = searches.begin();
         std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { return (*search_itr++)->get_weight(); });
@@ -137,43 +143,64 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         }
         bool intensification = true;
         int diversification_cnt = 0;
-        Solution searched_solution(*now);
+        //Solution searched_solution(*now);
+        Solution local_best(*now);
+        RandomInt<> des_num_ran(3, Item::N / 10);
 
         while (cnt < M) {
             int search_idx = search_random();
-
+            std::cout << "search_idx:" << search_idx << std::endl;
+            int des_num = des_num_ran();
+            for (auto&& s : searches) {
+                s->set_destroy_num(*now, des_num);
+            }
+            auto sstart = std::chrono::high_resolution_clock::now();
             auto next_solution = (*searches[search_idx])(*now);
             auto send = std::chrono::high_resolution_clock::now();
+            auto stime = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(send - sstart).count() / 1000.0);
+            search_time[search_idx] += stime;
+            ++counter_search[search_idx];
 
-            if (next_solution->get_eval_value() > best.get_eval_value()/* - std::abs(best.get_eval_value()) * 0.0005*/) {
-                for (auto&& s : searches) {
+            //if (next_solution->get_eval_value() > best.get_eval_value()/* - std::abs(best.get_eval_value()) * 0.0005*/) {
+                /*for (auto&& s : searches) {
                     s->reset_destroy_num(*next_solution);
                 }
                 intensification = true;
-            }
+                dis_out << "集中化1" << std::endl;
+            }*/
             double score;
             if (next_solution->get_eval_value() > best.get_eval_value()) {
                 score = 100;
                 now = std::move(next_solution);
                 best = *now;
                 best_change_cnt = cnt;
+                score_cnt_search[search_idx][0]++;
             }
             else if (next_solution->get_eval_value() >= now->get_eval_value()) {
                 if (searches[search_idx]->get_is_move()) {
                     score = 30;
                     now = std::move(next_solution);
+                    score_cnt_search[search_idx][1]++;
                 }
                 else {
                     score = 0.1;
+                    score_cnt_search[search_idx][3]++;
                 }
             }
             else if (now->get_penalty() >= next_solution->get_penalty() - 1) {
                 score = 5;
                 now = std::move(next_solution);
+                score_cnt_search[search_idx][2]++;
             }
             else {
                 score = 0.1;
+                score_cnt_search[search_idx][3]++;
             }
+            std::cout << *now << std::endl;
+
+            /*if (intensification && now->get_eval_value() > local_best.get_eval_value()) {
+                local_best = *now;
+            }*/
 
             searches[search_idx]->update_weight(score);
             search_itr = searches.begin();
@@ -183,37 +210,77 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             if (is_debug) {
                 debug_ptr->output();
             }
-            int d = distance(searched_solution, *now);
-            std::cerr << "d = " << d << std::endl;
+            //int d = distance(searched_solution, *now);
+            int d = distance(local_best, *now);
+            dis_out << "d = " << d << std::endl;
             //std::cerr << "size = " << now->debug_same_group() << ", p = " << now->get_penalty() << std::endl;
 
             //解の距離が20より大きくなったら(充分多様化されたら), 集中化に移行する
-            if (!intensification && d > 10000) {
-                std::cerr << "集中化2" << std::endl;
-                std::cerr << searched_solution << std::endl;
-                std::cerr << *now << std::endl;
+            /*if (!intensification && d > 80) {
+                dis_out << "集中化2" << std::endl;
+                //dis_out << searched_solution << std::endl;
+                dis_out << local_best << std::endl;
+                dis_out << *now << std::endl;
                 intensification = true;
                 diversification_cnt = cnt;
-            }
+                local_best = *now;
+                for (auto&& s : searches) {
+                    s->reset_destroy_num(*now);
+                }
+            }*/
 
             //現在の解周辺を充分探索できたら, 多様化に移行する
-            if (intensification && cnt - best_change_cnt > 200 && cnt - diversification_cnt > 200) {
-                std::cerr << "多様化" << std::endl;
+            /*if (intensification && cnt - best_change_cnt > 300 && cnt - diversification_cnt > 300) {
+                dis_out << "多様化" << std::endl;
                 intensification = false;
-                searched_solution = *now;
-            }
-            if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Item::N / Group::N)) == 0 && cnt != best_change_cnt) {
+                //searched_solution = *now;
                 for (auto&& s : searches) {
                     s->update_destroy_num(*now, false);
                 }
+            }*/
+            /*if ((cnt - best_change_cnt) % (int)((M / 100) * 0.75 * (Item::N / Group::N)) == 0 && cnt != best_change_cnt) {
+                for (auto&& s : searches) {
+                    s->update_destroy_num(*now, false);
+                }
+            }*/
+            if (cnt % 100 == 0) {
+                dis_out << "cnt = " << cnt << std::endl;
+                /*for (auto&& s : searches) {
+                    s->update_destroy_num(*now, intensification);
+                }*/
             }
             ++cnt;
         }
 
+        for (size_t j = 0; j < searches.size(); ++j) {
+            std::cerr << typeid(*searches[j]).name() << ":" << search_weights[j] << std::endl;
+            std::cerr << typeid(*searches[j]).name() << ":" << search_time[j] / counter_search[j] << "[ms]" << std::endl;
+            for (auto&& s_cnt : score_cnt_search[j]) std::cerr << (double)s_cnt / counter_search[j] * 100 << " ";
+            std::cerr << std::endl;
+        }
+
         auto end = std::chrono::high_resolution_clock::now();
         double time = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0);
+
+        time_ave += time;
     
         std::cout << best;
         std::cout << "time = " << time << "[ms]" << std::endl;
+
+        best.evaluation_all(input.get_items());
+        relation_ave += best.get_relation();
+        penalty_ave += best.get_penalty();
+        ave_balance_ave += best.get_ave_balance();
+        sum_balance_ave += best.get_sum_balance();
+        group_num_ave += best.get_valid_groups().size();
+        eval_ave += best.get_eval_value();
     }
+
+    std::cout << "relation_ave:" << relation_ave / N << std::endl;
+    std::cout << "penalty_ave:" << penalty_ave / N << std::endl;
+    std::cout << "ave_balance_ave:" << ave_balance_ave / N << std::endl;
+    std::cout << "sum_balance_ave:" << sum_balance_ave / N << std::endl;
+    std::cout << "group_num_ave:" << group_num_ave / N << std::endl;
+    std::cout << "eval_ave:" << eval_ave / N << std::endl;
+    std::cout << "time_ave:" << time_ave / N << std::endl;
 }

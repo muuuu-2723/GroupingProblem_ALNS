@@ -15,6 +15,7 @@ public:
     std::unique_ptr<Solution> operator()(const Solution& current_solution) override;                            //swap‹ß–T‚ğ’Tõ
     void reset_destroy_num(const Solution& solution) override {}
     void update_destroy_num(const Solution& solution, bool intensification) override {}
+    void set_destroy_num(const Solution& solution, int set_num) override {}
     void update_weight(double score) override;
     const Destroy& select_destroy() override;
 };
