@@ -176,7 +176,7 @@ int Group::calc_group_penalty(const vector<Item>& items) const {
 std::ostream& operator<<(std::ostream& out, const Group& g) {
     out << std::setw((int)std::log10(Group::N) + 1) << g.id << ":";
     for (const auto& member : g.member_id) {
-        out << std::setw((int)std::log10(Item::N) + 2) << member;
+        out << std::setw((int)std::log10(Item::N) + 2) << member + 1;
     }
     /*out << ",\t\t\t\t";
     for (auto&& w : g.sum_weight) {
