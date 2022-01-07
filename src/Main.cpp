@@ -97,9 +97,10 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double group_num_ave = 0;
     double eval_ave = 0;
     double time_ave = 0;
-    int N = 100;
+    int N = 1;
     int M = 5000;
     dis_out.open("distance_out3.txt");
+    std::ofstream best_out("best_out3.txt");
 
     for (int i = 0; i < N; i++) {
         auto start = std::chrono::high_resolution_clock::now();
@@ -170,7 +171,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }*/
             double score;
             if (next_solution->get_eval_value() > best.get_eval_value()) {
-                score = 100;
+                score = 10;
                 now = std::move(next_solution);
                 best = *now;
                 best_change_cnt = cnt;
@@ -178,22 +179,22 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }
             else if (next_solution->get_eval_value() >= now->get_eval_value()) {
                 if (searches[search_idx]->get_is_move()) {
-                    score = 30;
+                    score = 3;
                     now = std::move(next_solution);
                     score_cnt_search[search_idx][1]++;
                 }
                 else {
-                    score = 0.1;
+                    score = -10;
                     score_cnt_search[search_idx][3]++;
                 }
             }
             else if (now->get_penalty() >= next_solution->get_penalty() - 1) {
-                score = 5;
+                score = -3;
                 now = std::move(next_solution);
                 score_cnt_search[search_idx][2]++;
             }
             else {
-                score = 0.1;
+                score = -10;
                 score_cnt_search[search_idx][3]++;
             }
             std::cout << *now << std::endl;
@@ -264,8 +265,10 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
 
         time_ave += time;
     
-        std::cout << best;
-        std::cout << "time = " << time << "[ms]" << std::endl;
+        /*std::cout << best;
+        std::cout << "time = " << time << "[ms]" << std::endl;*/
+        best_out << best;
+        best_out << "time = " << time << "[ms]" << std::endl;
 
         best.evaluation_all(input.get_items());
         relation_ave += best.get_relation();
@@ -275,6 +278,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         group_num_ave += best.get_valid_groups().size();
         eval_ave += best.get_eval_value();
     }
+    best_out.close();
 
     std::cout << "relation_ave:" << relation_ave / N << std::endl;
     std::cout << "penalty_ave:" << penalty_ave / N << std::endl;
