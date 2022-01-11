@@ -74,7 +74,6 @@ private:
     void move_processing(const std::vector<MoveItem>& move_items, const EvalVals& diff);     //移動処理
     std::vector<std::vector<int>> item_times;
     std::vector<std::vector<int>> group_times;
-    std::vector<std::vector<bool>> same_group;
 
 public:
     enum EvalIdx {
@@ -123,7 +122,6 @@ public:
 };
 
 inline Solution& Solution::operator=(const Solution& s) {
-    std::cout << "コピー代入演算子" << std::endl;
     groups = s.groups;
     item_group_ids = s.item_group_ids;
     eval = s.eval;
@@ -140,7 +138,6 @@ inline Solution& Solution::operator=(const Solution& s) {
     eval_flags = s.eval_flags;
     item_times = s.item_times;
     group_times = s.group_times;
-    same_group = s.same_group;
 
     valid_groups.clear();
     for (auto&& g_ptr : s.valid_groups) {
@@ -228,26 +225,12 @@ inline const std::bitset<8>& Solution::get_eval_flags() const {
     return eval_flags;
 }
 
-inline const std::vector<std::vector<bool>>& Solution::get_same_group() const {
-    return same_group;
-}
-
 inline auto Solution::get_item_times() const -> const std::vector<std::vector<int>>& {
     return item_times;
 }
 
 inline auto Solution::get_group_times() const -> const std::vector<std::vector<int>>& {
     return group_times;
-}
-
-inline int Solution::debug_same_group() const {
-    int result = 0;
-    for (size_t i = 0, size = same_group.size(); i < size; ++i) {
-        for (size_t j = i + 1; j < size; ++j) {
-            if (same_group[i][j]) ++result;
-        }
-    }
-    return result;
 }
 
 #endif

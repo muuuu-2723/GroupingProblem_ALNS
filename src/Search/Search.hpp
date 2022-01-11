@@ -13,8 +13,6 @@
 struct Item;
 class Solution;
 
-extern std::ofstream dis_out;
-
 /*近傍と構築法の基底クラス*/
 class Search {
 protected:
@@ -75,12 +73,10 @@ inline void Search::update_destroy_num(const Solution& solution, bool intensific
     for (auto&& d : item_destroy) {
         d->add_destroy_num(add_num, solution);
     }
-    if (item_destroy.size() > 0) dis_out << "item:" << item_destroy[0]->get_destroy_num() << ", ";
     int group_destroy_num = (int)(item_destroy[0]->get_destroy_num() / ((double)Item::N / solution.get_valid_groups().size()));
     for (auto&& d : group_destroy) {
         d->set_destroy_num(group_destroy_num, solution);
     }
-    dis_out << "group:" << group_destroy[0]->get_destroy_num() << std::endl;
 }
 
 inline void Search::set_destroy_num(const Solution& solution, int set_num) {

@@ -96,6 +96,6 @@ int main(int argc, char* argv[]) {
 
     filesystem::path output_path("../" + filename + ".json");
     ofstream out(output_path);
-    out << j.dump(4);
+    out << j;
     out.close();
 }
