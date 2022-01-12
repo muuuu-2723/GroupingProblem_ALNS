@@ -22,10 +22,12 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <bitset>
 
 using std::vector;
 
 void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num, const std::string& add_output_name);
+bool accept(const Solution& next, const Solution& now);
 std::ofstream dis_out;
 
 int main(int argc, char* argv[]) {
@@ -99,8 +101,8 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double time_ave = 0;
     int N = 1;
     int M = 5000;
-    dis_out.open("distance_out3.txt");
-    std::ofstream best_out("best_out3.txt");
+    dis_out.open("distance_out4.txt");
+    std::ofstream best_out("best_out4.txt");
 
     for (int i = 0; i < N; i++) {
         auto start = std::chrono::high_resolution_clock::now();
@@ -188,7 +190,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                     score_cnt_search[search_idx][3]++;
                 }
             }
-            else if (now->get_penalty() >= next_solution->get_penalty() - 1) {
+            else if (accept(*next_solution, *now)) {
                 score = -3;
                 now = std::move(next_solution);
                 score_cnt_search[search_idx][2]++;
@@ -287,4 +289,14 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     std::cout << "group_num_ave:" << group_num_ave / N << std::endl;
     std::cout << "eval_ave:" << eval_ave / N << std::endl;
     std::cout << "time_ave:" << time_ave / N << std::endl;
+}
+
+bool accept(const Solution& next, const Solution& now) {
+    std::bitset<8> penalty_mask = (1<<Solution::EvalIdx::WEIGHT_PENA) | (1<<Solution::EvalIdx::ITEM_PENA) | (1<<Solution::EvalIdx::GROUP_PENA);
+    if ((now.get_eval_flags() & penalty_mask).any()) {
+        return now.get_penalty() >= next.get_penalty() - 1;
+    }
+    else {
+        return next.get_eval_value() >= now.get_eval_value() - std::abs(now.get_eval_value()) * 0.05;
+    }
 }

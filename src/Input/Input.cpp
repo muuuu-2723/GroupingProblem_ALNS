@@ -237,7 +237,9 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         }
     }
 
+    item_penalty_num = 0;
     if (j["constraint"].find("banItem") != j["constraint"].end()) {
+        item_penalty_num = j["constraint"]["banItem"].size();
         for (auto&& ban_pair : j["constraint"]["banItem"]) {
             size_t id1 = ban_pair["id1"].get<size_t>();
             size_t id2 = ban_pair["id2"].get<size_t>();
@@ -246,7 +248,9 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         }
     }
 
+    group_penalty_num = 0;
     if (j["constraint"].find("banGroup") != j["constraint"].end()) {
+        group_penalty_num = j["constraint"]["banGroup"].size();
         for (auto&& ban_ids : j["constraint"]["banGroup"]) {
             size_t item = ban_ids["item"].get<size_t>();
             size_t group = ban_ids["group"].get<size_t>();
