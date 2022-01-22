@@ -613,10 +613,11 @@ void Solution::swap_move(const Item& item1, const Item& item2) {
 
 /*‰ğ‚Ìo—Í—p*/
 std::ostream& operator<<(std::ostream& out, const Solution& s) {
+    out << s.get_valid_groups().size() << std::endl;
     for (auto&& group : s.get_valid_groups()) {
         out << *group << std::endl;
     }
-    out << "•]‰¿’l:";
+    out << "eval_value:";
     if (s.opt == Input::Opt::MAX) {
         out << std::fixed << std::setprecision(2) << s.get_eval_value();
     }
