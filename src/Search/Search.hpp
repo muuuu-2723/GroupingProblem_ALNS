@@ -130,7 +130,6 @@ inline const std::unique_ptr<DiscreteDistribution>& Search::get_destroy_random()
 #include "RelationGreedy/RelationGreedy.hpp"
 #include "ValueAverageGreedy/ValueAverageGreedy.hpp"
 #include "ValueDiversityGreedy/ValueDiversityGreedy.hpp"
-#include "ValueSumGreedy/ValueSumGreedy.hpp"
 #include "DecreaseGroup/DecreaseGroup.hpp"
 
 #endif

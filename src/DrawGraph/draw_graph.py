@@ -29,10 +29,11 @@ fig1 = plt.figure(figsize=(16, 12))
 ax1 = fig1.add_subplot(111)
 ax1.plot(x, now_eval, color="lightcyan", label="now_eval")
 ax1.plot(x, best_eval, color="red", label="best_eval")
-if best_eval[1] < best_eval[-1]:
-    ax1.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.1, best_eval[-1] * 1.05)
-else:
-    ax1.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.5, best_eval[1] + 50)
+#if best_eval[1] < best_eval[-1]:
+#    ax1.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.1, best_eval[-1] * 1.05)
+#else:
+#    ax1.set_ylim(best_eval[-1] - np.abs(best_eval[-1]) * 0.5, best_eval[1] + 50)
+ax1.set_ylim(2520000, 2528500)
 
 ax1.set_xlim(0, x[-1])
 ax1.set_xlabel("探索回数", fontname="MS Gothic")
@@ -40,7 +41,7 @@ ax1.set_ylabel("評価値", fontname="MS Gothic")
 
 exist_file("search.dat")
 search = np.loadtxt("search.dat")
-search_labels = ["GroupPenalty", "ItemPenalty", "WeightPenalty", "Relation", "ValueAve", "ValueSum", "Decrease", "Shift", "Swap", "Graph", "ValueDiv"]
+search_labels = ["GroupPenalty", "ItemPenalty", "WeightPenalty", "Relation", "ValueAve", "Decrease", "Shift", "Swap", "Graph", "ValueDiv"]
 cmap = plt.get_cmap("tab20")
 #ax2 = fig1.add_subplot(122)
 ax2 = ax1.twinx()

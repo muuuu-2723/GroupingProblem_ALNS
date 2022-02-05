@@ -28,7 +28,6 @@ Solution::Solution(const Input& input) {
     penalty_param = 500000;
     opt = input.get_opt();
     value_ave_params = input.get_value_ave_params();
-    value_sum_params = input.get_value_sum_params();
     group_cost = vector<double>(input.get_group_cost().begin(), input.get_group_cost().end());
     constant = input.get_constant();
 
@@ -40,7 +39,6 @@ Solution::Solution(const Input& input) {
     if (input.get_item_relation_params_size() == 0) eval_flags.reset(EvalIdx::ITEM_R);
     if (input.get_group_relation_params_size() == 0) eval_flags.reset(EvalIdx::GROUP_R);
     if (value_ave_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_AVE);
-    if (value_sum_params.size() == 0) eval_flags.reset(EvalIdx::VALUE_SUM);
     if (group_cost.size() == 0) eval_flags.reset(EvalIdx::GROUP_COST);
 
     Group::weight_aves.reserve(Item::w_size);
@@ -67,7 +65,7 @@ Solution::Solution(const Input& input) {
     each_group_item_penalty.assign(Item::N, vector<std::optional<int>>(Group::N + 1, std::nullopt));
     item_group_ids.resize(Item::N);
     aves.assign(Item::v_size, 0);
-    sum_values.assign(Item::v_size, 0);
+    vector<double> sum_values(Item::v_size, 0);
 
     //指定グループがあるアイテムを指定グループに
     //それ以外のアイテムはダミーグループに
@@ -98,8 +96,7 @@ Solution::Solution(const Input& input) {
 }
 
 Solution::Solution(const Solution& s) : groups(s.groups), item_group_ids(s.item_group_ids), eval(s.eval), each_group_item_relation(s.each_group_item_relation), each_group_item_penalty(s.each_group_item_penalty),
-                                        aves(s.aves), sum_values(s.sum_values), opt(s.opt),
-                                        value_ave_params(s.value_ave_params), value_sum_params(s.value_sum_params), penalty_param(s.penalty_param), group_cost(s.group_cost),
+                                        aves(s.aves), opt(s.opt), value_ave_params(s.value_ave_params), penalty_param(s.penalty_param), group_cost(s.group_cost),
                                         constant(s.constant), eval_flags(s.eval_flags), item_times(s.item_times), group_times(s.group_times), same_group(s.same_group) {
 
     for (auto&& g_ptr : s.valid_groups) {
@@ -152,16 +149,6 @@ double Solution::evaluation_all(const vector<Item>& items) {
         if (eval_flags.test(EvalIdx::VALUE_AVE)) {
             for (size_t i = 0; i < Item::v_size; ++i) {
                 eval.ave_balance += std::abs(aves[i] - g_itr->value_average(i)) * value_ave_params[i];
-            }
-        }
-        if (eval_flags.test(EvalIdx::VALUE_SUM)) {
-            for (size_t i = 0; i < Item::v_size; ++i) {
-                if (eval_flags.test(EvalIdx::GROUP_COST)) {
-                    eval.sum_balance += std::abs(sum_values[i] / valid_groups.size() - g_itr->get_sum_values()[i]) * value_sum_params[i];
-                }
-                else {
-                    eval.sum_balance += std::abs(sum_values[i] / Group::N - g_itr->get_sum_values()[i]) * value_sum_params[i];
-                }
             }
         }
 
@@ -232,7 +219,6 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
     }
     
     if (eval_flags.test(EvalIdx::ITEM_PENA)) {
-        
         for (const auto& mi : move_items) {
             diff.penalty -= get_each_group_item_penalty(mi.item, mi.source);
             diff.penalty += get_each_group_item_penalty(mi.item, mi.destination);
@@ -291,24 +277,11 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
         }
     }
     
-    //ave_balanceとsum_balanceの差分を計算
-    std::bitset<8> mask = (1<<EvalIdx::VALUE_AVE) | (1<<EvalIdx::VALUE_SUM);
-    std::bitset<8> mask2 = (1<<EvalIdx::VALUE_SUM) | (1<<EvalIdx::GROUP_COST);
-    
-    if ((eval_flags & mask2) == mask2) {
-        diff.sum_balance = -eval.sum_balance;
-    }
-    
-    if ((eval_flags & mask).any()) {
+    //ave_balanceの差分を計算
+    if (eval_flags.test(EvalIdx::VALUE_AVE)) {
         for (size_t i = 0; i < Group::N; ++i) {
-            if (in[i].size() == 0 && out[i].size() == 0) {
-                if ((eval_flags & mask2) == mask2) {
-                    for (size_t j = 0; j < Item::v_size; ++j) {
-                        diff.sum_balance += std::abs(groups[i].get_sum_values()[j] - sum_values[j] / (valid_groups.size() + diff.group_num)) * value_sum_params[j];
-                    }
-                }
-                continue;
-            }
+            if (in[i].size() == 0 && out[i].size() == 0) continue;
+
             for (size_t j = 0; j < Item::v_size; ++j) {
                 double new_sum_score = groups[i].get_sum_values()[j];
                 for (const auto& in_item : in[i]) {
@@ -323,15 +296,6 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
                     diff.ave_balance -= std::abs(groups[i].value_average(j) - aves[j]) * value_ave_params[j];
                     diff.ave_balance += std::abs(new_group_ave - aves[j]) * value_ave_params[j];
                 }
-                if (eval_flags.test(EvalIdx::VALUE_SUM)) {
-                    if (eval_flags.test(EvalIdx::GROUP_COST)) {
-                        diff.sum_balance += std::abs(new_sum_score - sum_values[j] / (valid_groups.size() + diff.group_num)) * value_sum_params[j];
-                    }
-                    else {
-                        diff.sum_balance -= std::abs(groups[i].get_sum_values()[j] - sum_values[j] / Group::N) * value_sum_params[j];
-                        diff.sum_balance += std::abs(new_sum_score - sum_values[j] / Group::N) * value_sum_params[j];
-                    }
-                }
             }
         }
     }
@@ -340,7 +304,6 @@ EvalVals Solution::evaluation_diff(const vector<MoveItem>& move_items) {
     if (std::abs(diff.penalty) < 1e-10) diff.penalty = 0;
     if (std::abs(diff.relation) < 1e-10) diff.relation = 0;
     if (std::abs(diff.ave_balance) < 1e-10) diff.ave_balance = 0;
-    if (std::abs(diff.sum_balance) < 1e-10) diff.sum_balance = 0;
     if (std::abs(diff.group_cost) < 1e-10) diff.group_cost = 0;
     
     return diff;
@@ -392,8 +355,7 @@ EvalVals Solution::evaluation_shift(const Item& item, int group_id) {
         diff.relation += item.group_relations[next_group.get_id()];
     }
 
-    //ave_balanceとsum_balanceの差分を計算
-    std::bitset<8> mask = (1<<EvalIdx::VALUE_AVE) | (1<<EvalIdx::VALUE_SUM);
+    //ave_balanceの差分を計算
     if (eval_flags.test(EvalIdx::VALUE_AVE)) {
         for (size_t i = 0; i < Item::v_size; ++i) {
             diff.ave_balance -= std::abs(now_group.value_average(i) - aves[i]) * value_ave_params[i];
@@ -405,36 +367,11 @@ EvalVals Solution::evaluation_shift(const Item& item, int group_id) {
             diff.ave_balance += std::abs(group_ave - aves[i]) * value_ave_params[i];
         }
     }
-    
-    if (eval_flags.test(EvalIdx::VALUE_SUM)) {
-        if (diff.group_num != 0) {
-            diff.sum_balance = -eval.sum_balance;
-            for (size_t i = 0; i < Group::N; ++i) {
-                if (i == now_group.get_id() || i == next_group.get_id()) continue;
-                for (size_t j = 0; j < Item::v_size; ++j) {
-                    diff.sum_balance += std::abs(groups[i].get_sum_values()[j] - sum_values[j] / (valid_groups.size() + diff.group_num)) * value_sum_params[j];
-                }
-            }
-            for (size_t i = 0; i < Item::v_size; ++i) {
-                diff.sum_balance += std::abs(now_group.get_sum_values()[i] - item.values[i] - sum_values[i] / (valid_groups.size() + diff.group_num)) * value_sum_params[i];
-                diff.sum_balance += std::abs(next_group.get_sum_values()[i] + item.values[i] - sum_values[i] / (valid_groups.size() + diff.group_num)) * value_sum_params[i];
-            }
-        }
-        else {
-            for (size_t i = 0; i < Item::v_size; ++i) {
-                diff.sum_balance -= std::abs(now_group.get_sum_values()[i] - sum_values[i] / valid_groups.size()) * value_sum_params[i];
-                diff.sum_balance -= std::abs(next_group.get_sum_values()[i] - sum_values[i] / valid_groups.size()) * value_sum_params[i];
-                diff.sum_balance += std::abs(now_group.get_sum_values()[i] - item.values[i] - sum_values[i] / valid_groups.size()) * value_sum_params[i];
-                diff.sum_balance += std::abs(next_group.get_sum_values()[i] + item.values[i] - sum_values[i] / valid_groups.size()) * value_sum_params[i];
-            }
-        }
-    }
 
     //計算誤差の対策
     if (std::abs(diff.penalty) < 1e-10) diff.penalty = 0;
     if (std::abs(diff.relation) < 1e-10) diff.relation = 0;
     if (std::abs(diff.ave_balance) < 1e-10) diff.ave_balance = 0;
-    if (std::abs(diff.sum_balance) < 1e-10) diff.sum_balance = 0;
     if (std::abs(diff.group_cost) < 1e-10) diff.group_cost = 0;
     
     return diff;
@@ -484,27 +421,16 @@ EvalVals Solution::evaluation_swap(const Item& item1, const Item& item2) {
         diff.relation -= item2.group_relations[g2.get_id()];
     }
 
-    //ave_balanceとsum_balanceの差分を計算
-    std::bitset<8> mask = (1<<EvalIdx::VALUE_AVE) | (1<<EvalIdx::VALUE_SUM);
-
-    if ((eval_flags & mask).any()) {
+    //ave_balanceの差分を計算
+    if (eval_flags.test(EvalIdx::VALUE_AVE)) {
         for (size_t i = 0; i < Item::v_size; ++i) {
-            if (eval_flags.test(EvalIdx::VALUE_AVE)) {
-                diff.ave_balance -= std::abs(g1.value_average(i) - aves[i]) * value_ave_params[i];
-                diff.ave_balance -= std::abs(g2.value_average(i) - aves[i]) * value_ave_params[i];
+            diff.ave_balance -= std::abs(g1.value_average(i) - aves[i]) * value_ave_params[i];
+            diff.ave_balance -= std::abs(g2.value_average(i) - aves[i]) * value_ave_params[i];
 
-                double group_ave = (double)(g1.get_sum_values()[i] - item1.values[i] + item2.values[i]) / g1.get_member_num();
-                diff.ave_balance += std::abs(group_ave - aves[i]) * value_ave_params[i];
-                group_ave = (double)(g2.get_sum_values()[i] - item2.values[i] + item1.values[i]) / g2.get_member_num();
-                diff.ave_balance += std::abs(group_ave - aves[i]) * value_ave_params[i];
-            }
-            
-            if (eval_flags.test(EvalIdx::VALUE_SUM)) {
-                diff.sum_balance -= std::abs(g1.get_sum_values()[i] - sum_values[i] / Group::N) * value_sum_params[i];
-                diff.sum_balance -= std::abs(g2.get_sum_values()[i] - sum_values[i] / Group::N) * value_sum_params[i];
-                diff.sum_balance += std::abs(g1.get_sum_values()[i] - item1.values[i] + item2.values[i] - sum_values[i] / Group::N) * value_sum_params[i];
-                diff.sum_balance += std::abs(g2.get_sum_values()[i] - item2.values[i] + item1.values[i] - sum_values[i] / Group::N) * value_sum_params[i];
-            }
+            double group_ave = (double)(g1.get_sum_values()[i] - item1.values[i] + item2.values[i]) / g1.get_member_num();
+            diff.ave_balance += std::abs(group_ave - aves[i]) * value_ave_params[i];
+            group_ave = (double)(g2.get_sum_values()[i] - item2.values[i] + item1.values[i]) / g2.get_member_num();
+            diff.ave_balance += std::abs(group_ave - aves[i]) * value_ave_params[i];
         }
     }
 
@@ -512,7 +438,6 @@ EvalVals Solution::evaluation_swap(const Item& item1, const Item& item2) {
     if (std::abs(diff.penalty) < 1e-10) diff.penalty = 0;
     if (std::abs(diff.relation) < 1e-10) diff.relation = 0;
     if (std::abs(diff.ave_balance) < 1e-10) diff.ave_balance = 0;
-    if (std::abs(diff.sum_balance) < 1e-10) diff.sum_balance = 0;
     
     return diff;
 }
@@ -564,17 +489,7 @@ void Solution::move_processing(const std::vector<MoveItem>& move_items, const Ev
         groups[mi.destination].add_member(mi.item);
         item_group_ids[mi.item.id] = mi.destination;
     }
-    /*same_group.assign(Item::N, vector<bool>(Item::N, false));
-    auto [group_begin, group_end] = get_groups_range();
-    for (auto g_itr = group_begin; g_itr != group_end; ++g_itr) {
-        auto& member_list = g_itr->get_member_list();
-        for (auto m_itr1 = member_list.begin(), end = member_list.end(); m_itr1 != end; ++m_itr1) {
-            for (auto m_itr2 = std::next(m_itr1); m_itr2 != end; ++m_itr2) {
-                same_group[*m_itr1][*m_itr2] = true;
-                same_group[*m_itr2][*m_itr1] = true;
-            }
-        }
-    }*/
+
     if (eval_flags.test(EvalIdx::GROUP_COST)) {
         for (auto&& id : add_id) {
             valid_groups.push_back(&groups[id]);

@@ -27,26 +27,23 @@ struct EvalVals {
     double relation;
     double penalty;
     double ave_balance;
-    double sum_balance;
     double group_cost;
     int group_num;
 
-    EvalVals() : relation(0), penalty(0), ave_balance(0), sum_balance(0), group_cost(0), group_num(0) {}
+    EvalVals() : relation(0), penalty(0), ave_balance(0), group_cost(0), group_num(0) {}
 
     double get_value(double penalty_param, double constant) const {
-        return relation - penalty * penalty_param + ave_balance / group_num + sum_balance / group_num + group_cost + constant;
+        return relation - penalty * penalty_param + ave_balance / group_num + group_cost + constant;
     }
 
     EvalVals& operator+=(const EvalVals& ev) {
         this->relation += ev.relation;
         this->penalty += ev.penalty;
         this->ave_balance += ev.ave_balance;
-        this->sum_balance += ev.sum_balance;
         this->group_cost += ev.group_cost;
         this->relation = std::abs(this->relation) < 1e-10 ? 0 : this->relation;
         this->penalty = std::abs(this->penalty) < 1e-10 ? 0 : this->penalty;
         this->ave_balance = std::abs(this->ave_balance) < 1e-10 ? 0 : this->ave_balance;
-        this->sum_balance = std::abs(this->sum_balance) < 1e-10 ? 0 : this->sum_balance;
         this->group_num += ev.group_num;
         return *this;
     }
@@ -62,14 +59,12 @@ private:
     std::vector<std::vector<std::optional<double>>> each_group_item_relation;                   //それぞれのグループに対するitem_relation each_group_item_relation[アイテム][グループ].value()
     std::vector<std::vector<std::optional<int>>> each_group_item_penalty;                       //それぞれのグループに対するitem_penalty each_group_item_penalty[アイテム][グループ]
     std::vector<double> aves;                                                                   //valueのアイテム単位での平均
-    std::vector<double> sum_values;                                                             //valueの合計
     Input::Opt opt;                                                                             //最小化か最大化か
     std::vector<double> value_ave_params;                                                       //各グループのvalueの平均値のばらつきのパラメータ
-    std::vector<double> value_sum_params;                                                       //各グループのvalueの合計のばらつきのパラメータ
     int penalty_param;                                                                          //ペナルティのパラメータ
     std::vector<double> group_cost;                                                             //グループ数のパラメータ
     double constant;                                                                            //目的関数の定数
-    std::bitset<8> eval_flags;                                                                  //各評価値を計算する必要があるかを管理するフラグ
+    std::bitset<7> eval_flags;                                                                  //各評価値を計算する必要があるかを管理するフラグ
 
     void move_processing(const std::vector<MoveItem>& move_items, const EvalVals& diff);     //移動処理
     std::vector<std::vector<int>> item_times;
@@ -78,7 +73,7 @@ private:
 
 public:
     enum EvalIdx {
-        WEIGHT_PENA, ITEM_PENA, GROUP_PENA, ITEM_R, GROUP_R, VALUE_AVE, VALUE_SUM, GROUP_COST
+        WEIGHT_PENA, ITEM_PENA, GROUP_PENA, ITEM_R, GROUP_R, VALUE_AVE, GROUP_COST
     };
     Solution(const Input& input);                                                                                                   //コンストラクタ
     Solution(const Solution& s);
@@ -88,7 +83,6 @@ public:
     double get_eval_value() const;                                                                                                  //評価値を取得
     double calc_diff_eval(const EvalVals& diff) const;                                    //変化量に対する評価値を計算
     const std::vector<double>& get_ave() const;                                                                                     //valueのアイテム単位での平均を取得
-    const std::vector<double>& get_sum_values() const;                                                                              //valueの合計を取得
     double get_each_group_item_relation(const Item& item, int group_id);                                                            //each_group_item_relationの値を取得, なければ計算して取得
     int get_each_group_item_penalty(const Item& item, int group_id);                                                                //each_group_item_penaltyの値を取得, なければ計算して取得
     int get_group_id(const Item& item) const;                                                                                       //アイテムの所属するグループidを取得
@@ -109,10 +103,9 @@ public:
     double get_relation() const;                                                                                                    //関係値を取得
     double get_penalty() const;                                                                                                     //ペナルティを取得
     double get_ave_balance() const;                                                                                                 //各グループのvalueの平均値のばらつきを取得
-    double get_sum_balance() const;                                                                                                 //各グループのvalueの合計のばらつきを取得
     double get_sum_group_cost() const;
     const std::vector<double>& get_group_relation_params() const;                                                                   //アイテムとグループ間の関係値のパラメータを取得
-    const std::bitset<8>& get_eval_flags() const;                                                                                   //eval_flagsを取得
+    const std::bitset<7>& get_eval_flags() const;                                                                                   //eval_flagsを取得
     const std::vector<std::vector<bool>>& get_same_group() const;
 
     friend std::ostream& operator<<(std::ostream&, const Solution&);                                                                //解の出力用
@@ -130,10 +123,8 @@ inline Solution& Solution::operator=(const Solution& s) {
     each_group_item_relation = s.each_group_item_relation;
     each_group_item_penalty = s.each_group_item_penalty;
     aves = s.aves;
-    sum_values = s.sum_values;
     opt = s.opt;
     value_ave_params = s.value_ave_params;
-    value_sum_params = s.value_sum_params;
     penalty_param = s.penalty_param;
     group_cost = s.group_cost;
     constant = s.constant;
@@ -167,11 +158,6 @@ inline double Solution::calc_diff_eval(const EvalVals& diff) const {
 /*valueのアイテム単位での平均を取得*/
 inline const std::vector<double>& Solution::get_ave() const {
     return aves;
-}
-
-/*valueの合計を取得*/
-inline const std::vector<double>& Solution::get_sum_values() const {
-    return sum_values;
 }
 
 /*アイテムの所属するグループidを取得*/
@@ -214,17 +200,12 @@ inline double Solution::get_ave_balance() const {
     return eval.ave_balance;
 }
 
-/*各グループのvalueの合計のばらつきを取得*/
-inline double Solution::get_sum_balance() const {
-    return eval.sum_balance;
-}
-
 inline double Solution::get_sum_group_cost() const {
     return eval.group_cost;
 }
 
 /*eval_flagsを取得*/
-inline const std::bitset<8>& Solution::get_eval_flags() const {
+inline const std::bitset<7>& Solution::get_eval_flags() const {
     return eval_flags;
 }
 

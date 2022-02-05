@@ -17,7 +17,6 @@ private:
     std::vector<double> item_relation_params;
     std::vector<double> group_relation_params;
     std::vector<double> value_ave_params;
-    std::vector<double> value_sum_params;
     std::vector<std::vector<double>> weight_upper;
     std::vector<std::vector<double>> weight_lower;
     std::vector<double> group_cost;
@@ -31,7 +30,6 @@ public:
     Input(const std::filesystem::path& problem_file_path, const std::filesystem::path& exe_path);
     const Opt& get_opt() const;
     const std::vector<double>& get_value_ave_params() const;
-    const std::vector<double>& get_value_sum_params() const;
     const std::vector<double>& get_weight_upper(size_t g_idx) const;
     const std::vector<double>& get_weight_lower(size_t g_idx) const;
     const std::vector<double>& get_group_cost() const;
@@ -50,10 +48,6 @@ inline const Input::Opt& Input::get_opt() const {
 
 inline const std::vector<double>& Input::get_value_ave_params() const {
     return value_ave_params;
-}
-
-inline const std::vector<double>& Input::get_value_sum_params() const {
-    return value_sum_params;
 }
 
 inline const std::vector<double>& Input::get_weight_upper(size_t g_idx) const {

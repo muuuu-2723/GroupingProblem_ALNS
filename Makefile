@@ -6,7 +6,7 @@ endif
 SRCDIR = src
 BINDIR = bin
 INCLUDE= -I./$(SRCDIR)/include
-SUBDIRS = Debug Destroy/RandomDestroy Destroy/RandomGroupDestroy Destroy/MinimumDestroy Destroy/MinimumGroupDestroy Destroy/UpperWeightGreedyDestroy Group Input Item MyRandom Search/DecreaseGroup Search/GroupPenaltyGreedy Search/ItemPenaltyGreedy Search/NeighborhoodGraph Search/RelationGreedy Search/ShiftNeighborhood Search/SwapNeighborhood Search/ValueAverageGreedy Search/ValueDiversityGreedy Search/ValueSumGreedy Search/WeightPenaltyGreedy Solution Weight
+SUBDIRS = Debug Destroy/RandomDestroy Destroy/RandomGroupDestroy Destroy/MinimumDestroy Destroy/MinimumGroupDestroy Destroy/UpperWeightGreedyDestroy Group Input Item MyRandom Search/DecreaseGroup Search/GroupPenaltyGreedy Search/ItemPenaltyGreedy Search/NeighborhoodGraph Search/RelationGreedy Search/ShiftNeighborhood Search/SwapNeighborhood Search/ValueAverageGreedy Search/ValueDiversityGreedy Search/WeightPenaltyGreedy Solution Weight
 OBJDIR = obj
 SRCS  = $(SRCDIR)/Main.cpp
 ifeq ($(OS),Windows_NT)

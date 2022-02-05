@@ -19,9 +19,9 @@ ValueDiversityGreedy::ValueDiversityGreedy(const vector<Item>& items, double ini
     value_types.resize(Item::v_size);
     std::iota(value_types.begin(), value_types.end(), 0);
 
-    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
-    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
-    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 50, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 50, 1, solution));
+    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, init_group_destroy_num, 50, 1, solution));
     
     init_destroy_random();
 

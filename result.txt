@@ -85,3 +85,320 @@ start_pos(オーダー) -> O(EL)
 sort(オーダー最大値)-> O(EL(logEL))
 
 cycle形成(オーダー最大値) -> O(EL^2)
+
+---------------------------------------------------------------------------------
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_bin_Falkenauer_t120_00_per_5.txt
+最大値:42.00
+最小値:41.00
+平均値:41.83
+最大時間:66038.96[ms]
+最小時間:43781.49[ms]
+平均時間:53290.20[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_bin_Falkenauer_t120_00_per_10.txt
+最大値:42.00
+最小値:41.00
+平均値:41.39
+最大時間:68348.02[ms]
+最小時間:47594.63[ms]
+平均時間:58094.74[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_bin_Falkenauer_t120_00_per_15.txt
+最大値:41.00
+最小値:41.00
+平均値:41.00
+最大時間:79097.48[ms]
+最小時間:54472.32[ms]
+平均時間:67669.07[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_bin_Falkenauer_t120_00_per_20.txt
+最大値:41.00
+最小値:41.00
+平均値:41.00
+最大時間:93493.07[ms]
+最小時間:44674.63[ms]
+平均時間:75933.12[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_bin_Falkenauer_t120_00_per_25.txt
+最大値:41.00
+最小値:41.00
+平均値:41.00
+最大時間:77387.99[ms]
+最小時間:41398.69[ms]
+平均時間:56022.40[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_bin_Falkenauer_t120_00_per_30.txt
+最大値:41.00
+最小値:41.00
+平均値:41.00
+最大時間:63924.30[ms]
+最小時間:42183.89[ms]
+平均時間:50487.56[ms]
+
+
+
+
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_BPPC_1_3_8_per_5.txt
+最大値:51.00
+最小値:50.00
+平均値:50.96
+最大時間:171587.47[ms]
+最小時間:84209.80[ms]
+平均時間:115240.26[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_BPPC_1_3_8_per_10.txt
+最大値:51.00
+最小値:51.00
+平均値:51.00
+最大時間:125739.84[ms]
+最小時間:74307.26[ms]
+平均時間:96209.58[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_BPPC_1_3_8_per_15.txt
+最大値:52.00
+最小値:51.00
+平均値:51.03
+最大時間:119144.10[ms]
+最小時間:76422.76[ms]
+平均時間:94145.45[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_BPPC_1_3_8_per_20.txt
+最大値:52.00
+最小値:51.00
+平均値:51.05
+最大時間:115841.47[ms]
+最小時間:66441.91[ms]
+平均時間:88863.75[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_BPPC_1_3_8_per_25.txt
+最大値:52.00
+最小値:51.00
+平均値:51.14
+最大時間:111805.96[ms]
+最小時間:67470.94[ms]
+平均時間:82768.08[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_BPPC_1_3_8_per_30.txt
+最大値:52.00
+最小値:51.00
+平均値:51.10
+最大時間:108926.29[ms]
+最小時間:63725.99[ms]
+平均時間:78144.77[ms]
+
+
+
+
+
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_csp_Falkenauer_t120_00_per_5.txt
+最大値:2000.00
+最小値:1000.00
+平均値:1790.00
+最大時間:63549.46[ms]
+最小時間:42862.00[ms]
+平均時間:53684.08[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_csp_Falkenauer_t120_00_per_10.txt
+最大値:2000.00
+最小値:1000.00
+平均値:1290.00
+最大時間:69233.15[ms]
+最小時間:47936.40[ms]
+平均時間:58950.98[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_csp_Falkenauer_t120_00_per_15.txt
+最大値:1000.00
+最小値:1000.00
+平均値:1000.00
+最大時間:85438.59[ms]
+最小時間:55796.21[ms]
+平均時間:67107.56[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_csp_Falkenauer_t120_00_per_20.txt
+最大値:1000.00
+最小値:1000.00
+平均値:1000.00
+最大時間:91477.51[ms]
+最小時間:44900.50[ms]
+平均時間:74327.96[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_csp_Falkenauer_t120_00_per_25.txt
+最大値:1000.00
+最小値:1000.00
+平均値:1000.00
+最大時間:80661.26[ms]
+最小時間:42616.34[ms]
+平均時間:55611.48[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_csp_Falkenauer_t120_00_per_30.txt
+最大値:1000.00
+最小値:1000.00
+平均値:1000.00
+最大時間:63000.37[ms]
+最小時間:43906.97[ms]
+平均時間:51269.87[ms]
+
+
+
+
+
+
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_gap_d20200_per_5.txt
+最大値:12463.00
+最小値:12389.00
+平均値:12421.59
+最大時間:71490.64[ms]
+最小時間:52204.32[ms]
+平均時間:61231.09[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_gap_d20200_per_10.txt
+最大値:12476.00
+最小値:12389.00
+平均値:12425.97
+最大時間:103748.65[ms]
+最小時間:66888.50[ms]
+平均時間:82605.26[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_gap_d20200_per_15.txt
+最大値:12463.00
+最小値:12388.00
+平均値:12430.04
+最大時間:108835.87[ms]
+最小時間:66467.94[ms]
+平均時間:88957.36[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_gap_d20200_per_20.txt
+最大値:12468.00
+最小値:12387.00
+平均値:12434.04
+最大時間:162489.14[ms]
+最小時間:71428.49[ms]
+平均時間:108928.49[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_gap_d20200_per_25.txt
+最大値:12462.00
+最小値:12404.00
+平均値:12435.49
+最大時間:178078.94[ms]
+最小時間:104042.85[ms]
+平均時間:156708.02[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_gap_d20200_per_30.txt
+最大値:12470.00
+最小値:12400.00
+平均値:12437.16
+最大時間:188685.37[ms]
+最小時間:153494.04[ms]
+平均時間:173256.22[ms]
+
+
+
+
+
+
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_mdgp_Geo_n240_ds_10_per_5.txt
+最大値:355204.37
+最小値:353821.83
+平均値:355040.03
+最大時間:174452.83[ms]
+最小時間:104454.34[ms]
+平均時間:138119.36[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_mdgp_Geo_n240_ds_10_per_10.txt
+最大値:355127.39
+最小値:353787.91
+平均値:355039.50
+最大時間:189253.97[ms]
+最小時間:90859.82[ms]
+平均時間:138133.71[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_mdgp_Geo_n240_ds_10_per_15.txt
+最大値:355126.56
+最小値:353787.15
+平均値:355017.34
+最大時間:196442.48[ms]
+最小時間:99886.95[ms]
+平均時間:143077.83[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_mdgp_Geo_n240_ds_10_per_20.txt
+最大値:355119.18
+最小値:354370.50
+平均値:355005.39
+最大時間:209512.32[ms]
+最小時間:94972.74[ms]
+平均時間:149604.32[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_mdgp_Geo_n240_ds_10_per_25.txt
+最大値:355095.33
+最小値:354185.10
+平均値:354994.21
+最大時間:225583.67[ms]
+最小時間:103556.06[ms]
+平均時間:158166.64[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_mdgp_Geo_n240_ds_10_per_30.txt
+最大値:355089.65
+最小値:354440.15
+平均値:354997.13
+最大時間:261723.48[ms]
+最小時間:124900.10[ms]
+平均時間:198526.91[ms]
+
+
+
+
+
+
+
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_UFLP_B1_1_per_5.txt
+最大値:26710.00
+最小値:23468.00
+平均値:24370.92
+最大時間:10769.20[ms]
+最小時間:6910.25[ms]
+平均時間:9235.11[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_UFLP_B1_1_per_10.txt
+最大値:27242.00
+最小値:23468.00
+平均値:24482.01
+最大時間:10507.55[ms]
+最小時間:8418.04[ms]
+平均時間:9346.59[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_UFLP_B1_1_per_15.txt
+最大値:28341.00
+最小値:23468.00
+平均値:24886.32
+最大時間:9949.09[ms]
+最小時間:8594.79[ms]
+平均時間:9243.94[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_UFLP_B1_1_per_20.txt
+最大値:28511.00
+最小値:23468.00
+平均値:25066.51
+最大時間:10076.59[ms]
+最小時間:8411.69[ms]
+平均時間:9261.73[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_UFLP_B1_1_per_25.txt
+最大値:28528.00
+最小値:23468.00
+平均値:25312.29
+最大時間:10002.09[ms]
+最小時間:8332.22[ms]
+平均時間:9245.96[ms]
+
+C:\Users\Akinori\Programing\C++>read_data.exe Bin_Packing\best_out_UFLP_B1_1_per_30.txt
+最大値:28511.00
+最小値:23468.00
+平均値:25650.77
+最大時間:10458.66[ms]
+最小時間:8786.27[ms]
+平均時間:9382.20[ms]

@@ -109,13 +109,11 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         Item::v_size = std::distance(v.begin(), v.end());
         value_name.reserve(Item::v_size);
         value_ave_params.reserve(Item::v_size);
-        value_sum_params.reserve(Item::v_size);
         //Item::item_r_size += Item::v_size;
 
         for (auto itr = v.begin(), end = v.end(); itr != end; ++itr) {
             value_name.push_back(itr.key());
             value_ave_params.push_back(itr.value()["ave"].get<double>());
-            value_sum_params.push_back(itr.value()["sum"].get<double>());
             item_relation_params.push_back(itr.value()["distance"].get<double>());
         }
     }
@@ -177,7 +175,6 @@ void Input::read_problem_file(const std::filesystem::path& problem_file_path) {
         std::for_each(item_relation_params.begin(), item_relation_params.end(), [](auto& p) { p *= -1; });
         std::for_each(group_relation_params.begin(), group_relation_params.end(), [](auto& p) { p *= -1; });
         std::for_each(value_ave_params.begin(), value_ave_params.end(), [](auto& p) { p *= -1; });
-        std::for_each(value_sum_params.begin(), value_sum_params.end(), [](auto& p) { p *= -1; });
         std::for_each(group_cost.begin(), group_cost.end(), [](auto& p) { p *= -1; });
         constant *= -1;
     }

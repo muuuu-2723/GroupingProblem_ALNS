@@ -23,12 +23,14 @@
 #include <sstream>
 #include <fstream>
 #include <bitset>
+#include <ios>
 
 using std::vector;
 
 void solve(const Input& input, const std::filesystem::path& data_file, bool is_debug, int debug_num, const std::string& add_output_name);
 bool accept(const Solution& next, const Solution& now);
 std::ofstream dis_out;
+int tmp = 0;
 
 int main(int argc, char* argv[]) {
     auto cp = std::filesystem::current_path();
@@ -41,7 +43,7 @@ int main(int argc, char* argv[]) {
 
     try {
         std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-p InputProblemFile]");
-        if (argc > 6 || argc < 1) {
+        if (/*argc > 6 ||*/ argc < 1) {
             throw argument_error;
         }
         auto exe_path = cp / argv[0];
@@ -63,6 +65,12 @@ int main(int argc, char* argv[]) {
                     throw argument_error;
                 }
                 add_output_name = argv[i];
+            }
+            else if (std::strcmp(argv[i], "-per") == 0) {
+                if (++i == argc) {
+                    throw argument_error;
+                }
+                tmp = atoi(argv[i]);
             }
             else {
                 throw argument_error;
@@ -95,14 +103,17 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double relation_ave = 0;
     double penalty_ave = 0;
     double ave_balance_ave = 0;
-    double sum_balance_ave = 0;
     double group_num_ave = 0;
     double eval_ave = 0;
     double time_ave = 0;
-    int N = 1;
+    int N = 100;
     int M = 5000;
+    int Percent = tmp == 0 ? 30 : tmp;
+    std::cerr << "per = " << Percent << std::endl;
     dis_out.open("distance_out4.txt");
-    std::ofstream best_out("best_out4.txt");
+    std::ofstream best_out("best_out_" + problem_file.filename().stem().string() + add_output_name + ".txt");
+    /*std::ofstream best_out("testes3.txt");
+    std::ofstream weight_out("weight3.txt");*/
 
     for (int i = 0; i < N; i++) {
         auto start = std::chrono::high_resolution_clock::now();
@@ -112,17 +123,16 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         Solution best(*now);
 
         vector<std::unique_ptr<Search>> searches;
-        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<RelationGreedy>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<ValueAverageGreedy>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<ValueSumGreedy>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 1, 1, *now));
-        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 1, /*4*/1, *now));
-        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 1, 4, *now));
-        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 1, 1, *now));
+        searches.emplace_back(std::make_unique<GroupPenaltyGreedy>(input.get_items(), 50, 1, *now));
+        searches.emplace_back(std::make_unique<ItemPenaltyGreedy>(input.get_items(), 50, 1, *now));
+        searches.emplace_back(std::make_unique<WeightPenaltyGreedy>(input.get_items(), 50, 1, *now));
+        searches.emplace_back(std::make_unique<RelationGreedy>(input.get_items(), 50, 1, *now));
+        searches.emplace_back(std::make_unique<ValueAverageGreedy>(input.get_items(), 50, 1, *now));
+        searches.emplace_back(std::make_unique<DecreaseGroup>(input.get_items(), 50, 1, *now));
+        searches.emplace_back(std::make_unique<ShiftNeighborhood>(input.get_items(), 50, 1, *now));
+        searches.emplace_back(std::make_unique<SwapNeighborhood>(input.get_items(), 50, /*4*/3, *now));
+        searches.emplace_back(std::make_unique<NeighborhoodGraph>(input.get_items(), 50, (Group::N + Item::N) / 5, *now));
+        searches.emplace_back(std::make_unique<ValueDiversityGreedy>(input.get_items(), 50, 1, *now));
 
         vector<double> search_weights(searches.size(), 1);
 
@@ -148,11 +158,11 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         int diversification_cnt = 0;
         //Solution searched_solution(*now);
         Solution local_best(*now);
-        RandomInt<> des_num_ran(3, Item::N / 10);
+        RandomInt<> des_num_ran(3, Item::N * (Percent / 100.0));
 
         while (cnt < M) {
             int search_idx = search_random();
-            std::cout << "search_idx:" << search_idx << std::endl;
+            //std::cout << "search_idx:" << search_idx << std::endl;
             int des_num = des_num_ran();
             for (auto&& s : searches) {
                 s->set_destroy_num(*now, des_num);
@@ -181,7 +191,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }
             else if (next_solution->get_eval_value() >= now->get_eval_value()) {
                 if (searches[search_idx]->get_is_move()) {
-                    score = 3;
+                    score = 2;
                     now = std::move(next_solution);
                     score_cnt_search[search_idx][1]++;
                 }
@@ -191,7 +201,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 }
             }
             else if (accept(*next_solution, *now)) {
-                score = -3;
+                score = -5;
                 now = std::move(next_solution);
                 score_cnt_search[search_idx][2]++;
             }
@@ -199,7 +209,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                 score = -10;
                 score_cnt_search[search_idx][3]++;
             }
-            std::cout << *now << std::endl;
+            //std::cout << *now << std::endl;
 
             /*if (intensification && now->get_eval_value() > local_best.get_eval_value()) {
                 local_best = *now;
@@ -207,7 +217,8 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
 
             searches[search_idx]->update_weight(score);
             search_itr = searches.begin();
-            std::generate(search_weights.begin(), search_weights.end(), [&search_itr]() { return (*search_itr++)->get_weight(); });
+            std::generate(search_weights.begin(), search_weights.end(), [&search_itr/*, &weight_out*/]() { /*weight_out << (*search_itr)->get_weight() << " ";*/ return (*search_itr++)->get_weight(); });
+            //weight_out << std::endl;
             search_random.set_weight(search_weights);
 
             if (is_debug) {
@@ -246,8 +257,8 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
                     s->update_destroy_num(*now, false);
                 }
             }*/
-            if (cnt % 100 == 0) {
-                dis_out << "cnt = " << cnt << std::endl;
+            if (cnt % (M / 10) == 0) {
+                std::cerr << "cnt = " << i << "_" << cnt << std::endl;
                 /*for (auto&& s : searches) {
                     s->update_destroy_num(*now, intensification);
                 }*/
@@ -276,7 +287,6 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         relation_ave += best.get_relation();
         penalty_ave += best.get_penalty();
         ave_balance_ave += best.get_ave_balance();
-        sum_balance_ave += best.get_sum_balance();
         group_num_ave += best.get_valid_groups().size();
         eval_ave += best.get_eval_value();
     }
@@ -285,14 +295,13 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     std::cout << "relation_ave:" << relation_ave / N << std::endl;
     std::cout << "penalty_ave:" << penalty_ave / N << std::endl;
     std::cout << "ave_balance_ave:" << ave_balance_ave / N << std::endl;
-    std::cout << "sum_balance_ave:" << sum_balance_ave / N << std::endl;
     std::cout << "group_num_ave:" << group_num_ave / N << std::endl;
     std::cout << "eval_ave:" << eval_ave / N << std::endl;
     std::cout << "time_ave:" << time_ave / N << std::endl;
 }
 
 bool accept(const Solution& next, const Solution& now) {
-    std::bitset<8> penalty_mask = (1<<Solution::EvalIdx::WEIGHT_PENA) | (1<<Solution::EvalIdx::ITEM_PENA) | (1<<Solution::EvalIdx::GROUP_PENA);
+    std::bitset<7> penalty_mask = (1<<Solution::EvalIdx::WEIGHT_PENA) | (1<<Solution::EvalIdx::ITEM_PENA) | (1<<Solution::EvalIdx::GROUP_PENA);
     if ((now.get_eval_flags() & penalty_mask).any()) {
         return now.get_penalty() >= next.get_penalty() - 1;
     }

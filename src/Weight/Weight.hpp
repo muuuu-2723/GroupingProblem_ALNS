@@ -22,7 +22,8 @@ inline double Weight::get_weight() const {
 /*d‚İ‚ğscore‚ÉŠî‚Ã‚¢‚Ä•Ï‰»‚³‚¹‚é*/
 inline void Weight::update(double score) {
     //weight = lambda * weight + (1 - lambda) * score / param;
-    weight += score / param;
+    //weight += score / param;
+    weight += lambda * score / param;
     if (weight < 1) weight = 1;
     if (weight > 100) weight = 100;
 }

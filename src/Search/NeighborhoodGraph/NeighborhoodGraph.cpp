@@ -27,11 +27,11 @@ NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weig
     if (items.size() + Group::N >= 800) {
         destroy_ratio = 800.0 / (items.size() + Group::N) < 0.4 ? 0.4 : 800.0 / (items.size() + Group::N);
     }
-    destructions.emplace_back(std::make_shared<RandomDestroy>(items, items.size(), 1, 1, solution, destroy_ratio));
-    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, solution.get_valid_groups().size(), 1, 1, solution, destroy_ratio));
-    destructions.emplace_back(std::make_shared<MinimumDestroy>(items, items.size(), 1, 1, solution, destroy_ratio));
-    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, solution.get_valid_groups().size(), 1, 1, solution, destroy_ratio));
-    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, solution.get_valid_groups().size(), 1, 1, solution, destroy_ratio));
+    destructions.emplace_back(std::make_shared<RandomDestroy>(items, items.size(), 50, 1, solution, destroy_ratio));
+    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, solution.get_valid_groups().size(), 50, 1, solution, destroy_ratio));
+    destructions.emplace_back(std::make_shared<MinimumDestroy>(items, items.size(), 50, 1, solution, destroy_ratio));
+    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, solution.get_valid_groups().size(), 50, 1, solution, destroy_ratio));
+    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, solution.get_valid_groups().size(), 50, 1, solution, destroy_ratio));
     
     init_destroy_random();
 

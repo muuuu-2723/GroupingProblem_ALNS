@@ -12,11 +12,11 @@
 using std::vector;
 
 RelationGreedy::RelationGreedy(const std::vector<Item>& items, double init_weight, int param, const Solution& solution) : Search(items, init_weight, param, solution) {
-    destructions.emplace_back(std::make_shared<RandomDestroy>(items, init_item_destroy_num, 1, 1, solution));
-    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
-    destructions.emplace_back(std::make_shared<MinimumDestroy>(items, init_item_destroy_num, 1, 1, solution));
-    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 1, 1, solution));
-    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, init_group_destroy_num, 1, 1, solution));
+    destructions.emplace_back(std::make_shared<RandomDestroy>(items, init_item_destroy_num, 50, 1, solution));
+    destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, init_group_destroy_num, 50, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumDestroy>(items, init_item_destroy_num, 50, 1, solution));
+    destructions.emplace_back(std::make_shared<MinimumGroupDestroy>(items, init_group_destroy_num, 50, 1, solution));
+    destructions.emplace_back(std::make_shared<UpperWeightGreedyDestroy>(items, init_group_destroy_num, 50, 1, solution));
     
     init_destroy_random();
 
