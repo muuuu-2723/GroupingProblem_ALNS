@@ -19,7 +19,7 @@ Debug::Debug(const DiscreteDistribution& search_random, const vector<std::unique
              : search_random(search_random), searches(searches), solution(solution), best(best), x(x), debug_num(debug_num) {
     
     auto output_dir = input.get_exe_directory();
-    auto data_file = std::filesystem::path(problem_file).stem();
+    auto data_file = std::filesystem::path(problem_file);
     output_dir /= data_file.string();
     try {
         std::filesystem::create_directory(output_dir);    

@@ -31,6 +31,7 @@ void solve(const Input& input, const std::filesystem::path& data_file, bool is_d
 bool accept(const Solution& next, const Solution& now);
 std::ofstream dis_out;
 int tmp = 0;
+vector<double> scores;
 
 int main(int argc, char* argv[]) {
     auto cp = std::filesystem::current_path();
@@ -40,6 +41,7 @@ int main(int argc, char* argv[]) {
     std::string add_output_name;
 
     std::unique_ptr<Input> input;
+    scores = {10, 2, -5, -10};
 
     try {
         std::runtime_error argument_error("コマンドライン引数エラー : run.exe [-p InputProblemFile]");
@@ -72,6 +74,16 @@ int main(int argc, char* argv[]) {
                 }
                 tmp = atoi(argv[i]);
             }
+            else if (std::strcmp(argv[i], "-s") == 0) {
+                if (i + 4 >= argc) {
+                    throw argument_error;
+                }
+                ++i;
+                for (size_t j = 0; j < 4; ++j) {
+                    scores[j] = atof(argv[i]);
+                    ++i;
+                }
+            }
             else {
                 throw argument_error;
             }
@@ -83,6 +95,10 @@ int main(int argc, char* argv[]) {
         std::cerr << e.what() << std::endl;
         std::exit(1);
     }
+    for (auto&& s : scores) {
+        std::cout << s << " ";
+    }
+    std::cout << std::endl;
     
     if (is_debug) {
         do {
@@ -106,7 +122,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
     double group_num_ave = 0;
     double eval_ave = 0;
     double time_ave = 0;
-    int N = 100;
+    int N = 1;
     int M = 5000;
     int Percent = tmp == 0 ? 30 : tmp;
     std::cerr << "per = " << Percent << std::endl;
@@ -161,6 +177,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
         RandomInt<> des_num_ran(3, Item::N * (Percent / 100.0));
 
         while (cnt < M) {
+        //while (true) {
             int search_idx = search_random();
             //std::cout << "search_idx:" << search_idx << std::endl;
             int des_num = des_num_ran();
@@ -183,7 +200,7 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }*/
             double score;
             if (next_solution->get_eval_value() > best.get_eval_value()) {
-                score = 10;
+                score = scores[0];
                 now = std::move(next_solution);
                 best = *now;
                 best_change_cnt = cnt;
@@ -191,22 +208,22 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }
             else if (next_solution->get_eval_value() >= now->get_eval_value()) {
                 if (searches[search_idx]->get_is_move()) {
-                    score = 2;
+                    score = scores[1];
                     now = std::move(next_solution);
                     score_cnt_search[search_idx][1]++;
                 }
                 else {
-                    score = -10;
+                    score = scores[3];
                     score_cnt_search[search_idx][3]++;
                 }
             }
             else if (accept(*next_solution, *now)) {
-                score = -5;
+                score = scores[2];
                 now = std::move(next_solution);
                 score_cnt_search[search_idx][2]++;
             }
             else {
-                score = -10;
+                score = scores[3];
                 score_cnt_search[search_idx][3]++;
             }
             //std::cout << *now << std::endl;
@@ -259,10 +276,13 @@ void solve(const Input& input, const std::filesystem::path& problem_file, bool i
             }*/
             if (cnt % (M / 10) == 0) {
                 std::cerr << "cnt = " << i << "_" << cnt << std::endl;
-                /*for (auto&& s : searches) {
-                    s->update_destroy_num(*now, intensification);
-                }*/
             }
+            /*if (cnt % 100 == 0) {
+                std::cerr << "cnt = " << i << "_" << cnt << std::endl;
+                auto now_time = std::chrono::high_resolution_clock::now();
+                auto passage_time = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(now_time - start).count() / 1000.0);
+                if (passage_time > 3600000) break;
+            }*/
             ++cnt;
         }
 

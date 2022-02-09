@@ -24,8 +24,8 @@ using std::vector;
 /*コンストラクタ*/
 NeighborhoodGraph::NeighborhoodGraph(const vector<Item>& items, double init_weight, int param, const Solution& solution) : Search(items,init_weight , param, solution) {
     destroy_ratio = 1;
-    if (items.size() + Group::N >= 800) {
-        destroy_ratio = 800.0 / (items.size() + Group::N) < 0.4 ? 0.4 : 800.0 / (items.size() + Group::N);
+    if (items.size() + Group::N >= 550) {
+        destroy_ratio = 550.0 / (items.size() + Group::N) < 0.4 ? 0.4 : 550.0 / (items.size() + Group::N);
     }
     destructions.emplace_back(std::make_shared<RandomDestroy>(items, items.size(), 50, 1, solution, destroy_ratio));
     destructions.emplace_back(std::make_shared<RandomGroupDestroy>(items, solution.get_valid_groups().size(), 50, 1, solution, destroy_ratio));
