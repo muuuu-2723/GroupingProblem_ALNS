@@ -1,6 +1,29 @@
+# Executables
 *.exe
-test.cpp
-.vscode
+*.out
+
+# Object files
+*.o
+*.obj
+
+# Build directories
 obj/
 bin/
-*.out
+build/
+
+# Editor settings
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local execution results
+result.txt
+
+# Temporary / local test files
+test.cpp
