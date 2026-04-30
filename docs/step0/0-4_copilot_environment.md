@@ -85,7 +85,8 @@ Copilot向けの指示・プロンプト・レビュー指摘票は、以下の構成で管理する。
     ├── step1-current-design-doc.prompt.md
     ├── step2-basic-design.prompt.md
     ├── step2-refactoring.prompt.md
-    ├── step2-test.prompt.md
+    ├── step2-test-checklist.prompt.md
+    ├── step2-test-result.prompt.md
     └── review-fix.prompt.md
 
 docs/

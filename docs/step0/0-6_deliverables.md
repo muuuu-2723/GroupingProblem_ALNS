@@ -282,6 +282,12 @@ Mermaid}‚ÍA1‚Â‚Ì}‚É‹l‚ß‚İ‚·‚¬‚¸AˆÈ‰º‚Ì‚æ‚¤‚É•ª‚¯‚Äì¬‚·‚éB
 
 `NeighborhoodGraph` ‚Í•¡G‚È’Tõ–@‚Å‚ ‚é‚½‚ßAƒRƒƒ“ƒg®—‚¾‚¯‚ÅÏ‚Ü‚¹‚¸AŒÂ•Ê‚ÌİŒvƒƒ‚‚Æ‚µ‚Äc‚·B
 
+‚Ü‚½A`NeighborhoodGraph` ‚Í‘²˜_‚Åˆµ‚Á‚½ƒAƒ‹ƒSƒŠƒYƒ€‚Æ–§Ú‚ÉŠÖŒW‚·‚é‰Â”\«‚ª‚ ‚é‚½‚ßAƒ\[ƒXƒR[ƒh‚¾‚¯‚Å‚ÍˆÓ}‚âŠT”O‘Î‰‚ª”»’f‚Å‚«‚È‚¢ê‡‚ª‚ ‚éB
+
+‚»‚Ìê‡‚ÍA„‘ª‚Å’f’è‚¹‚¸A—vŠm”F–€‚Æ‚µ‚Ä‹L˜^‚·‚éB
+
+•K—v‚É‰‚¶‚ÄAŒã‘±ƒŒƒrƒ…[‚Ü‚½‚Í’Ç‰Áì‹Æ‚ÅA‘²˜_–{•¶E‘²˜_’†‚Ì}E‰æ‘œƒf[ƒ^‚È‚Ç‚Ì•â‘«‘—¿‚ğQÆ‚µ‚Ä“à—e‚ğ•âŠ®‚·‚éB
+
 ---
 
 ### 6-9. `class_responsibility_list.md` ‚ÌŠT—v
@@ -587,7 +593,8 @@ Copilot‚Éì‹Æ‚ğˆË—Š‚·‚é‚½‚ß‚Ì‹¤’Êw¦‚Æƒvƒƒ“ƒvƒg‚ÍA `.github/` ”z‰º‚ÅŠÇ—‚·‚é
 | `.github/prompts/step1-current-design-doc.prompt.md` | STEP.1 Œ»sİŒv‘ì¬ƒvƒƒ“ƒvƒg | •K{ | STEP.1‚ÌŒ»s®—¬‰Ê•¨‚ğì¬‚·‚é‚½‚ß‚ÌCopilotŒü‚¯ƒvƒƒ“ƒvƒgB |
 | `.github/prompts/step2-basic-design.prompt.md` | STEP.2 Šî–{İŒvƒvƒƒ“ƒvƒg | •K{ | —vŒ’è‹`‚ÉŠî‚Ã‚¢‚ÄŠî–{İŒv‚ğì¬‚·‚é‚½‚ß‚ÌCopilotŒü‚¯ƒvƒƒ“ƒvƒgB |
 | `.github/prompts/step2-refactoring.prompt.md` | STEP.2 ƒŠƒtƒ@ƒNƒ^ƒŠƒ“ƒOÀ‘•ƒvƒƒ“ƒvƒg | •K{ | Šî–{İŒv‚ÉŠî‚Ã‚¢‚ÄƒŠƒtƒ@ƒNƒ^ƒŠƒ“ƒOÀ‘•‚ğs‚¤‚½‚ß‚ÌCopilotŒü‚¯ƒvƒƒ“ƒvƒgB |
-| `.github/prompts/step2-test.prompt.md` | STEP.2 ƒeƒXƒgì¬ƒvƒƒ“ƒvƒg | •K{ | ƒeƒXƒgƒ`ƒFƒbƒNƒŠƒXƒg‚¨‚æ‚ÑƒeƒXƒgŒ‹‰Ê®—‚ğx‰‡‚·‚é‚½‚ß‚ÌCopilotŒü‚¯ƒvƒƒ“ƒvƒgB |
+| `.github/prompts/step2-test-checklist.prompt.md` | STEP.2 ƒeƒXƒgƒ`ƒFƒbƒNƒŠƒXƒgì¬ƒvƒƒ“ƒvƒg | •K{ | STEP.2-4‚ÅAƒeƒXƒgŠÏ“_EƒeƒXƒgƒP[ƒXEÀsè‡EŠú‘ÒŒ‹‰Ê‚ğ’è‹`‚·‚é‚½‚ß‚ÌCopilotŒü‚¯ƒvƒƒ“ƒvƒgB |
+| `.github/prompts/step2-test-result.prompt.md` | STEP.2 ƒeƒXƒgŒ‹‰Ê‹L˜^ƒvƒƒ“ƒvƒg | •K{ | STEP.2-4‚ÅAÀ{Ï‚İƒeƒXƒg‚ÌŒ‹‰ÊEÀsŠÂ‹«E”»’èE–¢Šm”F–€‚ğ‹L˜^‚·‚é‚½‚ß‚ÌCopilotŒü‚¯ƒvƒƒ“ƒvƒgB |
 | `.github/prompts/review-fix.prompt.md` | ƒŒƒrƒ…[w“EC³ƒvƒƒ“ƒvƒg | •K{ | ƒŒƒrƒ…[w“E•[‚ğ“Ç‚İ‚İAw“E‚ÉŠî‚Ã‚¢‚ÄC³‘Î‰‚·‚é‚½‚ß‚ÌCopilotŒü‚¯ƒvƒƒ“ƒvƒgB |
 
 ---
